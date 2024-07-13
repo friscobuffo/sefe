@@ -5,7 +5,7 @@
 
 #include "utils.hpp"
 
-Segment::Segment(int numberOfNodes, const SubGraph* component, const Cycle* cycle)
+Segment::Segment(const int numberOfNodes, const SubGraph* component, const Cycle* cycle)
 : SubGraph(numberOfNodes, component), originalComponent_m(component),
 originalCycle_m(cycle), componentNodesPointers_m(numberOfNodes) {
     isNodeAnAttachment_m.resize(numberOfNodes);
@@ -24,6 +24,8 @@ bool Segment::isNodeAnAttachment(const Node* node) const {
     return isNodeAnAttachment_m[node->getIndex()];
 }
 
+// returns true if the segment is just a path inside (or outside) a cycle,
+// false otherwise
 bool Segment::isPath() const {
     for (int i = 0; i < size(); ++i) {
         const Node* node = getNode(i);
@@ -38,6 +40,7 @@ const std::vector<const Node*>& Segment::getAttachments() const {
     return attachmentNodes_m;
 }
 
+// computes a path between two attachments, assuring it does not go trought the cycle
 std::list<const Node*> Segment::computePathBetweenAttachments(const Node* start, const Node* end) const {
     assert(isNodeAnAttachment(start));
     assert(isNodeAnAttachment(end));
@@ -162,9 +165,9 @@ void SegmentsHandler::findSegments() {
 const Segment* SegmentsHandler::buildSegment(std::vector<const Node*>& nodes,
 std::vector<std::pair<const Node*, const Node*>>& edges) {
     Segment* segment = new Segment(nodes.size()+originalCycle_m->size(), originalComponent_m, originalCycle_m);
-    // assigning labels
     // first nodes MUST be the same of the cycle in the SAME ORDER
     int oldToNewLabel[originalComponent_m->size()];
+    // adding cycle nodes (which means setting up the pointers)
     for (int i = 0; i < originalCycle_m->size(); ++i) {
         const Node* cycleNode = originalCycle_m->getNode(i);
         oldToNewLabel[cycleNode->getIndex()] = i;
@@ -173,6 +176,7 @@ std::vector<std::pair<const Node*, const Node*>>& edges) {
         const Node* originalNode = originalComponent_m->getOriginalNode(cycleNode);
         segment->setOriginalNode(newNode, originalNode);
     }
+    // adding the other nodes of the segment (setting up the pointers)
     for (int i = 0; i < nodes.size(); ++i) { // remember that nodes does not include cycle nodes
         const Node* oldNode = nodes[i];
         int index = i+originalCycle_m->size();
@@ -226,7 +230,7 @@ const Segment* SegmentsHandler::buildChord(const Node* attachment1, const Node* 
     return chord;
 }
 
-const Segment* SegmentsHandler::getSegment(int index) const {
+const Segment* SegmentsHandler::getSegment(const int index) const {
     return segments_m[index].get();
 }
 

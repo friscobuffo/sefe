@@ -21,7 +21,7 @@ int BiconnectedComponentsHandler::size() const {
     return components_m.size();
 }
 
-const SubGraph* BiconnectedComponentsHandler::getComponent(int index) const {
+const SubGraph* BiconnectedComponentsHandler::getComponent(const int index) const {
     return components_m[index].get();
 }
 
@@ -34,7 +34,9 @@ std::list<std::pair<const Node*, const Node*>>& edges) {
     for (const Node* node : nodes) {
         int oldIndex = node->getIndex();
         oldToNewNodes[node->getIndex()] = newIndex;
-        component->setOriginalNode(component->getNode(newIndex), originalGraph_m->getNode(oldIndex));
+        const Node* nodeComponent = component->getNode(newIndex);
+        const Node* nodeOriginalGraph = originalGraph_m->getNode(oldIndex);
+        component->setOriginalNode(nodeComponent, nodeOriginalGraph);
         ++newIndex;
     }
     for (std::pair<const Node*, const Node*>& edge: edges) {
@@ -81,7 +83,7 @@ std::list<std::pair<const Node*, const Node*>>& stackOfEdges) {
     lowPoint[nodeIndex] = nextIdToAssign;
     ++nextIdToAssign;
     int childrenNumber = 0;
-    for (Node* neighbor : node->getNeighbors()) {
+    for (const Node* neighbor : node->getNeighbors()) {
         int neighborIndex = neighbor->getIndex();
         if (prevOfNode[nodeIndex] == neighbor)
             continue;

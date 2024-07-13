@@ -15,7 +15,7 @@ public:
     Embedding(const SubGraph* originalGraph);
     Embedding(const Graph* originalGraph);
     void addSingleEdge(int fromIndex, int toIndex);
-    void addSingleEdge(Node* from, Node* to);
+    void addSingleEdge(Node* from, const Node* to);
 };
 
 class Embedder {

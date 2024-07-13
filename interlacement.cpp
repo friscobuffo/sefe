@@ -31,6 +31,7 @@ void InterlacementGraph::computeCycleLabels(const Segment* segment, int cycleLab
     assert(foundAttachments == totalAttachments);
 }
 
+// two segments are in conflict if any of their non cycle edges may intersect
 void InterlacementGraph::computeConflicts() {
     int cycleLabels[cycle_m->getOriginalComponentSize()];
     for (int i = 0; i < segmentsHandler_m.size()-1; ++i) {

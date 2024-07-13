@@ -17,7 +17,7 @@ private:
     const Cycle* originalCycle_m;
     NodePointers componentNodesPointers_m;
 public:
-    Segment(int numberOfNodes, const SubGraph* originalComponent, const Cycle* cycle);
+    Segment(const int numberOfNodes, const SubGraph* originalComponent, const Cycle* cycle);
     bool isPath() const;
     const std::vector<const Node*>& getAttachments() const;
     void addAttachment(const Node* attachment);
@@ -45,7 +45,7 @@ private:
     void segmentCheck(const Segment* segment);
 public:
     SegmentsHandler(const SubGraph* component, const Cycle* cycle);
-    const Segment* getSegment(int index) const;
+    const Segment* getSegment(const int index) const;
     int size() const;
     void print() const;
 };

@@ -21,7 +21,7 @@ public:
     BiconnectedComponentsHandler(const Graph* graph);
     void print() const;
     int size() const;
-    const SubGraph* getComponent(int index) const;
+    const SubGraph* getComponent(const int index) const;
 };
 
 #endif

@@ -27,7 +27,7 @@ Embedding::Embedding(const Graph* originalGraph)
         setOriginalNode(getNode(i), originalGraph->getNode(i));
 }
 
-void Embedding::addSingleEdge(Node* from, Node* to) {
+void Embedding::addSingleEdge(Node* from, const Node* to) {
     from->addNeighbor(to);
 }
 
@@ -88,7 +88,8 @@ std::optional<const Embedding*> Embedder::embedGraph(const Graph* graph) const {
     return embedding;
 }
 
-// for each segment, it computes the minimum and the maximum of all of its attachments
+// for each segment, it computes the minimum and the maximum of all of its attachments,
+// using attachment notation based on the position in the cycle (0, ..., cycleSize-1)
 void Embedder::computeMinAndMaxSegmentsAttachments(const SegmentsHandler& segmentsHandler,
 int segmentsMinAttachment[], int segmentsMaxAttachment[]) const {
     for (int i = 0; i < segmentsHandler.size(); i++) {
@@ -104,13 +105,15 @@ int segmentsMinAttachment[], int segmentsMaxAttachment[]) const {
     }
 }
 
+// assuming the cycle is drawn CLOCKWISE, and assuming the segments incident to the 
+// attachment "cycleNode" must be drawn OUTSIDE the cycle, computes the order of
+// placement of these segments such that they don't intersect
 std::vector<int> Embedder::computeOrder(const Node* cycleNode, const std::vector<int>& segmentsIndexes,
 int segmentsMinAttachment[], int segmentsMaxAttachment[], const SegmentsHandler& segmentsHandler, int cycleNodePosition) const {
     std::optional<int> middleSegment;
     std::vector<int> minSegments{};
     std::vector<int> maxSegments{};
     int cycleNodeIndex = cycleNode->getIndex();
-
     for (int i = 0; i < segmentsIndexes.size(); ++i) {
         int segIndex = segmentsIndexes[i];
         if (segmentsMinAttachment[segIndex] == cycleNodePosition) {
@@ -193,6 +196,8 @@ int segmentsMinAttachment[], int segmentsMaxAttachment[], const SegmentsHandler&
     return order;
 }
 
+// the embedding is "compatible" with the cycle if, drawn the cycle clockwise,
+// the embedding of the segment places the segment inside the cycle
 std::vector<bool> Embedder::compatibilityEmbeddingsAndCycle(const SubGraph* component, const Cycle* cycle,
 const std::vector<std::optional<const Embedding*>>& embeddings, const SegmentsHandler& segmentsHandler) const {
     std::vector<bool> isCompatible(segmentsHandler.size());
@@ -206,7 +211,7 @@ const std::vector<std::optional<const Embedding*>>& embeddings, const SegmentsHa
         const Node* prev = cycle->getPrevOfNode(componentNode);
         int position = -1;
         int attachmentIndex = attachment->getIndex();
-        const std::vector<Node*>& neighbors = embedding->getNode(attachmentIndex)->getNeighbors();
+        const std::vector<const Node*>& neighbors = embedding->getNode(attachmentIndex)->getNeighbors();
         assert(neighbors.size() >= 3);
         for (int j = 0; j < neighbors.size(); ++j) {
             const Node* neighbor = neighbors[j];
@@ -234,7 +239,7 @@ const SubGraph* component, bool compatible, Embedding* output) const {
     assert(nextCycleNode->getGraph() == component);
     assert(segment->isNodeAnAttachment(segment->getNode(cycleNodeIndex)));
     std::vector<int> neighborsToAdd;
-    const std::vector<Node*>& neighbors = embedding->getNode(cycleNodeIndex)->getNeighbors();
+    const std::vector<const Node*>& neighbors = embedding->getNode(cycleNodeIndex)->getNeighbors();
     int positionOfLastAddedNode = -1;
     for (int i = 0; i < neighbors.size(); ++i) {
         const Node* neighbor = neighbors[i];
@@ -413,6 +418,8 @@ std::optional<const Embedding*> Embedder::embedComponent(const SubGraph* compone
     return embedding;
 }
 
+// it may happen that a cycle induces only one segment, which is not a base case
+// so the cycle must be recomputed such that it ensures at least two segments
 void Embedder::makeCycleGood(Cycle* cycle, const Segment* segment) const {
     const std::vector<const Node*>& attachments = segment->getAttachments();
     std::vector<int> attachmentsComponent{};
@@ -451,7 +458,7 @@ const Embedding* Embedder::baseCaseComponent(const SubGraph* component, const Cy
     Embedding* embedding = new Embedding(component);
     for (int nodeIndex = 0; nodeIndex < component->size(); ++nodeIndex) {
         const Node* node = component->getNode(nodeIndex);
-        const std::vector<Node*>& neighbors = node->getNeighbors();
+        const std::vector<const Node*>& neighbors = node->getNeighbors();
         if (neighbors.size() == 2) { // attachment nodes will be handled later
             embedding->addSingleEdge(node->getIndex(), neighbors[0]->getIndex());
             embedding->addSingleEdge(node->getIndex(), neighbors[1]->getIndex());
@@ -544,7 +551,7 @@ public:
         for (ogdf::node n : graph.nodes) {
             const int index = n->index();
             const Node* node = embedding->getNode(index);
-            const std::vector<Node*>& neighbors = node->getNeighbors();
+            const std::vector<const Node*>& neighbors = node->getNeighbors();
             for (int i = 0; i < neighbors.size(); ++i)
                 position[neighbors[i]->getIndex()] = i;
             std::vector<ogdf::adjEntry> order(neighbors.size());

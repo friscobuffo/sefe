@@ -5,7 +5,7 @@
 
 class GraphLoader {
 public:
-    const Graph* loadFromFile(char* path);
+    const Graph* loadFromFile(const char* path) const;
 };
 
 #endif

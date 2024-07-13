@@ -6,7 +6,7 @@
 #include <string>
 #include <sstream>
 
-const Graph* GraphLoader::loadFromFile(char* path) {
+const Graph* GraphLoader::loadFromFile(const char* path) const {
     std::ifstream inputFile(path);
     if (!inputFile.is_open()) {
         std::cerr << "Error: Could not open file " << path << std::endl;

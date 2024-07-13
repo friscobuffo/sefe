@@ -22,7 +22,7 @@ public:
     int size() const;
     const Node* getPrevOfNode(const Node* node) const;
     const Node* getNextOfNode(const Node* node) const;
-    const Node* getNode(int position) const;
+    const Node* getNode(const int position) const;
     void reverse();
     void print() const;
     int getOriginalComponentSize() const;
