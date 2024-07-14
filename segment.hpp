@@ -8,6 +8,7 @@
 
 #include "cycle.hpp"
 #include "biconnectedComponent.hpp"
+#include "utils.hpp"
 
 class Segment : public SubGraph {
 private:
@@ -15,7 +16,7 @@ private:
     std::vector<bool> isNodeAnAttachment_m{};
     const SubGraph* originalComponent_m;
     const Cycle* originalCycle_m;
-    NodePointers componentNodesPointers_m;
+    ArrayPointers<const Node> componentNodesPointers_m;
 public:
     Segment(const int numberOfNodes, const SubGraph* originalComponent, const Cycle* cycle);
     bool isPath() const;

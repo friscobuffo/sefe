@@ -5,11 +5,13 @@
 #include <optional>
 #include <memory>
 
+#include "utils.hpp"
+
 class Graph;
 
 class Node {
 private:
-    int index_m;
+    const int index_m;
     std::vector<const Node*> neighbors_m;
     const Graph* graph_m;
 public:
@@ -35,21 +37,13 @@ public:
     int size() const;
     virtual void print() const;
     const std::optional<std::vector<int>> computeBipartition() const;
-};
-
-class NodePointers {
-private:
-    std::vector<const Node*> pointers_m;
-public:
-    NodePointers(const int numberOfNodes);
-    const Node* getNodePointer(const int index) const;
-    void setNodePointer(const int index, const Node* node);
+    const Graph* computeIntersection(const Graph* graph) const;
 };
 
 class SubGraph : public Graph {
 private:
     const Graph* originalGraph_m;
-    NodePointers originalNodes_m;
+    ArrayPointers<const Node> originalNodes_m;
 public:
     SubGraph(const int numberOfNodes, const Graph* graph);
     const Node* getOriginalNode(const Node* node) const;

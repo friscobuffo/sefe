@@ -4,8 +4,6 @@
 #include <list>
 #include <cassert>
 
-#include "utils.hpp"
-
 Node::Node(const int index, const Graph* graph) : index_m(index), graph_m(graph) {}
 
 int Node::getIndex() const {
@@ -109,20 +107,27 @@ Node* Graph::getNode(const int index) {
     return nodes_m[index].get();
 }
 
-NodePointers::NodePointers(const int numberOfNodes) {
-    pointers_m.resize(numberOfNodes);
-    for (int i = 0; i < numberOfNodes; ++i)
-        pointers_m[i] = nullptr;
-}
-
-const Node* NodePointers::getNodePointer(const int index) const {
-    assert(pointers_m[index] != nullptr);
-    return pointers_m[index];
-}
-
-void NodePointers::setNodePointer(const int index, const Node* node) {
-    assert(pointers_m[index] == nullptr);
-    pointers_m[index] = node;
+const Graph* Graph::computeIntersection(const Graph* graph) const {
+    assert(size() == graph->size());
+    Graph* intersection = new Graph(size());
+    bool isEdgeInGraph1[size()];
+    bool isEdgeInGraph2[size()];
+    for (int i = 0; i < size(); ++i) {
+        const Node* node1 = getNode(i);
+        const Node* node2 = graph->getNode(i);
+        for (int j = 0; j < size(); ++i) {
+            isEdgeInGraph1[j] = false;
+            isEdgeInGraph2[j] = false;
+        }
+        for (const Node* neighbor : node1->getNeighbors())
+            isEdgeInGraph1[neighbor->getIndex()] = true;
+        for (const Node* neighbor : node2->getNeighbors())
+            isEdgeInGraph2[neighbor->getIndex()] = true;
+        for (int j = 0; j < size(); ++i)
+            if (isEdgeInGraph1[j] && isEdgeInGraph2[j] && i < j)
+                intersection->addEdge(i, j);
+    }
+    return intersection;
 }
 
 SubGraph::SubGraph(const int numberOfNodes, const Graph* graph) 
@@ -132,12 +137,12 @@ SubGraph::SubGraph(const int numberOfNodes, const Graph* graph)
 
 const Node* SubGraph::getOriginalNode(const Node* node) const {
     const int index = node->getIndex();
-    return originalNodes_m.getNodePointer(index);
+    return originalNodes_m.getPointer(index);
 }
 
 void SubGraph::setOriginalNode(const Node* node, const Node* originalNode) {
     const int index = node->getIndex();
-    originalNodes_m.setNodePointer(index, originalNode);
+    originalNodes_m.setPointer(index, originalNode);
 }
 
 void SubGraph::print() const {

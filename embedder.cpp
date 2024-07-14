@@ -48,13 +48,12 @@ void Embedder::graphAndEmbeddingChecks(const Graph* graph, const Embedding* embe
 }
 
 const Embedding* Embedder::mergeBiconnectedComponents(const Graph* graph, const BiconnectedComponentsHandler& biconnectedComponents,
-const std::vector<std::optional<const Embedding*>>& embeddings) const {
+const std::vector<std::unique_ptr<const Embedding>>& embeddings) const {
     Embedding* output = new Embedding(graph);
     assert(biconnectedComponents.size() == embeddings.size());
     for (int i = 0; i < biconnectedComponents.size(); ++i) {
-        assert(embeddings[i].has_value());
         const SubGraph* component = biconnectedComponents.getComponent(i);
-        const Embedding* embedding = embeddings[i].value();
+        const Embedding* embedding = embeddings[i].get();
         for (int i = 0; i < embedding->size(); ++i) {
             const Node* node = embedding->getNode(i);
             const Node* nodeOriginal = embedding->getOriginalNode(node);
@@ -70,21 +69,16 @@ const std::vector<std::optional<const Embedding*>>& embeddings) const {
 std::optional<const Embedding*> Embedder::embedGraph(const Graph* graph) const {
     if (graph->size() < 4) return baseCaseGraph(graph);
     const BiconnectedComponentsHandler bicComps(graph);
-    std::vector<std::optional<const Embedding*>> embeddings{};
+    std::vector<std::unique_ptr<const Embedding>> embeddings{};
     for (int i = 0; i < bicComps.size(); ++i) {
         const SubGraph* component = bicComps.getComponent(i);
-        embeddings.push_back(embedComponent(component));
-        if (!embeddings.back().has_value()) {
-            for (auto& embedding : embeddings)
-                if (embedding)
-                    delete embedding.value();
+        std::optional<const Embedding*> embedding = embedComponent(component);
+        if (!embedding.has_value())
             return std::nullopt;
-        }
+        embeddings.push_back(std::unique_ptr<const Embedding>(embedding.value()));
     }
     const Embedding* embedding = mergeBiconnectedComponents(graph, bicComps, embeddings);
     graphAndEmbeddingChecks(graph, embedding);
-    for (int i = 0; i < bicComps.size(); ++i)
-        delete embeddings[i].value();
     return embedding;
 }
 
@@ -199,12 +193,11 @@ int segmentsMinAttachment[], int segmentsMaxAttachment[], const SegmentsHandler&
 // the embedding is "compatible" with the cycle if, drawn the cycle clockwise,
 // the embedding of the segment places the segment inside the cycle
 std::vector<bool> Embedder::compatibilityEmbeddingsAndCycle(const SubGraph* component, const Cycle* cycle,
-const std::vector<std::optional<const Embedding*>>& embeddings, const SegmentsHandler& segmentsHandler) const {
+const std::vector<std::unique_ptr<const Embedding>>& embeddings, const SegmentsHandler& segmentsHandler) const {
     std::vector<bool> isCompatible(segmentsHandler.size());
     for (int i = 0; i < segmentsHandler.size(); ++i) {
         const Segment* segment = segmentsHandler.getSegment(i);
-        assert(embeddings[i].has_value());
-        const Embedding* embedding = embeddings[i].value();
+        const Embedding* embedding = embeddings[i].get();
         const Node* attachment = segment->getAttachments()[0]; // any attachment is good
         const Node* componentNode = segment->getComponentNode(attachment);
         const Node* next = cycle->getNextOfNode(componentNode);
@@ -283,7 +276,7 @@ const SubGraph* component, bool compatible, Embedding* output) const {
 }
 
 const Embedding* Embedder::mergeSegmentsEmbeddings(const SubGraph* component, const Cycle* cycle,
-const std::vector<std::optional<const Embedding*>>& embeddings, const SegmentsHandler& segmentsHandler,
+const std::vector<std::unique_ptr<const Embedding>>& embeddings, const SegmentsHandler& segmentsHandler,
 const std::vector<int>& bipartition) const {
     Embedding* output = new Embedding(component);
     int segmentsMinAttachment[segmentsHandler.size()];
@@ -315,19 +308,19 @@ const std::vector<int>& bipartition) const {
         output->addSingleEdge(cycleNode->getIndex(), nextCycleNode->getIndex());
         for (int i = 0; i < insideOrder.size(); ++i) {
             const Segment* segment = segmentsHandler.getSegment(insideOrder[i]);
-            const Embedding* embedding = embeddings[insideOrder[i]].value();
+            const Embedding* embedding = embeddings[insideOrder[i]].get();
             addMiddleEdges(segment, embedding, cycleNodePosition, component, isSegmentCompatible[insideOrder[i]], output);
         }
         output->addSingleEdge(cycleNode->getIndex(), prevCycleNode->getIndex());
         for (int i = 0; i < outsideOrder.size(); ++i) {
             const Segment* segment = segmentsHandler.getSegment(outsideOrder[i]);
-            const Embedding* embedding = embeddings[outsideOrder[i]].value();
+            const Embedding* embedding = embeddings[outsideOrder[i]].get();
             addMiddleEdges(segment, embedding, cycleNodePosition, component, isSegmentCompatible[outsideOrder[i]], output);
         }
     }
     for (int i = 0; i < segmentsHandler.size(); ++i) {
         const Segment* segment = segmentsHandler.getSegment(i);
-        const Embedding* embedding = embeddings[i].value();
+        const Embedding* embedding = embeddings[i].get();
         for (int nodeIndex = 0; nodeIndex < segment->size(); ++nodeIndex) {
             const Node* node = segment->getNode(nodeIndex);
             const Node* componentNode = segment->getComponentNode(node);
@@ -392,21 +385,16 @@ std::optional<const Embedding*> Embedder::embedComponent(const SubGraph* compone
     InterlacementGraph interlacementGraph(cycle, segmentsHandler);
     std::optional<std::vector<int>> bipartition = interlacementGraph.computeBipartition();
     if (!bipartition) return std::nullopt;
-    std::vector<std::optional<const Embedding*>> embeddings{};
+    std::vector<std::unique_ptr<const Embedding>> embeddings{};
     for (int i = 0; i < segmentsHandler.size(); ++i) {
         const Segment* segment = segmentsHandler.getSegment(i);
-        embeddings.push_back(embedComponent(segment));
-        if (!embeddings.back().has_value()) {
-            for (auto& embedding : embeddings)
-                if (embedding)
-                    delete embedding.value();
+        std::optional<const Embedding*> embedding = embedComponent(segment);
+        if (!embedding.has_value())
             return std::nullopt;
-        }
-        segmentAndEmbeddingChecks(segment, embeddings.back().value());
+        segmentAndEmbeddingChecks(segment, embedding.value());
+        embeddings.push_back(std::unique_ptr<const Embedding>(embedding.value()));
     }
     const Embedding* embedding = mergeSegmentsEmbeddings(component, cycle, embeddings, segmentsHandler, bipartition.value());
-    for (int i = 0; i < segmentsHandler.size(); ++i)
-        delete embeddings[i].value();
     return embedding;
 }
 

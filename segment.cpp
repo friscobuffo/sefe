@@ -3,8 +3,6 @@
 #include <iostream>
 #include <cassert>
 
-#include "utils.hpp"
-
 Segment::Segment(const int numberOfNodes, const SubGraph* component, const Cycle* cycle)
 : SubGraph(numberOfNodes, component), originalComponent_m(component),
 originalCycle_m(cycle), componentNodesPointers_m(numberOfNodes) {
@@ -84,11 +82,11 @@ const SubGraph* Segment::getOriginalComponent() const {
 }
 
 const Node* Segment::getComponentNode(const Node* node) const {
-    return componentNodesPointers_m.getNodePointer(node->getIndex());
+    return componentNodesPointers_m.getPointer(node->getIndex());
 }
 
 void Segment::setComponentNode(const Node* node, const Node* componentNode) {
-    componentNodesPointers_m.setNodePointer(node->getIndex(), componentNode);
+    componentNodesPointers_m.setPointer(node->getIndex(), componentNode);
 }
 
 void SegmentsHandler::segmentCheck(const Segment* segment) {

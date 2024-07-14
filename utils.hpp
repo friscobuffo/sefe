@@ -1,7 +1,11 @@
+#ifndef MY_UTILS_H
+#define MY_UTILS_H
+
 #include <vector>
 #include <iostream>
 #include <string>
 #include <algorithm>
+#include <cassert>
 
 template <typename T>
 bool contains(const std::vector<T>& vec, T value) {
@@ -44,3 +48,25 @@ void printArray(T array[], int size, const std::string& end = "\n") {
         std::cout << array[i] << " ";
     std::cout << "]" << end;
 }
+
+template <typename T>
+class ArrayPointers {
+private:
+    std::vector<T*> pointers_m;
+public:
+    ArrayPointers(const int numberOfPointers) {
+        pointers_m.resize(numberOfPointers);
+        for (int i = 0; i < numberOfPointers; ++i)
+            pointers_m[i] = nullptr;
+    }
+    T* getPointer(const int index) const {
+        assert(pointers_m[index] != nullptr);
+        return pointers_m[index];
+    }
+    void setPointer(const int index, T* pointer) {
+        assert(pointers_m[index] == nullptr);
+        pointers_m[index] = pointer;
+    }
+};
+
+#endif
