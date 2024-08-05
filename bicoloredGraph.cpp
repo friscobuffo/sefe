@@ -96,3 +96,30 @@ void BicoloredGraph::print() const {
         std::cout << " ]\n";
     }
 }
+
+
+BicoloredSubGraph::BicoloredSubGraph(const int numberOfNodes, const BicoloredGraph* graph) 
+: BicoloredGraph(numberOfNodes), originalNodes_m(numberOfNodes), originalBicoloredGraph_m(graph) {
+    assert(numberOfNodes <= graph->size());
+}
+
+const NodeWithColors* BicoloredSubGraph::getOriginalNode(const NodeWithColors* node) const {
+    const int index = node->getIndex();
+    return originalNodes_m.getPointer(index);
+}
+
+void BicoloredSubGraph::setOriginalNode(const NodeWithColors* node, const NodeWithColors* originalNode) {
+    const int index = node->getIndex();
+    originalNodes_m.setPointer(index, originalNode);
+}
+
+void BicoloredSubGraph::print() const {
+    for (auto& node : nodes_m) {
+        const int originalIndex = getOriginalNode(node.get())->getIndex();
+        const std::vector<Edge>& edges = node->getEdges();
+        std::cout << "node: " << originalIndex << " neighbors: " << edges.size() << " [ ";
+        for (const Edge& edge : edges)
+            std::cout << getOriginalNode(edge.node)->getIndex() << " ";
+        std::cout << "]\n";
+    }
+}

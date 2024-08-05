@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <iostream>
+#include <sstream>
 
 #include <ogdf/basic/Graph.h>
 #include <ogdf/basic/GraphAttributes.h>
@@ -556,6 +557,17 @@ public:
     }
 };
 
+void saveStringToFile(const char* filename, std::string content) {
+    std::ofstream outfile(filename);
+    if (outfile.is_open()) {
+        outfile << content;
+        outfile.close();
+        std::cout << "File saved successfully." << std::endl;
+    } else {
+        std::cerr << "Unable to open file" << std::endl;
+    }
+}
+
 void Embedder::embedToSvg(const Graph* graph, std::string& outputPath) const {
     ogdf::Graph ogdfGraph = myGraphToOgdf(graph);
     ogdf::GraphAttributes GA(ogdfGraph, ogdf::GraphAttributes::nodeGraphics | ogdf::GraphAttributes::edgeGraphics |
@@ -572,5 +584,13 @@ void Embedder::embedToSvg(const Graph* graph, std::string& outputPath) const {
     ogdf::PlanarDrawLayout layout;
     layout.setEmbedder(new AuslanderParterEmbedder);
     layout.call(GA);
-    ogdf::GraphIO::write(GA, outputPath);
+
+    std::ostringstream svgStream;
+    ogdf::GraphIO::SVGSettings svgSettings;
+    if (ogdf::GraphIO::drawSVG(GA, svgStream, svgSettings)) {
+        std::string svgContent = svgStream.str();
+        saveStringToFile("/embedding.svg", svgContent);
+    } else {
+        std::cerr << "Error generating SVG content." << std::endl;
+    }
 }

@@ -1,4 +1,4 @@
-g++ -o main \
+emcc \
     -IOGDF/include \
     -LOGDF \
     main.cpp \
@@ -9,4 +9,7 @@ g++ -o main \
     segment.cpp \
     interlacement.cpp \
     embedder.cpp \
-    -lOGDF -lCOIN
+    -lOGDF -lCOIN \
+    -o main.js \
+    -s EXPORTED_FUNCTIONS='["_embedLoadedFile"]' \
+    -s EXPORTED_RUNTIME_METHODS='["ccall", "cwrap", "FS"]'

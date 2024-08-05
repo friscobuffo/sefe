@@ -6,12 +6,11 @@
 #include <string>
 
 #include "graph.hpp"
-#include "biconnectedComponent.hpp"
-#include "cycle.hpp"
-#include "segment.hpp"
+#include "bicoloredGraph.hpp"
 
 class EmbedderSefe {
-private:    
+private:
+    bool testSefe(const BicoloredGraph* bicoloredGraph) const;
 public:
     bool testSefe(const Graph* graph1, const Graph* graph2) const;
 };
