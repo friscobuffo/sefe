@@ -3,7 +3,7 @@
 #include <cassert>
 #include <iostream>
 
-#include "biconnectedComponent.hpp"
+#include "../auslander-parter/biconnectedComponent.hpp"
 
 NodeWithColors::NodeWithColors(const int index, const BicoloredGraph* graph)
 : index_m(index), graph_m(graph) {}
@@ -28,13 +28,10 @@ const BicoloredGraph* NodeWithColors::getBicoloredGraph() const {
     return graph_m;
 }
 
-BicoloredGraph::BicoloredGraph(const Graph* graph1, const Graph* graph2) 
-: graphBlue_m(graph1), graphRed_m(graph2) {
+BicoloredGraph::BicoloredGraph(const Graph* graph1, const Graph* graph2) {
     assert(graph1->size() == graph2->size());
-    const Graph* intersection = graph1->computeIntersection(graph2);
-    BiconnectedComponentsHandler handler(intersection);
-    assert(handler.size() == 1);
-    intersection_m = std::unique_ptr<const Graph>(intersection);
+    Graph* intersection = graph1->computeIntersection(graph2);
+    intersection_m = std::unique_ptr<Graph>(intersection);
     bool isEdgeInGraph1[size()];
     bool isEdgeInGraph2[size()];
     for (int i = 0; i < size(); ++i) {
@@ -66,6 +63,10 @@ BicoloredGraph::BicoloredGraph(const Graph* graph1, const Graph* graph2)
     }
 }
 
+BicoloredGraph::BicoloredGraph(int numberOfNodes) {
+    Graph* intersection = new Graph(numberOfNodes);
+}
+
 const NodeWithColors* BicoloredGraph::getNode(const int index) const {
     return nodes_m[index].get();
 }
@@ -77,6 +78,7 @@ NodeWithColors* BicoloredGraph::getNode(const int index) {
 void BicoloredGraph::addEdge(NodeWithColors* from, NodeWithColors* to, Color color) {
     from->addEdge(to, color);
     to->addEdge(from, color);
+    if (color == Color::BOTH) intersection_m.get()->addEdge(from->getIndex(), to->getIndex());
 }
 
 void BicoloredGraph::addEdge(const int fromIndex, const int toIndex, Color color) {
@@ -87,39 +89,6 @@ int BicoloredGraph::size() const {
     return nodes_m.size();
 }
 
-void BicoloredGraph::print() const {
-    for (int i = 0; i < size(); ++i) {
-        const NodeWithColors* node = getNode(i);
-        std::cout << "node [" << node->getIndex() << "]: neighbors: [";
-        for (const Edge& edge : node->getEdges())
-            std::cout << " (" << edge.node->getIndex() << " " << color2string(edge.color) << ")";
-        std::cout << " ]\n";
-    }
-}
-
-
-BicoloredSubGraph::BicoloredSubGraph(const int numberOfNodes, const BicoloredGraph* graph) 
-: BicoloredGraph(numberOfNodes), originalNodes_m(numberOfNodes), originalBicoloredGraph_m(graph) {
-    assert(numberOfNodes <= graph->size());
-}
-
-const NodeWithColors* BicoloredSubGraph::getOriginalNode(const NodeWithColors* node) const {
-    const int index = node->getIndex();
-    return originalNodes_m.getPointer(index);
-}
-
-void BicoloredSubGraph::setOriginalNode(const NodeWithColors* node, const NodeWithColors* originalNode) {
-    const int index = node->getIndex();
-    originalNodes_m.setPointer(index, originalNode);
-}
-
-void BicoloredSubGraph::print() const {
-    for (auto& node : nodes_m) {
-        const int originalIndex = getOriginalNode(node.get())->getIndex();
-        const std::vector<Edge>& edges = node->getEdges();
-        std::cout << "node: " << originalIndex << " neighbors: " << edges.size() << " [ ";
-        for (const Edge& edge : edges)
-            std::cout << getOriginalNode(edge.node)->getIndex() << " ";
-        std::cout << "]\n";
-    }
+const Graph* BicoloredGraph::getIntersection() const {
+    return intersection_m.get();
 }

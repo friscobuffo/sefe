@@ -26,7 +26,7 @@ public:
     const NodeWithColors* getNode(const int position) const;
     void reverse();
     void print() const;
-    int getOriginalComponentSize() const;
+    int getOriginalBicoloredGraphSize() const;
     std::optional<int> getPositionOfNode(const NodeWithColors* node) const;
 };
 

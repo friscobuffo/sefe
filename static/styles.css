@@ -1,0 +1,8 @@
+#svgOutput {
+    width: 500px;  /* Desired width */
+    height: auto;  /* Maintain aspect ratio */
+}
+.box {
+    border: 2px solid black;
+    margin: 20px;
+}

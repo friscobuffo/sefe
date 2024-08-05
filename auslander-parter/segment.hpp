@@ -8,7 +8,7 @@
 
 #include "cycle.hpp"
 #include "biconnectedComponent.hpp"
-#include "utils.hpp"
+#include "../basic/utils.hpp"
 
 class Segment : public SubGraph {
 private:

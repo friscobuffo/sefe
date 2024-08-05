@@ -107,7 +107,7 @@ Node* Graph::getNode(const int index) {
     return nodes_m[index].get();
 }
 
-const Graph* Graph::computeIntersection(const Graph* graph) const {
+Graph* Graph::computeIntersection(const Graph* graph) const {
     assert(size() == graph->size());
     Graph* intersection = new Graph(size());
     bool isEdgeInGraph1[size()];

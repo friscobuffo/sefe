@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "graph.hpp"
+#include "../basic/graph.hpp"
 #include "segment.hpp"
 #include "cycle.hpp"
 

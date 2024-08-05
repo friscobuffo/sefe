@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-#include "utils.hpp"
+#include "../basic/utils.hpp"
 
 InterlacementGraph::InterlacementGraph(const Cycle* cycle, const SegmentsHandler& segmentsHandler) 
     : Graph(segmentsHandler.size()), cycle_m(cycle) , segmentsHandler_m(segmentsHandler) {

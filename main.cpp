@@ -4,9 +4,9 @@
 #include <fstream>
 #include <sstream>
 
-#include "graph.hpp"
-#include "graphLoader.hpp"
-#include "embedder.hpp"
+#include "basic/graph.hpp"
+#include "basic/graphLoader.hpp"
+#include "auslander-parter/embedder.hpp"
 
 const Graph* loadFromfile(const char* filename) {
     int nodesNumber{};

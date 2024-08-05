@@ -5,7 +5,7 @@
 #include <list>
 #include <utility>
 
-#include "graph.hpp"
+#include "../basic/graph.hpp"
 
 class BiconnectedComponentsHandler {
 private:

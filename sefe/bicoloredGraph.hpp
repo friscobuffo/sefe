@@ -5,7 +5,7 @@
 #include <optional>
 #include <memory>
 
-#include "graph.hpp"
+#include "../basic/graph.hpp"
 
 enum Color {
     RED,
@@ -21,6 +21,10 @@ inline const char* color2string(const Color color) {
         default: return "error";
     }
 }
+
+class BicoloredGraph;
+
+class NodeWithColors;
 
 struct Edge {
     const NodeWithColors* node;
@@ -43,9 +47,7 @@ public:
 
 class BicoloredGraph {
 private:
-    const Graph* graphRed_m = nullptr;
-    const Graph* graphBlue_m = nullptr;
-    std::unique_ptr<const Graph> intersection_m;
+    std::unique_ptr<Graph> intersection_m;
 protected:
     std::vector<std::unique_ptr<NodeWithColors>> nodes_m;
     void addEdge(NodeWithColors* from, NodeWithColors* to, Color color);
@@ -58,17 +60,6 @@ public:
     int size() const;
     virtual void print() const;
     const Graph* getIntersection() const;
-};
-
-class BicoloredSubGraph : public BicoloredGraph {
-private:
-    const BicoloredGraph* originalBicoloredGraph_m;
-    ArrayPointers<const NodeWithColors> originalNodes_m;
-public:
-    BicoloredSubGraph(const int numberOfNodes, const BicoloredGraph* graph);
-    const NodeWithColors* getOriginalNode(const NodeWithColors* node) const;
-    void setOriginalNode(const NodeWithColors* node, const NodeWithColors* originalNode);
-    void print() const override;
 };
 
 #endif

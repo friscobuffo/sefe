@@ -7,10 +7,11 @@
 
 #include "graph.hpp"
 #include "bicoloredGraph.hpp"
+#include "intersectionCycle.hpp"
 
 class EmbedderSefe {
 private:
-    bool testSefe(const BicoloredGraph* bicoloredGraph) const;
+    bool testSefe(const BicoloredGraph* bicoloredGraph, IntersectionCycle* cycle) const;
 public:
     bool testSefe(const Graph* graph1, const Graph* graph2) const;
 };

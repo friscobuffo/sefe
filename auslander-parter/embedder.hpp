@@ -5,7 +5,7 @@
 #include <vector>
 #include <string>
 
-#include "graph.hpp"
+#include "../basic/graph.hpp"
 #include "biconnectedComponent.hpp"
 #include "cycle.hpp"
 #include "segment.hpp"

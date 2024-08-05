@@ -108,15 +108,6 @@ const NodeWithColors* IntersectionCycle::getNode(const int position) const {
     return nodes_m[position];
 }
 
-void IntersectionCycle::print() const {
-    std::cout << "cycle: [ ";
-    for (const NodeWithColors* node : nodes_m) {
-        const int label = originalComponent_m->getOriginalNode(node)->getIndex();
-        std::cout << label << " ";
-    }
-    std::cout << "]\n";
-}
-
 void IntersectionCycle::reverse() {
     int start = 0;
     int end = nodes_m.size()-1;
@@ -131,8 +122,8 @@ void IntersectionCycle::reverse() {
     }
 }
 
-int IntersectionCycle::getOriginalComponentSize() const {
-    return originalComponent_m->size();
+int IntersectionCycle::getOriginalBicoloredGraphSize() const {
+    return originalBicoloredGraph_m->size();
 }
 
 std::optional<int> IntersectionCycle::getPositionOfNode(const NodeWithColors* node) const {

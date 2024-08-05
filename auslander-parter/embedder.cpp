@@ -11,7 +11,7 @@
 #include <ogdf/planarity/EmbedderModule.h>
 
 #include "interlacement.hpp"
-#include "utils.hpp"
+#include "../basic/utils.hpp"
 
 Embedding::Embedding(const SubGraph* originalGraph)
 : SubGraph(originalGraph->size(), originalGraph) {
