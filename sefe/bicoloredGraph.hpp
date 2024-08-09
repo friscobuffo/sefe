@@ -22,14 +22,14 @@ inline const char* color2string(const Color color) {
     }
 }
 
-class BicoloredGraph;
-
 class NodeWithColors;
 
 struct Edge {
     const NodeWithColors* node;
     const Color color;
 };
+
+class BicoloredGraph;
 
 class NodeWithColors {
 private:

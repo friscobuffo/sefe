@@ -12,5 +12,7 @@ emcc \
     sefe/bicoloredGraph.cpp \
     -lOGDF -lCOIN \
     -o static/main.js \
-    -s EXPORTED_FUNCTIONS='["_embedLoadedFile"]' \
-    -s EXPORTED_RUNTIME_METHODS='["ccall", "cwrap", "FS"]'
+    -s EXPORTED_FUNCTIONS='["_embedLoadedFile", "_sefeMainTest"]' \
+    -s EXPORTED_RUNTIME_METHODS='["ccall", "cwrap", "FS"]' \
+    --preload-file graphs-sefe/a0.txt \
+    --preload-file graphs-sefe/a1.txt

@@ -8,6 +8,8 @@
 #include "basic/graphLoader.hpp"
 #include "auslander-parter/embedder.hpp"
 
+#include "sefe/bicoloredGraph.hpp"
+
 const Graph* loadFromfile(const char* filename) {
     int nodesNumber{};
     std::ifstream infile(filename);
@@ -50,5 +52,19 @@ extern "C" {
         std::cout << "\n";
         std::cout << "all good\n";
         delete graph;
+    }
+}
+
+extern "C" {
+    void sefeMainTest() {
+        const Graph* graph1 = loadFromfile("/graphs-sefe/a0.txt");
+        const Graph* graph2 = loadFromfile("/graphs-sefe/a1.txt");
+        const BicoloredGraph bicoloredGraph(graph1, graph2);
+        graph1->print();
+        graph2->print();
+        std::cout << "\n";
+        bicoloredGraph.print();
+        delete graph1;
+        delete graph2;
     }
 }

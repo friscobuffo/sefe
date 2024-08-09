@@ -30,6 +30,9 @@ const BicoloredGraph* NodeWithColors::getBicoloredGraph() const {
 
 BicoloredGraph::BicoloredGraph(const Graph* graph1, const Graph* graph2) {
     assert(graph1->size() == graph2->size());
+    nodes_m.resize(graph1->size());
+    for (int i = 0; i < graph1->size(); ++i)
+        nodes_m[i] = std::make_unique<NodeWithColors>(i, this);
     Graph* intersection = graph1->computeIntersection(graph2);
     intersection_m = std::unique_ptr<Graph>(intersection);
     bool isEdgeInGraph1[size()];
@@ -37,7 +40,7 @@ BicoloredGraph::BicoloredGraph(const Graph* graph1, const Graph* graph2) {
     for (int i = 0; i < size(); ++i) {
         const Node* node1 = graph1->getNode(i);
         const Node* node2 = graph2->getNode(i);
-        for (int j = 0; j < size(); ++i) {
+        for (int j = 0; j < size(); ++j) {
             isEdgeInGraph1[j] = false;
             isEdgeInGraph2[j] = false;
         }
@@ -45,7 +48,7 @@ BicoloredGraph::BicoloredGraph(const Graph* graph1, const Graph* graph2) {
             isEdgeInGraph1[neighbor->getIndex()] = true;
         for (const Node* neighbor : node2->getNeighbors())
             isEdgeInGraph2[neighbor->getIndex()] = true;
-        for (int j = 0; j < size(); ++i) {
+        for (int j = 0; j < size(); ++j) {
             if (i > j) continue;
             if (isEdgeInGraph1[j] && isEdgeInGraph2[j]) {
                 addEdge(i, j, Color::BOTH);
@@ -65,6 +68,7 @@ BicoloredGraph::BicoloredGraph(const Graph* graph1, const Graph* graph2) {
 
 BicoloredGraph::BicoloredGraph(int numberOfNodes) {
     Graph* intersection = new Graph(numberOfNodes);
+    intersection_m = std::unique_ptr<Graph>(intersection);
 }
 
 const NodeWithColors* BicoloredGraph::getNode(const int index) const {
@@ -91,4 +95,16 @@ int BicoloredGraph::size() const {
 
 const Graph* BicoloredGraph::getIntersection() const {
     return intersection_m.get();
+}
+
+void BicoloredGraph::print() const {
+    for (auto& nodePtr : nodes_m) {
+        const NodeWithColors* node = nodePtr.get();
+        const int index = node->getIndex();
+        const std::vector<Edge>& edges = node->getEdges();
+        std::cout << "node: " << index << " neighbors: " << edges.size() << " [ ";
+        for (const Edge& edge : edges)
+            std::cout << "(" << edge.node->getIndex() << " " << color2string(edge.color) << ") ";
+        std::cout << "]\n";
+    }
 }

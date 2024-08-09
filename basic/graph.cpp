@@ -115,7 +115,7 @@ Graph* Graph::computeIntersection(const Graph* graph) const {
     for (int i = 0; i < size(); ++i) {
         const Node* node1 = getNode(i);
         const Node* node2 = graph->getNode(i);
-        for (int j = 0; j < size(); ++i) {
+        for (int j = 0; j < size(); ++j) {
             isEdgeInGraph1[j] = false;
             isEdgeInGraph2[j] = false;
         }
@@ -123,7 +123,7 @@ Graph* Graph::computeIntersection(const Graph* graph) const {
             isEdgeInGraph1[neighbor->getIndex()] = true;
         for (const Node* neighbor : node2->getNeighbors())
             isEdgeInGraph2[neighbor->getIndex()] = true;
-        for (int j = 0; j < size(); ++i)
+        for (int j = 0; j < size(); ++j)
             if (isEdgeInGraph1[j] && isEdgeInGraph2[j] && i < j)
                 intersection->addEdge(i, j);
     }
