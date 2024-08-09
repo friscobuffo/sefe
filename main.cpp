@@ -60,9 +60,6 @@ extern "C" {
         const Graph* graph1 = loadFromfile("/graphs-sefe/a0.txt");
         const Graph* graph2 = loadFromfile("/graphs-sefe/a1.txt");
         const BicoloredGraph bicoloredGraph(graph1, graph2);
-        graph1->print();
-        graph2->print();
-        std::cout << "\n";
         bicoloredGraph.print();
         delete graph1;
         delete graph2;

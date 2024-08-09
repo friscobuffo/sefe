@@ -6,18 +6,18 @@
 #include <optional>
 
 #include "utils.hpp"
-#include "bicoloredGraph.hpp"
+#include "bicoloredSegment.hpp"
 
 class IntersectionCycle {
 private:
     std::vector<const NodeWithColors*> nodes_m{};
     std::vector<int> posInCycle_m{};
-    const BicoloredGraph* originalBicoloredGraph_m;
+    const BicoloredSegment* originalBicoloredSegment_m;
     void dfsBuildCycle(const NodeWithColors* node, bool isNodeVisited[], const NodeWithColors* prev);
     void cleanupCycle();
     void nextIndex(int& index);
 public:
-    IntersectionCycle(const BicoloredGraph* graph);
+    IntersectionCycle(const BicoloredSegment* graph);
     void changeWithPath(std::list<const NodeWithColors*>& path);
     bool hasNode(const NodeWithColors* node) const;
     int size() const;
@@ -26,7 +26,7 @@ public:
     const NodeWithColors* getNode(const int position) const;
     void reverse();
     void print() const;
-    int getOriginalBicoloredGraphSize() const;
+    int getOriginalBicoloredSegmentSize() const;
     std::optional<int> getPositionOfNode(const NodeWithColors* node) const;
 };
 

@@ -50,9 +50,9 @@ private:
     std::unique_ptr<Graph> intersection_m;
 protected:
     std::vector<std::unique_ptr<NodeWithColors>> nodes_m;
+public:
     void addEdge(NodeWithColors* from, NodeWithColors* to, Color color);
     void addEdge(const int fromIndex, const int toIndex, Color color);
-public:
     BicoloredGraph(const Graph* graph1, const Graph* graph2);
     BicoloredGraph(int numberOfNodes);
     const NodeWithColors* getNode(const int index) const;

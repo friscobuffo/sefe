@@ -69,6 +69,9 @@ BicoloredGraph::BicoloredGraph(const Graph* graph1, const Graph* graph2) {
 BicoloredGraph::BicoloredGraph(int numberOfNodes) {
     Graph* intersection = new Graph(numberOfNodes);
     intersection_m = std::unique_ptr<Graph>(intersection);
+    nodes_m.resize(numberOfNodes);
+    for (int i = 0; i < numberOfNodes; ++i)
+        nodes_m[i] = std::make_unique<NodeWithColors>(i, this);
 }
 
 const NodeWithColors* BicoloredGraph::getNode(const int index) const {
@@ -82,7 +85,8 @@ NodeWithColors* BicoloredGraph::getNode(const int index) {
 void BicoloredGraph::addEdge(NodeWithColors* from, NodeWithColors* to, Color color) {
     from->addEdge(to, color);
     to->addEdge(from, color);
-    if (color == Color::BOTH) intersection_m.get()->addEdge(from->getIndex(), to->getIndex());
+    if (color == Color::BOTH)
+        intersection_m.get()->addEdge(from->getIndex(), to->getIndex());
 }
 
 void BicoloredGraph::addEdge(const int fromIndex, const int toIndex, Color color) {

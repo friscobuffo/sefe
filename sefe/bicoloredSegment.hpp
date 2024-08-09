@@ -6,7 +6,7 @@
 #include <list>
 #include <memory>
 
-#include "cycle.hpp"
+#include "intersectionCycle.hpp"
 #include "bicoloredGraph.hpp"
 #include "utils.hpp"
 
@@ -14,41 +14,42 @@ class BicoloredSegment : public BicoloredGraph {
 private:
     std::vector<const NodeWithColors*> attachmentNodes_m{};
     std::vector<bool> isNodeAnAttachment_m{};
-    const BicoloredGraph* higherLevel_m;
-    const Cycle* originalCycle_m;
+    const BicoloredSegment* higherLevel_m;
+    const IntersectionCycle* originalCycle_m;
     ArrayPointers<const NodeWithColors> higherLevelNodesPointers_m;
     ArrayPointers<const NodeWithColors> originalNodesPointers_m;
 public:
-    BicoloredSegment(const int numberOfNodes, const BicoloredGraph* higherLevel, const Cycle* cycle);
+    BicoloredSegment(const int numberOfNodes, const BicoloredSegment* higherLevel, const IntersectionCycle* cycle);
+    BicoloredSegment(const BicoloredGraph* bicoloredGraph);
     bool isPath() const;
     const std::vector<const NodeWithColors*>& getAttachments() const;
     void addAttachment(const NodeWithColors* attachment);
     bool isNodeAnAttachment(const NodeWithColors* node) const;
-    std::list<const Node*> computePathBetweenAttachments(const NodeWithColors* start, const NodeWithColors* end) const;
-    const Cycle* getOriginalCycle() const;
-    const BicoloredGraph* getHigherLevel() const;
-    const NodeWithColors* getHigherLevelNode(const Node* node) const;
-    void setHigherLevelNode(const NodeWithColors* node, const NodeWithColors* componentNode);
+    std::list<const NodeWithColors*> computeBlackPathBetweenAttachments(const NodeWithColors* start, const NodeWithColors* end) const;
+    const IntersectionCycle* getOriginalCycle() const;
+    const BicoloredSegment* getHigherLevel() const;
+    const NodeWithColors* getHigherLevelNode(const NodeWithColors* node) const;
+    void setHigherLevelNode(const NodeWithColors* node, const NodeWithColors* higherLevelNode);
     const NodeWithColors* getOriginalNode(const NodeWithColors* node) const;
-    void setOriginalNode(const NodeWithColors* node, const NodeWithColors* componentNode);
+    void setOriginalNode(const NodeWithColors* node, const NodeWithColors* originalNode);
 };
 
 class BicoloredSegmentsHandler {
 private:
     std::vector<std::unique_ptr<const BicoloredSegment>> segments_m{};
-    const Cycle* originalCycle_m;
-    const BicoloredGraph* higherLevel_m;
-    const BicoloredSegment* buildSegment(std::vector<const Node*>& nodes,
-        std::vector<std::pair<const Node*, const Node*>>& edges);
-    const BicoloredSegment* buildChord(const NodeWithColors* attachment1, const NodeWithColors* attachment2);
-    void dfsFindSegments(const Node* node, bool isNodeVisited[],
-        std::vector<const Node*>& nodesInSegment,
-        std::vector<std::pair<const Node*, const Node*>>& edgesInSegment);
+    const IntersectionCycle* originalCycle_m;
+    const BicoloredSegment* higherLevel_m;
+    const BicoloredSegment* buildSegment(std::vector<const NodeWithColors*>& nodes,
+        std::vector<std::pair<const NodeWithColors*, const Edge>>& edges);
+    const BicoloredSegment* buildChord(const NodeWithColors* attachment1,
+        const NodeWithColors* attachment2, const Color color);
+    void dfsFindSegments(const NodeWithColors* node, bool isNodeVisited[],
+        std::vector<const NodeWithColors*>& nodesInSegment,
+        std::vector<std::pair<const NodeWithColors*, const Edge>>& edgesInSegment);
     void findSegments();
     void findChords();
-    void segmentCheck(const BicoloredSegment* segment);
 public:
-    BicoloredSegmentsHandler(const SubGraph* component, const Cycle* cycle);
+    BicoloredSegmentsHandler(const BicoloredSegment* bicoloredSegment, const IntersectionCycle* cycle);
     const BicoloredSegment* getSegment(const int index) const;
     int size() const;
     void print() const;

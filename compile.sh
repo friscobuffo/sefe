@@ -10,6 +10,8 @@ emcc \
     auslander-parter/interlacement.cpp \
     auslander-parter/embedder.cpp \
     sefe/bicoloredGraph.cpp \
+    sefe/intersectionCycle.cpp \
+    sefe/bicoloredSegment.cpp \
     -lOGDF -lCOIN \
     -o static/main.js \
     -s EXPORTED_FUNCTIONS='["_embedLoadedFile", "_sefeMainTest"]' \

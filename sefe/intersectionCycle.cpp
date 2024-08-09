@@ -4,14 +4,14 @@
 
 #include "utils.hpp"
 
-// assumes intersection of graph is biconnected
-IntersectionCycle::IntersectionCycle(const BicoloredGraph* graph) 
-: originalBicoloredGraph_m(graph) {
-    int size = graph->size();
+// assumes intersection of segment is biconnected
+IntersectionCycle::IntersectionCycle(const BicoloredSegment* segment) 
+: originalBicoloredSegment_m(segment) {
+    int size = segment->size();
     bool isNodeVisited[size];
     for (int node = 0; node < size; ++node)
         isNodeVisited[node] = false;
-    dfsBuildCycle(graph->getNode(0), isNodeVisited, nullptr);
+    dfsBuildCycle(segment->getNode(0), isNodeVisited, nullptr);
     cleanupCycle();
     posInCycle_m.resize(size);
     for (int i = 0; i < size; ++i)
@@ -26,14 +26,15 @@ IntersectionCycle::IntersectionCycle(const BicoloredGraph* graph)
 void IntersectionCycle::dfsBuildCycle(const NodeWithColors* node, bool isNodeVisited[], const NodeWithColors* prev) {
     nodes_m.push_back(node);
     isNodeVisited[node->getIndex()] = true;
-    for (const Edge& neighbor : node->getEdges()) {
-        if (neighbor.node == prev)
+    for (const Edge& edge : node->getEdges()) {
+        const NodeWithColors* neighbor = edge.node;
+        if (neighbor == prev)
             continue;
-        if (!isNodeVisited[neighbor.node->getIndex()]) {
-            dfsBuildCycle(neighbor.node, isNodeVisited, node);
+        if (!isNodeVisited[neighbor->getIndex()]) {
+            dfsBuildCycle(neighbor, isNodeVisited, node);
             break;
         }
-        nodes_m.push_back(neighbor.node);
+        nodes_m.push_back(neighbor);
         return;
     }
 }
@@ -122,8 +123,8 @@ void IntersectionCycle::reverse() {
     }
 }
 
-int IntersectionCycle::getOriginalBicoloredGraphSize() const {
-    return originalBicoloredGraph_m->size();
+int IntersectionCycle::getOriginalBicoloredSegmentSize() const {
+    return originalBicoloredSegment_m->size();
 }
 
 std::optional<int> IntersectionCycle::getPositionOfNode(const NodeWithColors* node) const {
