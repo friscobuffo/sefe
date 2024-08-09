@@ -8,7 +8,8 @@
 
 #include "intersectionCycle.hpp"
 #include "bicoloredGraph.hpp"
-#include "utils.hpp"
+
+class IntersectionCycle;
 
 class BicoloredSegment : public BicoloredGraph {
 private:

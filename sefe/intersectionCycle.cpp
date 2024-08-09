@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-#include "utils.hpp"
+#include "../basic/utils.hpp"
 
 // assumes intersection of segment is biconnected
 IntersectionCycle::IntersectionCycle(const BicoloredSegment* segment) 

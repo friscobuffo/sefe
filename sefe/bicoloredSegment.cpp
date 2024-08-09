@@ -3,6 +3,8 @@
 #include <iostream>
 #include <cassert>
 
+#include "../basic/utils.hpp"
+
 BicoloredSegment::BicoloredSegment(const int numberOfNodes, const BicoloredSegment* higherLevel, const IntersectionCycle* cycle)
 : BicoloredGraph(numberOfNodes), higherLevel_m(higherLevel),
 originalCycle_m(cycle), higherLevelNodesPointers_m(numberOfNodes), originalNodesPointers_m(numberOfNodes) {
