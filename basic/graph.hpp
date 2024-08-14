@@ -38,6 +38,7 @@ public:
     virtual void print() const;
     const std::optional<std::vector<int>> computeBipartition() const;
     Graph* computeIntersection(const Graph* graph) const;
+    void computeIntersection(const Graph* graph, Graph* intersection) const;
 };
 
 class SubGraph : public Graph {

@@ -110,6 +110,13 @@ Node* Graph::getNode(const int index) {
 Graph* Graph::computeIntersection(const Graph* graph) const {
     assert(size() == graph->size());
     Graph* intersection = new Graph(size());
+    computeIntersection(graph, intersection);
+    return intersection;
+}
+
+void Graph::computeIntersection(const Graph* graph, Graph* intersection) const {
+    assert(size() == graph->size());
+    assert(size() == intersection->size());
     bool isEdgeInGraph1[size()];
     bool isEdgeInGraph2[size()];
     for (int i = 0; i < size(); ++i) {
@@ -127,7 +134,6 @@ Graph* Graph::computeIntersection(const Graph* graph) const {
             if (isEdgeInGraph1[j] && isEdgeInGraph2[j] && i < j)
                 intersection->addEdge(i, j);
     }
-    return intersection;
 }
 
 SubGraph::SubGraph(const int numberOfNodes, const Graph* graph) 

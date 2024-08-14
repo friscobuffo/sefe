@@ -2,46 +2,68 @@
 
 #include <iostream>
 
-#include "biconnectedComponent.hpp"
-#include "bicoloredSegment.hpp"
+#include "../auslander-parter/biconnectedComponent.hpp"
+#include "interlacementSefe.hpp"
 
 bool EmbedderSefe::testSefe(const Graph* graph1, const Graph* graph2) const {
-    BicoloredGraph* bicoloredGraph = new BicoloredGraph(graph1, graph2);
-    const Graph* intersection = bicoloredGraph->getIntersection();
+    BicoloredGraph bicoloredGraph(graph1, graph2);
+    const Graph* intersection = bicoloredGraph.getIntersection();
     BiconnectedComponentsHandler bicCompHandler(intersection);
     if (bicCompHandler.size() > 1) {
         std::cout << "intersection must be biconnected\n";
         return false;
     }
-    IntersectionCycle* cycle = new IntersectionCycle(bicoloredGraph);
-    return testSefe(bicoloredGraph, cycle);
+    BicoloredSegment bicoloredSegment(&bicoloredGraph);
+    IntersectionCycle cycle(&bicoloredSegment);
+    return testSefe(bicoloredSegment, cycle);
 }
 
 // assumes intersection is biconnected
-bool EmbedderSefe::testSefe(const BicoloredGraph* bicoloredGraph, IntersectionCycle* cycle) const {
-    const BicoloredSegmentsHandler segmentsHandler = BicoloredSegmentsHandler(component, cycle);
+bool EmbedderSefe::testSefe(const BicoloredSegment& bicoloredSegment, IntersectionCycle& cycle) const {
+    const BicoloredSegmentsHandler segmentsHandler = BicoloredSegmentsHandler(&bicoloredSegment, &cycle);
     if (segmentsHandler.size() == 0) // entire biconnected component is a cycle
-        return baseCaseCycle(component);
+        return true;
     if (segmentsHandler.size() == 1) {
         const BicoloredSegment* segment = segmentsHandler.getSegment(0);
-        if (segment->isPath())
-            return baseCaseComponent(component, cycle);
+        if (segment->isBlackPath())
+            return isBlackPathGood();
         // chosen cycle is bad
         makeCycleGood(cycle, segment);
-        return embedComponent(component, cycle);
+        return testSefe(bicoloredSegment, cycle);
     }
-    InterlacementGraph interlacementGraph(cycle, segmentsHandler);
+    InterlacementGraphSefe interlacementGraph(&cycle, segmentsHandler);
     std::optional<std::vector<int>> bipartition = interlacementGraph.computeBipartition();
-    if (!bipartition) return std::nullopt;
-    std::vector<std::unique_ptr<const Embedding>> embeddings{};
+    if (!bipartition) return false;
     for (int i = 0; i < segmentsHandler.size(); ++i) {
-        const Segment* segment = segmentsHandler.getSegment(i);
-        std::optional<const Embedding*> embedding = embedComponent(segment);
-        if (!embedding.has_value())
-            return std::nullopt;
-        segmentAndEmbeddingChecks(segment, embedding.value());
-        embeddings.push_back(std::unique_ptr<const Embedding>(embedding.value()));
+        const BicoloredSegment* segment = segmentsHandler.getSegment(i);
+        IntersectionCycle cycle(segment);
+        if (!testSefe(segment, cycle)) return false;
     }
-    const Embedding* embedding = mergeSegmentsEmbeddings(component, cycle, embeddings, segmentsHandler, bipartition.value());
-    return embedding;
+    return true;
+}
+
+// it may happen that a cycle induces only one segment, which is not a base case
+// so the cycle must be recomputed such that it ensures at least two segments
+void EmbedderSefe::makeCycleGood(IntersectionCycle& cycle, const BicoloredSegment& segment) const {
+    const std::vector<const NodeWithColors*>& attachments = segment.getAttachments();
+    std::vector<int> attachmentsComponent{};
+    for (const NodeWithColors* attachment : attachments)
+        attachmentsComponent.push_back(segment.getHigherLevelNode(attachment)->getIndex());
+    int foundAttachments = 0;
+    const NodeWithColors* attachmentsToUse[2];
+    for (int i = 0; i < cycle.size(); ++i) {
+        const NodeWithColors* node = cycle.getNode(i);
+        int index = findIndex(attachmentsComponent, node->getIndex());
+        if (index == -1) continue;
+        const NodeWithColors* attachment = segment.getAttachments()[index];
+        if (!segment.isNodeBlackAttachment(attachment))
+            continue;
+        attachmentsToUse[foundAttachments++] = attachments[index];
+        if (foundAttachments == 2) break;
+    }
+    std::list<const NodeWithColors*> path = segment.computeBlackPathBetweenAttachments(attachmentsToUse[0], attachmentsToUse[1]);
+    std::list<const NodeWithColors*> pathHigherLevel;
+    for (const NodeWithColors* node : path)
+        pathHigherLevel.push_back(segment.getHigherLevelNode(node));
+    cycle.changeWithPath(pathHigherLevel);
 }

@@ -9,6 +9,7 @@
 #include "auslander-parter/embedder.hpp"
 
 #include "sefe/bicoloredGraph.hpp"
+#include "sefe/intersectionCycle.hpp"
 
 const Graph* loadFromfile(const char* filename) {
     int nodesNumber{};
@@ -61,6 +62,12 @@ extern "C" {
         const Graph* graph2 = loadFromfile("/graphs-sefe/a1.txt");
         const BicoloredGraph bicoloredGraph(graph1, graph2);
         bicoloredGraph.print();
+        const BicoloredSegment bicoloredSegment(&bicoloredGraph);
+        std::cout << "\n";
+        bicoloredSegment.print();
+        std::cout << "\n";
+        const IntersectionCycle cycle(&bicoloredSegment);
+        cycle.print();
         delete graph1;
         delete graph2;
     }

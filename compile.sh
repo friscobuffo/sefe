@@ -12,6 +12,8 @@ emcc \
     sefe/bicoloredGraph.cpp \
     sefe/intersectionCycle.cpp \
     sefe/bicoloredSegment.cpp \
+    sefe/interlacementSefe.cpp \
+    sefe/embedderSefe.cpp \
     -lOGDF -lCOIN \
     -o static/main.js \
     -s EXPORTED_FUNCTIONS='["_embedLoadedFile", "_sefeMainTest"]' \

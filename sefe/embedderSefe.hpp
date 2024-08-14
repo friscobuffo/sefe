@@ -5,13 +5,15 @@
 #include <vector>
 #include <string>
 
-#include "graph.hpp"
+#include "../basic/graph.hpp"
 #include "bicoloredGraph.hpp"
+#include "bicoloredSegment.hpp"
 #include "intersectionCycle.hpp"
 
 class EmbedderSefe {
 private:
-    bool testSefe(const BicoloredGraph* bicoloredGraph, IntersectionCycle* cycle) const;
+    bool testSefe(const BicoloredSegment& bicoloredGraph, IntersectionCycle& cycle) const;
+    void makeCycleGood(IntersectionCycle& cycle, const BicoloredSegment& segment) const;
 public:
     bool testSefe(const Graph* graph1, const Graph* graph2) const;
 };
