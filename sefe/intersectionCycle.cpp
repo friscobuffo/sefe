@@ -23,18 +23,18 @@ IntersectionCycle::IntersectionCycle(const BicoloredSegment& segment)
     }
 }
 
-void IntersectionCycle::dfsBuildCycle(const NodeWithColors* node, bool isNodeVisited[], const NodeWithColors* prev) {
-    nodes_m.push_back(node);
-    isNodeVisited[node->getIndex()] = true;
-    for (const Edge& edge : node->getEdges()) {
-        const NodeWithColors* neighbor = edge.node;
-        if (neighbor == prev)
+void IntersectionCycle::dfsBuildCycle(const NodeWithColors& node, bool isNodeVisited[], const NodeWithColors* prev) {
+    nodes_m.push_back(&node);
+    isNodeVisited[node.getIndex()] = true;
+    for (const Edge& edge : node.getEdges()) {
+        const NodeWithColors& neighbor = edge.node;
+        if (&neighbor == prev)
             continue;
-        if (!isNodeVisited[neighbor->getIndex()]) {
-            dfsBuildCycle(neighbor, isNodeVisited, node);
+        if (!isNodeVisited[neighbor.getIndex()]) {
+            dfsBuildCycle(neighbor, isNodeVisited, &node);
             break;
         }
-        nodes_m.push_back(neighbor);
+        nodes_m.push_back(&neighbor);
         return;
     }
 }
@@ -78,26 +78,26 @@ void IntersectionCycle::changeWithPath(std::list<const NodeWithColors*>& path) {
     }
 }
 
-bool IntersectionCycle::hasNode(const NodeWithColors* node) const {
-    return posInCycle_m[node->getIndex()] != -1;
+bool IntersectionCycle::hasNode(const NodeWithColors& node) const {
+    return posInCycle_m[node.getIndex()] != -1;
 }
 
 int IntersectionCycle::size() const {
     return nodes_m.size();
 }
 
-const NodeWithColors* IntersectionCycle::getPrevOfNode(const NodeWithColors* node) const {
-    int pos = posInCycle_m[node->getIndex()];
+const NodeWithColors& IntersectionCycle::getPrevOfNode(const NodeWithColors& node) const {
+    int pos = posInCycle_m[node.getIndex()];
     assert(pos != -1);
-    if (pos == 0) return nodes_m[size()-1];
-    return nodes_m[pos-1];
+    if (pos == 0) return *nodes_m[size()-1];
+    return *nodes_m[pos-1];
 }
 
-const NodeWithColors* IntersectionCycle::getNextOfNode(const NodeWithColors* node) const {
-    int pos = posInCycle_m[node->getIndex()];
+const NodeWithColors& IntersectionCycle::getNextOfNode(const NodeWithColors& node) const {
+    int pos = posInCycle_m[node.getIndex()];
     assert(pos != -1);
-    if (pos == size()-1) return nodes_m[0];
-    return nodes_m[pos+1];
+    if (pos == size()-1) return *nodes_m[0];
+    return *nodes_m[pos+1];
 }
 
 void IntersectionCycle::nextIndex(int& index) {
@@ -105,8 +105,8 @@ void IntersectionCycle::nextIndex(int& index) {
     index %= nodes_m.size();
 }
 
-const NodeWithColors* IntersectionCycle::getNode(const int position) const {
-    return nodes_m[position];
+const NodeWithColors& IntersectionCycle::getNode(const int position) const {
+    return *nodes_m[position];
 }
 
 void IntersectionCycle::reverse() {
@@ -124,11 +124,11 @@ void IntersectionCycle::reverse() {
 }
 
 int IntersectionCycle::getOriginalBicoloredSegmentSize() const {
-    return originalBicoloredSegment_m->size();
+    return originalBicoloredSegment_m.size();
 }
 
-std::optional<int> IntersectionCycle::getPositionOfNode(const NodeWithColors* node) const {
-    int pos = posInCycle_m[node->getIndex()];
+std::optional<int> IntersectionCycle::getPositionOfNode(const NodeWithColors& node) const {
+    int pos = posInCycle_m[node.getIndex()];
     if (pos != -1) return pos;
     return std::nullopt;
 }
@@ -136,8 +136,8 @@ std::optional<int> IntersectionCycle::getPositionOfNode(const NodeWithColors* no
 void IntersectionCycle::print() const {
     std::cout << "cycle: [";
     for (const NodeWithColors* node : nodes_m) {
-        const NodeWithColors* original = originalBicoloredSegment_m->getOriginalNode(node);
-        std::cout << " " << original->getIndex();
+        const NodeWithColors& original = originalBicoloredSegment_m.getOriginalNode(*node);
+        std::cout << " " << original.getIndex();
     }
     std::cout << " ]\n";
 }

@@ -39,7 +39,7 @@ BicoloredGraph::BicoloredGraph(const Graph* graph1, const Graph* graph2)
     assert(graph1->size() == graph2->size());
     nodes_m.resize(graph1->size());
     for (int i = 0; i < graph1->size(); ++i)
-        nodes_m[i] = std::make_unique<NodeWithColors>(i, this);
+        nodes_m[i] = std::make_unique<NodeWithColors>(i, *this);
     graph1->computeIntersection(graph2, &intersection_m);
     bool isEdgeInGraph1[size()];
     bool isEdgeInGraph2[size()];
@@ -76,7 +76,7 @@ BicoloredGraph::BicoloredGraph(const int numberOfNodes)
 : intersection_m(numberOfNodes) {
     nodes_m.resize(numberOfNodes);
     for (int i = 0; i < numberOfNodes; ++i)
-        nodes_m[i] = std::make_unique<NodeWithColors>(i, this);
+        nodes_m[i] = std::make_unique<NodeWithColors>(i, *this);
 }
 
 const NodeWithColors& BicoloredGraph::getNode(const int index) const {

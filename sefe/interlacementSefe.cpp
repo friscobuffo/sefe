@@ -43,24 +43,24 @@ bool InterlacementGraphSefe::areInConflict(const BicoloredSegment& segment1,
 const BicoloredSegment& segment2, const int cycleLabels[], const Color color, const int numberOfAttachments) {
     int numberOfLabels = 2*numberOfAttachments;
     int labels[numberOfLabels];
-    for (int k = 0; k < numberOfLabels; ++k)
-        labels[k] = 0;
-    for (int k = 0; k < segment2.getNumberOfAttachments(); ++k) {
-        const NodeWithColors& attachment = segment2.getAttachment(k);
+    for (int i = 0; i < numberOfLabels; ++i)
+        labels[i] = 0;
+    for (int i = 0; i < segment2.getNumberOfAttachments(); ++i) {
+        const NodeWithColors& attachment = segment2.getAttachment(i);
         if (!segment2.isNodeAttachmentOfColor(attachment, color))
             continue;
         int attachmentHigherLevel = segment2.getHigherLevelNode(attachment).getIndex();
         labels[cycleLabels[attachmentHigherLevel]] = 1;
     }
     int sum = 0;
-    for (int k = 0; k < numberOfLabels; ++k)
-        sum += labels[k];
+    for (int i = 0; i < numberOfLabels; ++i)
+        sum += labels[i];
     int partSum = labels[0] + labels[1] + labels[2];
-    for (int k = 0; k <= numberOfLabels-2; k += 2) {
+    for (int i = 0; i <= numberOfLabels-2; i += 2) {
         if (partSum == sum)
             return false;
-        partSum = partSum + labels[(3+k) % numberOfLabels] + labels[(4+k) % numberOfLabels];
-        partSum = partSum - labels[k] - labels[(1+k) % numberOfLabels];
+        partSum = partSum + labels[(3+i) % numberOfLabels] + labels[(4+i) % numberOfLabels];
+        partSum = partSum - labels[i] - labels[(1+i) % numberOfLabels];
     }
     return true;
 }
