@@ -24,7 +24,7 @@ private:
     ArrayPointers<const NodeWithColors> originalNodesPointers_m;
 public:
     BicoloredSegment(const int numberOfNodes, const BicoloredSegment& higherLevel, const IntersectionCycle& cycle);
-    BicoloredSegment(const BicoloredGraph* bicoloredGraph);
+    BicoloredSegment(const BicoloredGraph& bicoloredGraph);
     bool isBlackPath() const;
     const int getNumberOfAttachments() const;
     const NodeWithColors& getAttachment(const int index) const;

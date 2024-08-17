@@ -1,2 +1,2 @@
  - test cicli intersezione
- 
+ - bool EmbedderSefe::isBlackPathGood()

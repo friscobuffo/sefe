@@ -5,21 +5,22 @@
 
 #include "../basic/utils.hpp"
 
-BicoloredSegment::BicoloredSegment(const BicoloredGraph* bicoloredGraph)
-: BicoloredGraph(bicoloredGraph->size()), higherLevel_m(nullptr), originalCycle_m(nullptr),
-higherLevelNodesPointers_m(bicoloredGraph->size()), originalNodesPointers_m(bicoloredGraph->size()) {
-    for (int i = 0; i < bicoloredGraph->size(); ++i) {
-        const NodeWithColors& node = bicoloredGraph->getNode(i);
+BicoloredSegment::BicoloredSegment(const BicoloredGraph& bicoloredGraph)
+: BicoloredGraph(bicoloredGraph.size()), higherLevel_m(nullptr), originalCycle_m(nullptr),
+higherLevelNodesPointers_m(bicoloredGraph.size()), originalNodesPointers_m(bicoloredGraph.size()) {
+    for (int i = 0; i < bicoloredGraph.size(); ++i) {
+        const NodeWithColors& node = bicoloredGraph.getNode(i);
         setHigherLevelNode(getNode(i), node);
         setOriginalNode(getNode(i), node);
         for (const Edge& edge : node.getEdges())
             if (i < edge.node.getIndex())
                 addEdge(i, edge.node.getIndex(), edge.color);
     }
-    isNodeAnAttachment_m.resize(bicoloredGraph->size());
-    isNodeRedAttachment_m.resize(bicoloredGraph->size());
-    isNodeBlueAttachment_m.resize(bicoloredGraph->size());
-    for (int i = 0; i < bicoloredGraph->size(); ++i) {
+    isNodeAnAttachment_m.resize(bicoloredGraph.size());
+    isNodeRedAttachment_m.resize(bicoloredGraph.size());
+    isNodeBlueAttachment_m.resize(bicoloredGraph.size());
+    isNodeBlackAttachment_m.resize(bicoloredGraph.size());
+    for (int i = 0; i < bicoloredGraph.size(); ++i) {
         isNodeAnAttachment_m[i] = false;
         isNodeBlueAttachment_m[i] = false;
         isNodeRedAttachment_m[i] = false;
@@ -121,27 +122,23 @@ int BicoloredSegmentsHandler::size() const {
 }
 
 void BicoloredSegment::addAttachment(const NodeWithColors& attachment, const Color color) {
-    if (isNodeBlackAttachment(attachment))
-        return;
-    if (color == Color::BOTH) {
-        isNodeRedAttachment_m[attachment.getIndex()] = true;
-        isNodeBlackAttachment_m[attachment.getIndex()] = true;
-        isNodeBlueAttachment_m[attachment.getIndex()] = true;
+    const int index = attachment.getIndex();
+    if (!isNodeAnAttachment(attachment))
+        attachmentNodes_m.push_back(&attachment);
+    isNodeAnAttachment_m[index] = true;
+    switch (color) {
+        case Color::BOTH:
+            isNodeRedAttachment_m[index] = true;
+            isNodeBlackAttachment_m[index] = true;
+            isNodeBlueAttachment_m[index] = true;
+            break;
+        case Color::BLUE:
+            isNodeBlueAttachment_m[index] = true;
+            break;
+        case Color::RED:
+            isNodeRedAttachment_m[index] = true;
+            break;
     }
-    if (isNodeBlueAttachment(attachment) && isNodeRedAttachment(attachment))
-        return;
-    if (isNodeBlueAttachment(attachment)) {
-        if (color == Color::BLUE) return;
-        isNodeRedAttachment_m[attachment.getIndex()] = true;
-        return;
-    }
-    if (isNodeRedAttachment(attachment)) {
-        if (color == Color::RED) return;
-        isNodeBlueAttachment_m[attachment.getIndex()] = true;
-        return;
-    }
-    isNodeAnAttachment_m[attachment.getIndex()] = true;
-    attachmentNodes_m.push_back(&attachment);
 }
 
 bool BicoloredSegment::isNodeAnAttachment(const NodeWithColors& node) const {

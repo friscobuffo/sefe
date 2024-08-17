@@ -16,7 +16,7 @@ private:
     void makeCycleGood(IntersectionCycle& cycle, const BicoloredSegment& segment) const;
     bool isBlackPathGood() const;
 public:
-    bool testSefe(const Graph* graph1, const Graph* graph2) const;
+    bool testSefe(const Graph& graph1, const Graph& graph2) const;
 };
 
 #endif

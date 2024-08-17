@@ -5,16 +5,16 @@
 #include "../auslander-parter/biconnectedComponent.hpp"
 #include "interlacementSefe.hpp"
 
-bool EmbedderSefe::testSefe(const Graph* graph1, const Graph* graph2) const {
+bool EmbedderSefe::testSefe(const Graph& graph1, const Graph& graph2) const {
     BicoloredGraph bicoloredGraph(graph1, graph2);
     const Graph& intersection = bicoloredGraph.getIntersection();
-    BiconnectedComponentsHandler bicCompHandler(&intersection);
+    BiconnectedComponentsHandler bicCompHandler(intersection);
     if (bicCompHandler.size() > 1) {
         std::cout << "intersection must be biconnected\n";
         return false;
     }
-    BicoloredSegment bicoloredSegment(&bicoloredGraph);
-    IntersectionCycle cycle(&bicoloredSegment);
+    BicoloredSegment bicoloredSegment(bicoloredGraph);
+    IntersectionCycle cycle(bicoloredSegment);
     return testSefe(bicoloredSegment, cycle);
 }
 
@@ -67,4 +67,8 @@ void EmbedderSefe::makeCycleGood(IntersectionCycle& cycle, const BicoloredSegmen
     for (const NodeWithColors* node : path)
         pathHigherLevel.push_back(&(segment.getHigherLevelNode(*node)));
     cycle.changeWithPath(pathHigherLevel);
+}
+
+bool EmbedderSefe::isBlackPathGood() const {
+    return true;
 }

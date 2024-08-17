@@ -6,21 +6,19 @@
 
 // assumes intersection of segment is biconnected
 IntersectionCycle::IntersectionCycle(const BicoloredSegment& segment) 
-: originalBicoloredSegment_m(segment) {
+: bicoloredSegment_m(segment) {
     int size = segment.size();
     bool isNodeVisited[size];
     for (int node = 0; node < size; ++node)
         isNodeVisited[node] = false;
-    dfsBuildCycle(segment.getNode(0), isNodeVisited, nullptr);
-    cleanupCycle();
     posInCycle_m.resize(size);
     for (int i = 0; i < size; ++i)
         posInCycle_m[i] = -1;
+    dfsBuildCycle(segment.getNode(0), isNodeVisited, nullptr);
+    cleanupCycle();
     int index = 0;
-    for (const NodeWithColors* node : nodes_m) {
-        posInCycle_m[node->getIndex()] = index;
-        ++index;
-    }
+    for (const NodeWithColors* node : nodes_m)
+        posInCycle_m[node->getIndex()] = index++;
 }
 
 void IntersectionCycle::dfsBuildCycle(const NodeWithColors& node, bool isNodeVisited[], const NodeWithColors* prev) {
@@ -124,7 +122,7 @@ void IntersectionCycle::reverse() {
 }
 
 int IntersectionCycle::getOriginalBicoloredSegmentSize() const {
-    return originalBicoloredSegment_m.size();
+    return bicoloredSegment_m.size();
 }
 
 std::optional<int> IntersectionCycle::getPositionOfNode(const NodeWithColors& node) const {
@@ -136,7 +134,7 @@ std::optional<int> IntersectionCycle::getPositionOfNode(const NodeWithColors& no
 void IntersectionCycle::print() const {
     std::cout << "cycle: [";
     for (const NodeWithColors* node : nodes_m) {
-        const NodeWithColors& original = originalBicoloredSegment_m.getOriginalNode(*node);
+        const NodeWithColors& original = bicoloredSegment_m.getOriginalNode(*node);
         std::cout << " " << original.getIndex();
     }
     std::cout << " ]\n";

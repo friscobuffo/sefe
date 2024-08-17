@@ -4,47 +4,50 @@
 
 #include "../basic/utils.hpp"
 
-InterlacementGraph::InterlacementGraph(const Cycle* cycle, const SegmentsHandler& segmentsHandler) 
+InterlacementGraph::InterlacementGraph(const Cycle& cycle, const SegmentsHandler& segmentsHandler) 
     : Graph(segmentsHandler.size()), cycle_m(cycle) , segmentsHandler_m(segmentsHandler) {
     computeConflicts();
 }
 
-void InterlacementGraph::computeCycleLabels(const Segment* segment, int cycleLabels[]) {
-    int originalComponentSize = cycle_m->getOriginalComponentSize();
+void InterlacementGraph::computeCycleLabels(const Segment& segment, int cycleLabels[]) {
+    int originalComponentSize = cycle_m.getOriginalComponentSize();
     bool isCycleNodeAnAttachment[originalComponentSize];
     for (int i = 0; i < originalComponentSize; ++i)
         isCycleNodeAnAttachment[i] = false;
-    for (const Node* attachment : segment->getAttachments())
-        isCycleNodeAnAttachment[segment->getComponentNode(attachment)->getIndex()] = true;
+    int totalAttachments = segment.getNumberOfAttachments();
+    for (int i = 0; i < totalAttachments; ++i) {
+        const Node& attachment = segment.getAttachment(i);
+        isCycleNodeAnAttachment[segment.getComponentNode(attachment).getIndex()] = true;
+    }
     int foundAttachments = 0;
-    int totalAttachments = segment->getAttachments().size();
-    for (int i = 0; i < cycle_m->size(); ++i) {
-        const Node* node = cycle_m->getNode(i);
-        if (isCycleNodeAnAttachment[node->getIndex()])
-            cycleLabels[node->getIndex()] = 2*(foundAttachments++);
+    for (int i = 0; i < cycle_m.size(); ++i) {
+        const Node& node = cycle_m.getNode(i);
+        if (isCycleNodeAnAttachment[node.getIndex()])
+            cycleLabels[node.getIndex()] = 2*(foundAttachments++);
         else
             if (foundAttachments == 0)
-                cycleLabels[node->getIndex()] = 2*totalAttachments-1;
+                cycleLabels[node.getIndex()] = 2*totalAttachments-1;
             else
-                cycleLabels[node->getIndex()] = 2*foundAttachments-1;
+                cycleLabels[node.getIndex()] = 2*foundAttachments-1;
     }
     assert(foundAttachments == totalAttachments);
 }
 
 // two segments are in conflict if any of their non cycle edges may intersect
 void InterlacementGraph::computeConflicts() {
-    int cycleLabels[cycle_m->getOriginalComponentSize()];
+    int cycleLabels[cycle_m.getOriginalComponentSize()];
     for (int i = 0; i < segmentsHandler_m.size()-1; ++i) {
-        const Segment* segment = segmentsHandler_m.getSegment(i);
+        const Segment& segment = segmentsHandler_m.getSegment(i);
         computeCycleLabels(segment, cycleLabels);
-        int numberOfLabels = 2*segment->getAttachments().size();
+        int numberOfLabels = 2*segment.getNumberOfAttachments();
         int labels[numberOfLabels];
         for (int j = i+1; j < segmentsHandler_m.size(); ++j) {
-            const Segment* otherSegment = segmentsHandler_m.getSegment(j);
+            const Segment& otherSegment = segmentsHandler_m.getSegment(j);
             for (int k = 0; k < numberOfLabels; ++k)
                 labels[k] = 0;
-            for (const Node* attachment : otherSegment->getAttachments()) {
-                int attachmentComponent = otherSegment->getComponentNode(attachment)->getIndex();
+            for (int k = 0; k < otherSegment.getNumberOfAttachments(); ++k) {
+                const Node& attachment = otherSegment.getAttachment(k);
+                int attachmentComponent = otherSegment.getComponentNode(attachment).getIndex();
                 labels[cycleLabels[attachmentComponent]] = 1;
             }
             int sum = 0;

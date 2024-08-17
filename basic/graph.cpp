@@ -4,33 +4,32 @@
 #include <list>
 #include <cassert>
 
-Node::Node(const int index, const Graph* graph) : index_m(index), graph_m(graph) {}
+Node::Node(const int index, const Graph& graph) : index_m(index), graph_m(graph) {}
 
 int Node::getIndex() const {
     return index_m;
 }
 
-std::vector<const Node*>& Node::getNeighbors() {
-    return neighbors_m;
+const int Node::getNumberOfNeighbors() const {
+    return neighbors_m.size();
 }
 
-const std::vector<const Node*>& Node::getNeighbors() const {
-    return neighbors_m;
+const Node& Node::getNeighbor(int index) const {
+    return *neighbors_m[index];
 }
 
-void Node::addNeighbor(const Node* neighbor) {
-    neighbors_m.push_back(neighbor);
+void Node::addNeighbor(const Node& neighbor) {
+    neighbors_m.push_back(&neighbor);
 }
 
-const Graph* Node::getGraph() const {
+const Graph& Node::getGraph() const {
     return graph_m;
 }
 
 Graph::Graph(const int numberOfNodes) {
     assert(numberOfNodes > 0);
-    nodes_m.resize(numberOfNodes);
     for (int i = 0; i < numberOfNodes; ++i)
-        nodes_m[i] = std::make_unique<Node>(i, this);
+        nodes_m.push_back(Node(i, *this));
 }
 
 // assumes edge is not already in graph
@@ -43,9 +42,9 @@ void Graph::addEdge(const int fromIndex, const int toIndex) {
 
 // assumes edge is not already in graph
 // adds edge from-to and edge to-from
-void Graph::addEdge(Node* from, Node* to) {
-    from->addNeighbor(to);
-    to->addNeighbor(from);
+void Graph::addEdge(Node& from, Node& to) {
+    from.addNeighbor(to);
+    to.addNeighbor(from);
 }
 
 int Graph::size() const {
@@ -54,10 +53,9 @@ int Graph::size() const {
 
 void Graph::print() const {
     for (auto& node : nodes_m) {
-        std::cout << "node [" << node->getIndex() << "]: neighbors: [";
-        for (const Node* neighbor : node->getNeighbors()) {
-            std::cout << " " << neighbor->getIndex();
-        }
+        std::cout << "node [" << node.getIndex() << "]: neighbors: [";
+        for (int i = 0; i < node.getNumberOfNeighbors(); ++i)
+            std::cout << " " << node.getNeighbor(i).getIndex();
         std::cout << " ]\n";
     }
 };
@@ -85,9 +83,10 @@ bool Graph::bfsBipartition(int nodeIndex, std::vector<int>& bipartition) const {
     while (queue.size() > 0) {
         nodeIndex = queue.front();
         queue.pop_front();
-        const Node* node = getNode(nodeIndex);
-        for (const Node* neighbor : node->getNeighbors()) {
-            int neighborIndex = neighbor->getIndex();
+        const Node& node = getNode(nodeIndex);
+        for (int i = 0; i < node.getNumberOfNeighbors(); ++i) {
+            const Node& neighbor = node.getNeighbor(i);
+            int neighborIndex = neighbor.getIndex();
             if (bipartition[neighborIndex] == -1) {
                 bipartition[neighborIndex] = 1-bipartition[nodeIndex];
                 queue.push_back(neighborIndex);
@@ -99,65 +98,64 @@ bool Graph::bfsBipartition(int nodeIndex, std::vector<int>& bipartition) const {
     return true;
 }
 
-const Node* Graph::getNode(const int index) const {
-    return nodes_m[index].get();
+const Node& Graph::getNode(const int index) const {
+    return nodes_m[index];
 }
 
-Node* Graph::getNode(const int index) {
-    return nodes_m[index].get();
+Node& Graph::getNode(const int index) {
+    return nodes_m[index];
 }
 
-Graph* Graph::computeIntersection(const Graph* graph) const {
-    assert(size() == graph->size());
-    Graph* intersection = new Graph(size());
+Graph Graph::computeIntersection(const Graph& graph) const {
+    assert(size() == graph.size());
+    Graph intersection(size());
     computeIntersection(graph, intersection);
     return intersection;
 }
 
-void Graph::computeIntersection(const Graph* graph, Graph* intersection) const {
-    assert(size() == graph->size());
-    assert(size() == intersection->size());
+void Graph::computeIntersection(const Graph& graph, Graph& intersection) const {
+    assert(size() == graph.size());
+    assert(size() == intersection.size());
     bool isEdgeInGraph1[size()];
     bool isEdgeInGraph2[size()];
     for (int i = 0; i < size(); ++i) {
-        const Node* node1 = getNode(i);
-        const Node* node2 = graph->getNode(i);
+        const Node& node1 = getNode(i);
+        const Node& node2 = graph.getNode(i);
         for (int j = 0; j < size(); ++j) {
             isEdgeInGraph1[j] = false;
             isEdgeInGraph2[j] = false;
         }
-        for (const Node* neighbor : node1->getNeighbors())
-            isEdgeInGraph1[neighbor->getIndex()] = true;
-        for (const Node* neighbor : node2->getNeighbors())
-            isEdgeInGraph2[neighbor->getIndex()] = true;
+        for (int j = 0; j < node1.getNumberOfNeighbors(); ++j)
+            isEdgeInGraph1[node1.getNeighbor(j).getIndex()] = true;
+        for (int j = 0; j < node2.getNumberOfNeighbors(); ++j)
+            isEdgeInGraph2[node2.getNeighbor(j).getIndex()] = true;
         for (int j = 0; j < size(); ++j)
             if (isEdgeInGraph1[j] && isEdgeInGraph2[j] && i < j)
-                intersection->addEdge(i, j);
+                intersection.addEdge(i, j);
     }
 }
 
-SubGraph::SubGraph(const int numberOfNodes, const Graph* graph) 
+SubGraph::SubGraph(const int numberOfNodes, const Graph& graph) 
 : Graph(numberOfNodes), originalNodes_m(numberOfNodes), originalGraph_m(graph) {
-    assert(numberOfNodes <= graph->size());
+    assert(numberOfNodes <= graph.size());
 }
 
-const Node* SubGraph::getOriginalNode(const Node* node) const {
-    const int index = node->getIndex();
-    return originalNodes_m.getPointer(index);
+const Node& SubGraph::getOriginalNode(const Node& node) const {
+    const int index = node.getIndex();
+    return *originalNodes_m.getPointer(index);
 }
 
-void SubGraph::setOriginalNode(const Node* node, const Node* originalNode) {
-    const int index = node->getIndex();
-    originalNodes_m.setPointer(index, originalNode);
+void SubGraph::setOriginalNode(const Node& node, const Node& originalNode) {
+    const int index = node.getIndex();
+    originalNodes_m.setPointer(index, &originalNode);
 }
 
 void SubGraph::print() const {
     for (auto& node : nodes_m) {
-        const int originalIndex = getOriginalNode(node.get())->getIndex();
-        std::vector<const Node*>& neighbors = node->getNeighbors();
-        std::cout << "node: " << originalIndex << " neighbors: " << neighbors.size() << " [ ";
-        for (const Node* neighbor : neighbors)
-            std::cout << getOriginalNode(neighbor)->getIndex() << " ";
+        const int originalIndex = getOriginalNode(node).getIndex();
+        std::cout << "node: " << originalIndex << " neighbors: " << node.getNumberOfNeighbors() << " [ ";
+        for (int i = 0; i < node.getNumberOfNeighbors(); ++i)
+            std::cout << getOriginalNode(node.getNeighbor(i)).getIndex() << " ";
         std::cout << "]\n";
     }
 }

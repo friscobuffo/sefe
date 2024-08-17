@@ -35,7 +35,6 @@ int cycleLabels[], Color color, int& numberOfColoredAttachments) {
             else
                 cycleLabels[node.getIndex()] = 2*foundAttachments-1;
     }
-    assert(foundAttachments == totalAttachments);
     numberOfColoredAttachments = totalAttachments;
 }
 

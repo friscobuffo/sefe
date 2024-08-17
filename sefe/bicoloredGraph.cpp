@@ -1,6 +1,5 @@
 #include "bicoloredGraph.hpp"
 
-#include <cassert>
 #include <iostream>
 
 #include "../auslander-parter/biconnectedComponent.hpp"
@@ -20,6 +19,7 @@ std::vector<Edge>& NodeWithColors::getEdges() {
     return edges_m;
 }
 
+// assumes edge is not already in graph
 void NodeWithColors::addEdge(const NodeWithColors& neighbor, const Color color) {
     edges_m.push_back(Edge{neighbor, color});
     if (color == Color::BOTH)
@@ -34,26 +34,29 @@ const int NodeWithColors::getNumberOfBlackEdges() const {
     return numberOfBlackEdges_m;
 }
 
-BicoloredGraph::BicoloredGraph(const Graph* graph1, const Graph* graph2)
-: intersection_m(graph1->size()) {
-    assert(graph1->size() == graph2->size());
-    nodes_m.resize(graph1->size());
-    for (int i = 0; i < graph1->size(); ++i)
-        nodes_m[i] = std::make_unique<NodeWithColors>(i, *this);
-    graph1->computeIntersection(graph2, &intersection_m);
+BicoloredGraph::BicoloredGraph(const Graph& graph1, const Graph& graph2)
+: intersection_m(graph1.size()) {
+    assert(graph1.size() == graph2.size());
+    for (int i = 0; i < graph1.size(); ++i)
+        nodes_m.push_back(NodeWithColors(i, *this));
+    graph1.computeIntersection(graph2, intersection_m);
     bool isEdgeInGraph1[size()];
     bool isEdgeInGraph2[size()];
     for (int i = 0; i < size(); ++i) {
-        const Node* node1 = graph1->getNode(i);
-        const Node* node2 = graph2->getNode(i);
+        const Node& node1 = graph1.getNode(i);
+        const Node& node2 = graph2.getNode(i);
         for (int j = 0; j < size(); ++j) {
             isEdgeInGraph1[j] = false;
             isEdgeInGraph2[j] = false;
         }
-        for (const Node* neighbor : node1->getNeighbors())
-            isEdgeInGraph1[neighbor->getIndex()] = true;
-        for (const Node* neighbor : node2->getNeighbors())
-            isEdgeInGraph2[neighbor->getIndex()] = true;
+        for (int j = 0; j < node1.getNumberOfNeighbors(); ++j) {
+            const Node& neighbor = node1.getNeighbor(j);
+            isEdgeInGraph1[neighbor.getIndex()] = true;
+        }
+        for (int j = 0; j < node2.getNumberOfNeighbors(); ++j) {
+            const Node& neighbor = node2.getNeighbor(j);
+            isEdgeInGraph2[neighbor.getIndex()] = true;
+        }
         for (int j = 0; j < size(); ++j) {
             if (i > j) continue;
             if (isEdgeInGraph1[j] && isEdgeInGraph2[j]) {
@@ -74,17 +77,16 @@ BicoloredGraph::BicoloredGraph(const Graph* graph1, const Graph* graph2)
 
 BicoloredGraph::BicoloredGraph(const int numberOfNodes) 
 : intersection_m(numberOfNodes) {
-    nodes_m.resize(numberOfNodes);
     for (int i = 0; i < numberOfNodes; ++i)
-        nodes_m[i] = std::make_unique<NodeWithColors>(i, *this);
+        nodes_m.push_back(NodeWithColors(i, *this));
 }
 
 const NodeWithColors& BicoloredGraph::getNode(const int index) const {
-    return *nodes_m[index].get();
+    return nodes_m[index];
 }
 
 NodeWithColors& BicoloredGraph::getNode(const int index) {
-    return *nodes_m[index].get();
+    return nodes_m[index];
 }
 
 void BicoloredGraph::addEdge(NodeWithColors& from, NodeWithColors& to, Color color) {
@@ -107,10 +109,9 @@ const Graph& BicoloredGraph::getIntersection() const {
 }
 
 void BicoloredGraph::print() const {
-    for (auto& nodePtr : nodes_m) {
-        const NodeWithColors* node = nodePtr.get();
-        const int index = node->getIndex();
-        const std::vector<Edge>& edges = node->getEdges();
+    for (auto& node : nodes_m) {
+        const int index = node.getIndex();
+        const std::vector<Edge>& edges = node.getEdges();
         std::cout << "node: " << index << " neighbors: " << edges.size() << " [ ";
         for (const Edge& edge : edges)
             std::cout << "(" << edge.node.getIndex() << " " << color2string(edge.color) << ") ";

@@ -14,7 +14,7 @@ class IntersectionCycle {
 private:
     std::vector<const NodeWithColors*> nodes_m{};
     std::vector<int> posInCycle_m{};
-    const BicoloredSegment& originalBicoloredSegment_m;
+    const BicoloredSegment& bicoloredSegment_m;
     void dfsBuildCycle(const NodeWithColors& node, bool isNodeVisited[], const NodeWithColors* prev);
     void cleanupCycle();
     void nextIndex(int& index);

@@ -9,13 +9,13 @@
 
 class InterlacementGraph : public Graph {
 private:
-    const Cycle* cycle_m;
+    const Cycle& cycle_m;
     const SegmentsHandler& segmentsHandler_m;
 
     void computeConflicts();
-    void computeCycleLabels(const Segment* segment, int cycleLabels[]);
+    void computeCycleLabels(const Segment& segment, int cycleLabels[]);
 public:
-    InterlacementGraph(const Cycle* cycle, const SegmentsHandler& segmentsHandler);
+    InterlacementGraph(const Cycle& cycle, const SegmentsHandler& segmentsHandler);
 };
 
 #endif

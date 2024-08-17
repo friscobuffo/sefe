@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <memory>
+#include <cassert>
 
 #include "../basic/graph.hpp"
 
@@ -17,7 +18,7 @@ inline const char* color2string(const Color color) {
         case Color::RED: return "red";
         case Color::BLUE: return "blue";
         case Color::BOTH: return "both";
-        default: return "error";
+        default: assert(false);
     }
 }
 
@@ -50,11 +51,11 @@ class BicoloredGraph {
 private:
     Graph intersection_m;
 protected:
-    std::vector<std::unique_ptr<NodeWithColors>> nodes_m;
+    std::vector<NodeWithColors> nodes_m;
 public:
     void addEdge(NodeWithColors& from, NodeWithColors& to, Color color);
     void addEdge(const int fromIndex, const int toIndex, Color color);
-    BicoloredGraph(const Graph* graph1, const Graph* graph2);
+    BicoloredGraph(const Graph& graph1, const Graph& graph2);
     BicoloredGraph(const int numberOfNodes);
     const NodeWithColors& getNode(const int index) const;
     NodeWithColors& getNode(const int index);
