@@ -11,22 +11,22 @@ class Cycle {
 private:
     std::vector<const Node*> nodes_m{};
     std::vector<int> posInCycle_m{};
-    const SubGraph& originalComponent_m;
-    void dfsBuildCycle(const Node& node, bool isNodeVisited[], const Node* prev);
+    const SubGraph* originalComponent_m;
+    void dfsBuildCycle(const Node* node, bool isNodeVisited[], const Node* prev);
     void cleanupCycle();
     void nextIndex(int& index);
 public:
-    Cycle(const SubGraph& component);
+    Cycle(const SubGraph* component);
     void changeWithPath(std::list<const Node*>& path);
-    bool hasNode(const Node& node) const;
+    bool hasNode(const Node* node) const;
     int size() const;
-    const Node& getPrevOfNode(const Node& node) const;
-    const Node& getNextOfNode(const Node& node) const;
-    const Node& getNode(const int position) const;
+    const Node* getPrevOfNode(const Node* node) const;
+    const Node* getNextOfNode(const Node* node) const;
+    const Node* getNode(const int position) const;
     void reverse();
     void print() const;
     int getOriginalComponentSize() const;
-    std::optional<int> getPositionOfNode(const Node& node) const;
+    std::optional<int> getPositionOfNode(const Node* node) const;
 };
 
 #endif

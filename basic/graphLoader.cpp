@@ -6,7 +6,7 @@
 #include <string>
 #include <sstream>
 
-const Graph GraphLoader::loadFromFile(const char* path) const {
+const Graph* GraphLoader::loadFromFile(const char* path) const {
     std::ifstream inputFile(path);
     if (!inputFile.is_open()) {
         std::cerr << "Error: Could not open file " << path << std::endl;
@@ -14,7 +14,7 @@ const Graph GraphLoader::loadFromFile(const char* path) const {
     }
     int nodesNumber{};
     inputFile >> nodesNumber;
-    Graph graph(nodesNumber);
+    Graph* graph = new Graph(nodesNumber);
     int fromIndex, toIndex;
     std::string line;
     while (std::getline(inputFile, line)) {
@@ -22,7 +22,7 @@ const Graph GraphLoader::loadFromFile(const char* path) const {
             continue;
         std::istringstream iss(line);
         if (iss >> fromIndex >> toIndex)
-            graph.addEdge(fromIndex, toIndex);
+            graph->addEdge(fromIndex, toIndex);
     }
     inputFile.close();
     return graph;

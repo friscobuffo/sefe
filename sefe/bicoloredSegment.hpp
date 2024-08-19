@@ -23,45 +23,45 @@ private:
     ArrayPointers<const NodeWithColors> higherLevelNodesPointers_m;
     ArrayPointers<const NodeWithColors> originalNodesPointers_m;
 public:
-    BicoloredSegment(const int numberOfNodes, const BicoloredSegment& higherLevel, const IntersectionCycle& cycle);
-    BicoloredSegment(const BicoloredGraph& bicoloredGraph);
+    BicoloredSegment(const int numberOfNodes, const BicoloredSegment* higherLevel, const IntersectionCycle* cycle);
+    BicoloredSegment(const BicoloredGraph* bicoloredGraph);
     bool isBlackPath() const;
     const int getNumberOfAttachments() const;
-    const NodeWithColors& getAttachment(const int index) const;
-    void addAttachment(const NodeWithColors& attachment, const Color color);
-    bool isNodeAnAttachment(const NodeWithColors& node) const;
-    bool isNodeRedAttachment(const NodeWithColors& node) const;
-    bool isNodeBlueAttachment(const NodeWithColors& node) const;
-    bool isNodeBlackAttachment(const NodeWithColors& node) const;
-    bool isNodeAttachmentOfColor(const NodeWithColors& node, const Color color) const;
-    std::list<const NodeWithColors*> computeBlackPathBetweenAttachments(const NodeWithColors& start,
-        const NodeWithColors& end) const;
+    const NodeWithColors* getAttachment(const int index) const;
+    void addAttachment(const NodeWithColors* attachment, const Color color);
+    bool isNodeAnAttachment(const NodeWithColors* node) const;
+    bool isNodeRedAttachment(const NodeWithColors* node) const;
+    bool isNodeBlueAttachment(const NodeWithColors* node) const;
+    bool isNodeBlackAttachment(const NodeWithColors* node) const;
+    bool isNodeAttachmentOfColor(const NodeWithColors* node, const Color color) const;
+    std::list<const NodeWithColors*> computeBlackPathBetweenAttachments(const NodeWithColors* start,
+        const NodeWithColors* end) const;
     const IntersectionCycle* getOriginalCycle() const;
     const BicoloredSegment* getHigherLevel() const;
-    const NodeWithColors& getHigherLevelNode(const NodeWithColors& node) const;
-    void setHigherLevelNode(const NodeWithColors& node, const NodeWithColors& higherLevelNode);
-    const NodeWithColors& getOriginalNode(const NodeWithColors& node) const;
-    void setOriginalNode(const NodeWithColors& node, const NodeWithColors& originalNode);
+    const NodeWithColors* getHigherLevelNode(const NodeWithColors* node) const;
+    void setHigherLevelNode(const NodeWithColors* node, const NodeWithColors* higherLevelNode);
+    const NodeWithColors* getOriginalNode(const NodeWithColors* node) const;
+    void setOriginalNode(const NodeWithColors* node, const NodeWithColors* originalNode);
     void print() const;
 };
 
 class BicoloredSegmentsHandler {
 private:
     std::vector<std::unique_ptr<const BicoloredSegment>> segments_m{};
-    const IntersectionCycle& originalCycle_m;
-    const BicoloredSegment& higherLevel_m;
+    const IntersectionCycle* originalCycle_m;
+    const BicoloredSegment* higherLevel_m;
     const BicoloredSegment* buildSegment(std::vector<const NodeWithColors*>& nodes,
-        std::vector<std::pair<const NodeWithColors&, const Edge>>& edges);
-    const BicoloredSegment* buildChord(const NodeWithColors& attachment1,
-        const NodeWithColors& attachment2, const Color color);
-    void dfsFindSegments(const NodeWithColors& node, bool isNodeVisited[],
+        std::vector<std::pair<const NodeWithColors*, const Edge>>& edges);
+    const BicoloredSegment* buildChord(const NodeWithColors* attachment1,
+        const NodeWithColors* attachment2, const Color color);
+    void dfsFindSegments(const NodeWithColors* node, bool isNodeVisited[],
         std::vector<const NodeWithColors*>& nodesInSegment,
-        std::vector<std::pair<const NodeWithColors&, const Edge>>& edgesInSegment);
+        std::vector<std::pair<const NodeWithColors*, const Edge>>& edgesInSegment);
     void findSegments();
     void findChords();
 public:
-    BicoloredSegmentsHandler(const BicoloredSegment& bicoloredSegment, const IntersectionCycle& cycle);
-    const BicoloredSegment& getSegment(const int index) const;
+    BicoloredSegmentsHandler(const BicoloredSegment* bicoloredSegment, const IntersectionCycle* cycle);
+    const BicoloredSegment* getSegment(const int index) const;
     int size() const;
     void print() const;
 };
