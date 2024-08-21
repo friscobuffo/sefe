@@ -11,7 +11,7 @@
 #include "sefe/bicoloredGraph.hpp"
 #include "sefe/embedderSefe.hpp"
 
-const Graph* loadFromfile(const char* filename) {
+const Graph* loadFromfile(std::string filename) {
     int nodesNumber{};
     std::ifstream infile(filename);
     if (infile.is_open()) {
@@ -56,6 +56,18 @@ extern "C" {
     }
 }
 
+void testGraph(std::string path) {
+    EmbedderSefe embedderSefe{};
+    Embedder embedder{};
+    const Graph* g1 = loadFromfile(path);
+    const Graph* g2 = loadFromfile(path);
+    std::optional<const Embedding*> embedding = embedder.embedGraph(g1);
+    std::cout << embedding.has_value() << " - " << embedderSefe.testSefe(g1, g2) << "\n";
+    delete g1;
+    delete g2;
+    if (embedding.has_value()) delete embedding.value();
+}
+
 extern "C" {
     void sefeMainTest() {
         std::cout << std::boolalpha;
@@ -67,5 +79,15 @@ extern "C" {
         std::cout << embedderSefe.testSefe(graph1, graph2) << "\n";
         delete graph1;
         delete graph2;
+
+        std::cout << "all graphs tests\n";
+        testGraph("/graphs/g1.txt");
+        testGraph("/graphs/g2.txt");
+        // testGraph("/graphs/g3.txt"); 
+        testGraph("/graphs/g4.txt");
+        testGraph("/graphs/g5.txt");
+        testGraph("/graphs/g6.txt");
+        testGraph("/graphs/k5.txt");
+        testGraph("/graphs/k33.txt");
     }
 }

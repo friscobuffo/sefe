@@ -14,10 +14,7 @@ class IntersectionCycle;
 class BicoloredSegment : public BicoloredGraph {
 private:
     std::vector<const NodeWithColors*> attachmentNodes_m{};
-    std::vector<bool> isNodeAnAttachment_m{};
-    std::vector<bool> isNodeBlueAttachment_m{};
-    std::vector<bool> isNodeRedAttachment_m{};
-    std::vector<bool> isNodeBlackAttachment_m{};
+    std::vector<Color> attachmentColor_m{};
     const BicoloredSegment* higherLevel_m;
     const IntersectionCycle* originalCycle_m;
     ArrayPointers<const NodeWithColors> higherLevelNodesPointers_m;
@@ -26,6 +23,7 @@ public:
     BicoloredSegment(const int numberOfNodes, const BicoloredSegment* higherLevel, const IntersectionCycle* cycle);
     BicoloredSegment(const BicoloredGraph* bicoloredGraph);
     bool isBlackPath() const;
+    bool isPath() const;
     const int getNumberOfAttachments() const;
     const NodeWithColors* getAttachment(const int index) const;
     void addAttachment(const NodeWithColors* attachment, const Color color);

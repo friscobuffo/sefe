@@ -25,8 +25,8 @@ bool EmbedderSefe::testSefe(const BicoloredSegment* bicoloredSegment, Intersecti
         return true;
     if (segmentsHandler.size() == 1) {
         const BicoloredSegment* segment = segmentsHandler.getSegment(0);
-        if (segment->isBlackPath())
-            return isBlackPathGood();
+        if (segment->isPath())
+            return true;
         // chosen cycle is bad
         makeCycleGood(cycle, segment);
         return testSefe(bicoloredSegment, cycle);
@@ -45,6 +45,11 @@ bool EmbedderSefe::testSefe(const BicoloredSegment* bicoloredSegment, Intersecti
 // it may happen that a cycle induces only one segment, which is not a base case
 // so the cycle must be recomputed such that it ensures at least two segments
 void EmbedderSefe::makeCycleGood(IntersectionCycle* cycle, const BicoloredSegment* segment) const {
+    assert(!segment->isPath());
+    if (segment->isBlackPath()) {
+        std::cout << "ciao\n";
+        exit(1);
+    }
     std::vector<int> attachmentsComponent{};
     for (int i = 0; i < segment->getNumberOfAttachments(); ++i) {
         const NodeWithColors* attachment = segment->getAttachment(i);
@@ -67,8 +72,4 @@ void EmbedderSefe::makeCycleGood(IntersectionCycle* cycle, const BicoloredSegmen
     for (const NodeWithColors* node : path)
         pathHigherLevel.push_back(segment->getHigherLevelNode(node));
     cycle->changeWithPath(pathHigherLevel);
-}
-
-bool EmbedderSefe::isBlackPathGood() const {
-    return true;
 }

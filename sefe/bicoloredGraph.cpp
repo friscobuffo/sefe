@@ -22,7 +22,7 @@ std::vector<Edge>& NodeWithColors::getEdges() {
 // assumes edge is not already in graph
 void NodeWithColors::addEdge(const NodeWithColors* neighbor, const Color color) {
     edges_m.push_back(Edge{neighbor, color});
-    if (color == Color::BOTH)
+    if (color == Color::BLACK)
         ++numberOfBlackEdges_m;
 }
 
@@ -56,7 +56,7 @@ BicoloredGraph::BicoloredGraph(const Graph* graph1, const Graph* graph2)
         for (int j = 0; j < size(); ++j) {
             if (i > j) continue;
             if (isEdgeInGraph1[j] && isEdgeInGraph2[j]) {
-                addEdge(i, j, Color::BOTH);
+                addEdge(i, j, Color::BLACK);
                 continue;
             }
             if (isEdgeInGraph1[j]) {
@@ -88,7 +88,7 @@ NodeWithColors* BicoloredGraph::getNode(const int index) {
 void BicoloredGraph::addEdge(NodeWithColors* from, NodeWithColors* to, Color color) {
     from->addEdge(to, color);
     to->addEdge(from, color);
-    if (color == Color::BOTH)
+    if (color == Color::BLACK)
         intersection_m.addEdge(from->getIndex(), to->getIndex());
 }
 

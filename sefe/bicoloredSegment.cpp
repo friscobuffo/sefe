@@ -16,30 +16,17 @@ higherLevelNodesPointers_m(bicoloredGraph->size()), originalNodesPointers_m(bico
             if (i < edge.node->getIndex())
                 addEdge(i, edge.node->getIndex(), edge.color);
     }
-    isNodeAnAttachment_m.resize(bicoloredGraph->size());
-    isNodeRedAttachment_m.resize(bicoloredGraph->size());
-    isNodeBlueAttachment_m.resize(bicoloredGraph->size());
-    isNodeBlackAttachment_m.resize(bicoloredGraph->size());
-    for (int i = 0; i < bicoloredGraph->size(); ++i) {
-        isNodeAnAttachment_m[i] = false;
-        isNodeBlueAttachment_m[i] = false;
-        isNodeRedAttachment_m[i] = false;
-        isNodeBlackAttachment_m[i] = false;
-    }
+    attachmentColor_m.resize(bicoloredGraph->size());
+    for (int i = 0; i < bicoloredGraph->size(); ++i)
+        attachmentColor_m[i] = Color::NONE;
 }
 
 BicoloredSegment::BicoloredSegment(const int numberOfNodes, const BicoloredSegment* higherLevel, const IntersectionCycle* cycle)
 : BicoloredGraph(numberOfNodes), higherLevel_m(higherLevel),
 originalCycle_m(cycle), higherLevelNodesPointers_m(numberOfNodes), originalNodesPointers_m(numberOfNodes) {
-    isNodeAnAttachment_m.resize(numberOfNodes);
-    isNodeRedAttachment_m.resize(numberOfNodes);
-    isNodeBlueAttachment_m.resize(numberOfNodes);
-    for (int i = 0; i < numberOfNodes; ++i) {
-        isNodeAnAttachment_m[i] = false;
-        isNodeBlueAttachment_m[i] = false;
-        isNodeRedAttachment_m[i] = false;
-        isNodeBlackAttachment_m[i] = false;
-    }
+    attachmentColor_m.resize(numberOfNodes);
+    for (int i = 0; i < numberOfNodes; ++i)
+        attachmentColor_m[i] = Color::NONE;
 }
 
 const BicoloredSegment* BicoloredSegmentsHandler::buildChord(const NodeWithColors* attachment1,
@@ -56,8 +43,8 @@ const NodeWithColors* attachment2, const Color color) {
     }
     // adding cycle edges
     for (int i = 0; i < originalCycle_m->size()-1; ++i)
-        chord->addEdge(i, i+1, Color::BOTH);
-    chord->addEdge(0, originalCycle_m->size()-1, Color::BOTH);
+        chord->addEdge(i, i+1, Color::BLACK);
+    chord->addEdge(0, originalCycle_m->size()-1, Color::BLACK);
     // adding chord edge
     std::optional<int> fromIndex = originalCycle_m->getPositionOfNode(attachment1);
     std::optional<int> toIndex = originalCycle_m->getPositionOfNode(attachment2);
@@ -87,7 +74,7 @@ std::list<const NodeWithColors*> BicoloredSegment::computeBlackPathBetweenAttach
         queue.pop_front();
         const NodeWithColors* higherLevelNode = getHigherLevelNode(node);
         for (const Edge& edge : node->getEdges()) {
-            if (edge.color != Color::BOTH) continue;
+            if (edge.color != Color::BLACK) continue;
             const NodeWithColors* neighbor = edge.node;
             const NodeWithColors* higherLevelNeighbor = getHigherLevelNode(neighbor);
             if (originalCycle_m->hasNode(higherLevelNode) && originalCycle_m->hasNode(higherLevelNeighbor))
@@ -123,44 +110,60 @@ int BicoloredSegmentsHandler::size() const {
 }
 
 void BicoloredSegment::addAttachment(const NodeWithColors* attachment, const Color color) {
-    const int index = attachment->getIndex();
+    if (isNodeBlackAttachment(attachment)) return;
     if (!isNodeAnAttachment(attachment))
         attachmentNodes_m.push_back(attachment);
-    isNodeAnAttachment_m[index] = true;
+    const int index = attachment->getIndex();
     switch (color) {
-        case Color::BOTH:
-            isNodeRedAttachment_m[index] = true;
-            isNodeBlackAttachment_m[index] = true;
-            isNodeBlueAttachment_m[index] = true;
+        case Color::BLACK:
+            attachmentColor_m[index] = Color::BLACK;
             break;
         case Color::BLUE:
-            isNodeBlueAttachment_m[index] = true;
+            if (isNodeRedAttachment(attachment))
+                attachmentColor_m[index] = Color::RED_AND_BLUE;
+            else
+                attachmentColor_m[index] = Color::BLUE;
             break;
         case Color::RED:
-            isNodeRedAttachment_m[index] = true;
+            if (isNodeBlueAttachment(attachment))
+                attachmentColor_m[index] = Color::RED_AND_BLUE;
+            else
+                attachmentColor_m[index] = Color::RED;
             break;
     }
 }
 
 bool BicoloredSegment::isNodeAnAttachment(const NodeWithColors* node) const {
-    return isNodeAnAttachment_m[node->getIndex()];
+    return attachmentColor_m[node->getIndex()] != Color::NONE;
 }
 
 bool BicoloredSegment::isNodeRedAttachment(const NodeWithColors* node) const {
-    return isNodeRedAttachment_m[node->getIndex()];
+    Color color = attachmentColor_m[node->getIndex()];
+    switch (color) {
+        case Color::BLACK: return true;
+        case Color::RED_AND_BLUE: return true;
+        case Color::RED: return true;
+        default: return false;
+    }
 }
 
 bool BicoloredSegment::isNodeBlueAttachment(const NodeWithColors* node) const {
-    return isNodeBlueAttachment_m[node->getIndex()];
+    Color color = attachmentColor_m[node->getIndex()];
+    switch (color) {
+        case Color::BLACK: return true;
+        case Color::RED_AND_BLUE: return true;
+        case Color::BLUE: return true;
+        default: return false;
+    }
 }
 
 bool BicoloredSegment::isNodeBlackAttachment(const NodeWithColors* node) const {
-    return isNodeBlackAttachment_m[node->getIndex()];
+    return attachmentColor_m[node->getIndex()] == Color::BLACK;
 }
 
 bool BicoloredSegment::isNodeAttachmentOfColor(const NodeWithColors* node, const Color color) const {
     switch (color) {
-        case Color::BOTH:
+        case Color::BLACK:
             return isNodeBlackAttachment(node);
         case Color::RED:
             return isNodeRedAttachment(node);
@@ -179,7 +182,7 @@ const NodeWithColors* BicoloredSegment::getAttachment(const int index) const {
     return attachmentNodes_m[index];
 }
 
-// returns true if the segment is just a black path inside (or outside) a cycle
+// returns true if the segment is just a black path
 // with some red/blue edges attached to the path, false otherwise
 bool BicoloredSegment::isBlackPath() const {
     for (int i = 0; i < size(); ++i) {
@@ -190,6 +193,22 @@ bool BicoloredSegment::isBlackPath() const {
             continue;
         }
         if (node->getNumberOfBlackEdges() > 2)
+            return false;
+    }
+    return true;
+}
+
+// returns true if the segment is just a black path
+// or a chord of any color
+bool BicoloredSegment::isPath() const {
+    for (int i = 0; i < size(); ++i) {
+        const NodeWithColors* node = getNode(i);
+        if (isNodeAnAttachment(node)) {
+            if (node->getEdges().size() > 3)
+                return false;
+            continue;
+        }
+        if (node->getEdges().size() > 2)
             return false;
     }
     return true;
@@ -336,7 +355,7 @@ std::vector<std::pair<const NodeWithColors*, const Edge>>& edges) {
     }
     // adding cycle edges
     for (int i = 0; i < originalCycle_m->size()-1; ++i)
-        segment->addEdge(i, i+1, Color::BOTH);
-    segment->addEdge(0, originalCycle_m->size()-1, Color::BOTH);
+        segment->addEdge(i, i+1, Color::BLACK);
+    segment->addEdge(0, originalCycle_m->size()-1, Color::BLACK);
     return segment;
 }

@@ -10,14 +10,16 @@
 enum Color {
     RED,
     BLUE,
-    BOTH
+    BLACK,
+    RED_AND_BLUE,
+    NONE,
 };
 
 inline const char* color2string(const Color color) {
     switch (color) {
         case Color::RED: return "red";
         case Color::BLUE: return "blue";
-        case Color::BOTH: return "both";
+        case Color::BLACK: return "black";
         default: assert(false);
     }
 }

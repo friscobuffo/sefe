@@ -19,4 +19,12 @@ emcc \
     -s EXPORTED_FUNCTIONS='["_embedLoadedFile", "_sefeMainTest"]' \
     -s EXPORTED_RUNTIME_METHODS='["ccall", "cwrap", "FS"]' \
     --preload-file graphs-sefe/a0.txt \
-    --preload-file graphs-sefe/a1.txt
+    --preload-file graphs-sefe/a1.txt \
+    --preload-file graphs/g1.txt \
+    --preload-file graphs/g2.txt \
+    --preload-file graphs/g3.txt \
+    --preload-file graphs/g4.txt \
+    --preload-file graphs/g5.txt \
+    --preload-file graphs/g6.txt \
+    --preload-file graphs/k5.txt \
+    --preload-file graphs/k33.txt

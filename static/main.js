@@ -39,7 +39,7 @@ if (ENVIRONMENT_IS_NODE) {
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
-// include: /tmp/tmp1afiycwm.js
+// include: /tmp/tmpdc99dfik.js
 
   if (!Module.expectedDataFileDownloads) {
     Module.expectedDataFileDownloads = 0;
@@ -149,6 +149,7 @@ var REMOTE_PACKAGE_SIZE = metadata['remote_package_size'];
         if (!check) throw msg + new Error().stack;
       }
 Module['FS_createPath']("/", "graphs-sefe", true, true);
+Module['FS_createPath']("/", "graphs", true, true);
 
       /** @constructor */
       function DataRequest(start, end, audio) {
@@ -216,25 +217,25 @@ Module['FS_createPath']("/", "graphs-sefe", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/graphs-sefe/a0.txt", "start": 0, "end": 33}, {"filename": "/graphs-sefe/a1.txt", "start": 33, "end": 66}], "remote_package_size": 66});
+    loadPackage({"files": [{"filename": "/graphs-sefe/a0.txt", "start": 0, "end": 33}, {"filename": "/graphs-sefe/a1.txt", "start": 33, "end": 66}, {"filename": "/graphs/g1.txt", "start": 66, "end": 99}, {"filename": "/graphs/g2.txt", "start": 99, "end": 128}, {"filename": "/graphs/g3.txt", "start": 128, "end": 181}, {"filename": "/graphs/g4.txt", "start": 181, "end": 239}, {"filename": "/graphs/g5.txt", "start": 239, "end": 272}, {"filename": "/graphs/g6.txt", "start": 272, "end": 305}, {"filename": "/graphs/k33.txt", "start": 305, "end": 342}, {"filename": "/graphs/k5.txt", "start": 342, "end": 383}], "remote_package_size": 383});
 
   })();
 
-// end include: /tmp/tmp1afiycwm.js
-// include: /tmp/tmpsx6h9ffc.js
+// end include: /tmp/tmpdc99dfik.js
+// include: /tmp/tmpr7qf6t1q.js
 
     // All the pre-js content up to here must remain later on, we need to run
     // it.
     if (Module['$ww'] || (typeof ENVIRONMENT_IS_PTHREAD != 'undefined' && ENVIRONMENT_IS_PTHREAD)) Module['preRun'] = [];
     var necessaryPreJSTasks = Module['preRun'].slice();
-  // end include: /tmp/tmpsx6h9ffc.js
-// include: /tmp/tmp6unuh_1d.js
+  // end include: /tmp/tmpr7qf6t1q.js
+// include: /tmp/tmposccrvg0.js
 
     if (!Module['preRun']) throw 'Module.preRun should exist because file support used it; did a pre-js delete it?';
     necessaryPreJSTasks.forEach((task) => {
       if (Module['preRun'].indexOf(task) < 0) throw 'All preRun tasks that exist before user pre-js code should remain after; did you replace Module or modify Module.preRun?';
     });
-  // end include: /tmp/tmp6unuh_1d.js
+  // end include: /tmp/tmposccrvg0.js
 
 
 // Sometimes an existing Module object exists with properties
