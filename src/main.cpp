@@ -71,8 +71,8 @@ void testGraph(std::string path) {
 extern "C" {
     void sefeMainTest() {
         std::cout << std::boolalpha;
-        const Graph* graph1 = loadFromfile("/graphs-sefe/a0.txt");
-        const Graph* graph2 = loadFromfile("/graphs-sefe/a1.txt");
+        const Graph* graph1 = loadFromfile("/example-graphs/graphs-sefe/a0.txt");
+        const Graph* graph2 = loadFromfile("/example-graphs/graphs-sefe/a1.txt");
         const BicoloredGraph bicoloredGraph(graph1, graph2);
         bicoloredGraph.print();
         EmbedderSefe embedderSefe{};
@@ -82,13 +82,13 @@ extern "C" {
 
         std::cout << "all graphs tests\n";
         std::cout << "(boolean values on same row must be the same)\n";
-        testGraph("/graphs/g1.txt");
-        testGraph("/graphs/g2.txt");
-        // testGraph("/graphs/g3.txt"); 
-        testGraph("/graphs/g4.txt");
-        testGraph("/graphs/g5.txt");
-        testGraph("/graphs/g6.txt");
-        testGraph("/graphs/k5.txt");
-        testGraph("/graphs/k33.txt");
+        testGraph("/example-graphs/graphs/g1.txt");
+        testGraph("/example-graphs/graphs/g2.txt");
+        // testGraph("/example-graphs/graphs/g3.txt"); 
+        testGraph("/example-graphs/graphs/g4.txt");
+        testGraph("/example-graphs/graphs/g5.txt");
+        testGraph("/example-graphs/graphs/g6.txt");
+        testGraph("/example-graphs/graphs/k5.txt");
+        testGraph("/example-graphs/graphs/k33.txt");
     }
 }
