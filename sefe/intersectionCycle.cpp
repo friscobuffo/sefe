@@ -52,7 +52,7 @@ void IntersectionCycle::cleanupCycle() {
 
 // the list of nodes must contain, at the end, a node contained in the cycle
 // the new cycle becomes: nodes in the path + nodes in the cycle after the last path's node
-void IntersectionCycle::changeWithPath(std::list<const NodeWithColors*>& path) {
+void IntersectionCycle::changeWithPath(std::list<const NodeWithColors*>& path, const NodeWithColors* nodeToInclude) {
     std::list<const NodeWithColors*> nodesCopy(path); // newCycleList
     const NodeWithColors* firstOfPath = path.front();
     const NodeWithColors* lastOfPath = path.back();
@@ -60,9 +60,17 @@ void IntersectionCycle::changeWithPath(std::list<const NodeWithColors*>& path) {
     while (nodes_m[i] != lastOfPath)
         nextIndex(i);
     nextIndex(i);
+    bool foundNodeToInclude = false;
+    if (nodeToInclude == nullptr) foundNodeToInclude = true;
     while (nodes_m[i] != firstOfPath) {
         nodesCopy.push_back(nodes_m[i]);
+        if (nodes_m[i] == nodeToInclude) foundNodeToInclude = true;
         nextIndex(i);
+    }
+    if (!foundNodeToInclude) {
+        reverse();
+        changeWithPath(path, nodeToInclude);
+        return;
     }
     nodes_m.clear();
     for (int i = 0; i < posInCycle_m.size(); ++i)

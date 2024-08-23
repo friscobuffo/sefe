@@ -130,6 +130,12 @@ void BicoloredSegment::addAttachment(const NodeWithColors* attachment, const Col
             else
                 attachmentColor_m[index] = Color::RED;
             break;
+        case Color::RED_AND_BLUE:
+            attachmentColor_m[index] = Color::RED_AND_BLUE;
+            break;
+        default:
+            std::cout << "invalid color\n";
+            exit(1);
     }
 }
 
@@ -169,8 +175,8 @@ bool BicoloredSegment::isNodeAttachmentOfColor(const NodeWithColors* node, const
             return isNodeRedAttachment(node);
         case Color::BLUE:
             return isNodeBlueAttachment(node);
+        default: assert(false);
     }
-    assert(false);
 }
 
 const int BicoloredSegment::getNumberOfAttachments() const {

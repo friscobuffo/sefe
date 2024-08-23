@@ -47,29 +47,38 @@ bool EmbedderSefe::testSefe(const BicoloredSegment* bicoloredSegment, Intersecti
 void EmbedderSefe::makeCycleGood(IntersectionCycle* cycle, const BicoloredSegment* segment) const {
     assert(!segment->isPath());
     if (segment->isBlackPath()) {
-        std::cout << "ciao\n";
-        exit(1);
+        std::cout << "black path with some chords\n";
     }
-    std::vector<int> attachmentsComponent{};
+    bool isCycleNodeAttachment[cycle->size()];
+    for (int i = 0; i < cycle->size(); ++i)
+        isCycleNodeAttachment[i] = false;
     for (int i = 0; i < segment->getNumberOfAttachments(); ++i) {
         const NodeWithColors* attachment = segment->getAttachment(i);
-        attachmentsComponent.push_back(segment->getHigherLevelNode(attachment)->getIndex());
+        const NodeWithColors* attachmentHigherLevel = segment->getHigherLevelNode(attachment);
+        isCycleNodeAttachment[cycle->getPositionOfNode(attachmentHigherLevel).value()] = true;
     }
     int foundAttachments = 0;
     const NodeWithColors* attachmentsToUse[2];
+    const NodeWithColors* attachmentToInclude = nullptr;
     for (int i = 0; i < cycle->size(); ++i) {
+        if (!isCycleNodeAttachment[i]) continue;
         const NodeWithColors* node = cycle->getNode(i);
-        int index = findIndex(attachmentsComponent, node->getIndex());
-        if (index == -1) continue;
-        const NodeWithColors* attachment = segment->getAttachment(index);
-        if (!segment->isNodeBlackAttachment(attachment))
+        const NodeWithColors* nodeSegment = segment->getNode(i);
+        assert(segment->getHigherLevelNode(nodeSegment) == node);
+        if (!segment->isNodeBlackAttachment(nodeSegment)) {
+            attachmentToInclude = nodeSegment;
             continue;
-        attachmentsToUse[foundAttachments++] = segment->getAttachment(index);
-        if (foundAttachments == 2) break;
+        }
+        if (foundAttachments < 2)
+            attachmentsToUse[foundAttachments++] = nodeSegment;
+        else
+            attachmentToInclude = nodeSegment;
+        if (foundAttachments == 2 && attachmentToInclude != nullptr) break;
     }
     std::list<const NodeWithColors*> path = segment->computeBlackPathBetweenAttachments(attachmentsToUse[0], attachmentsToUse[1]);
     std::list<const NodeWithColors*> pathHigherLevel;
     for (const NodeWithColors* node : path)
         pathHigherLevel.push_back(segment->getHigherLevelNode(node));
-    cycle->changeWithPath(pathHigherLevel);
+    if (attachmentToInclude != nullptr) attachmentToInclude = segment->getHigherLevelNode(attachmentToInclude);
+    cycle->changeWithPath(pathHigherLevel, attachmentToInclude);
 }

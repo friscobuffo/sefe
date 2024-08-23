@@ -17,7 +17,7 @@ private:
     void nextIndex(int& index);
 public:
     Cycle(const SubGraph* component);
-    void changeWithPath(std::list<const Node*>& path);
+    void changeWithPath(std::list<const Node*>& path, const Node* nodeToInclude);
     bool hasNode(const Node* node) const;
     int size() const;
     const Node* getPrevOfNode(const Node* node) const;

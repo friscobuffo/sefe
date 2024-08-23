@@ -410,24 +410,35 @@ std::optional<const Embedding*> Embedder::embedComponent(const SubGraph* compone
 // it may happen that a cycle induces only one segment, which is not a base case
 // so the cycle must be recomputed such that it ensures at least two segments
 void Embedder::makeCycleGood(Cycle* cycle, const Segment* segment) const {
-    const std::vector<const Node*>& attachments = segment->getAttachments();
-    std::vector<int> attachmentsComponent{};
-    for (const Node* attachment : attachments)
-        attachmentsComponent.push_back(segment->getComponentNode(attachment)->getIndex());
+    assert(!segment->isPath());
+    bool isCycleNodeAttachment[cycle->size()];
+    for (int i = 0; i < cycle->size(); ++i)
+        isCycleNodeAttachment[i] = false;
+    for (const Node* attachment : segment->getAttachments()) {
+        const Node* attachmentComponent = segment->getComponentNode(attachment);
+        isCycleNodeAttachment[cycle->getPositionOfNode(attachmentComponent).value()] = true;
+    }
     int foundAttachments = 0;
     const Node* attachmentsToUse[2];
+    const Node* attachmentToInclude = nullptr;
     for (int i = 0; i < cycle->size(); ++i) {
+        if (!isCycleNodeAttachment[i]) continue;
         const Node* node = cycle->getNode(i);
-        int index = findIndex(attachmentsComponent, node->getIndex());
-        if (index == -1) continue;
-        attachmentsToUse[foundAttachments++] = attachments[index];
-        if (foundAttachments == 2) break;
+        const Node* nodeSegment = segment->getNode(i);
+        assert(segment->getComponentNode(nodeSegment) == node);
+        if (foundAttachments < 2)
+            attachmentsToUse[foundAttachments++] = nodeSegment;
+        else
+            attachmentToInclude = nodeSegment;
+        if (foundAttachments == 2 && attachmentToInclude != nullptr) break;
     }
     std::list<const Node*> path = segment->computePathBetweenAttachments(attachmentsToUse[0], attachmentsToUse[1]);
     std::list<const Node*> pathComponent;
     for (const Node* node : path)
         pathComponent.push_back(segment->getComponentNode(node));
-    cycle->changeWithPath(pathComponent);
+    if (attachmentToInclude != nullptr)
+        attachmentToInclude = segment->getComponentNode(attachmentToInclude);
+    cycle->changeWithPath(pathComponent, attachmentToInclude);
 }
 
 // base case: graph has <4 nodes

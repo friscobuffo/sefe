@@ -52,7 +52,7 @@ Cycle::Cycle(const SubGraph* component) : originalComponent_m(component) {
 
 // the list of nodes must contain, at the end, a node contained in the cycle
 // the new cycle becomes: nodes in the path + nodes in the cycle after the last path's node
-void Cycle::changeWithPath(std::list<const Node*>& path) {
+void Cycle::changeWithPath(std::list<const Node*>& path, const Node* nodeToInclude) {
     std::list<const Node*> nodesCopy(path); // newCycleList
     const Node* firstOfPath = path.front();
     const Node* lastOfPath = path.back();
@@ -60,9 +60,17 @@ void Cycle::changeWithPath(std::list<const Node*>& path) {
     while (nodes_m[i] != lastOfPath)
         nextIndex(i);
     nextIndex(i);
+    bool foundNodeToInclude = false;
+    if (nodeToInclude == nullptr) foundNodeToInclude = true;
     while (nodes_m[i] != firstOfPath) {
         nodesCopy.push_back(nodes_m[i]);
+        if (nodes_m[i] == nodeToInclude) foundNodeToInclude = true;
         nextIndex(i);
+    }
+    if (!foundNodeToInclude) {
+        reverse();
+        changeWithPath(path, nodeToInclude);
+        return;
     }
     nodes_m.clear();
     for (int i = 0; i < posInCycle_m.size(); ++i)

@@ -20,7 +20,7 @@ private:
     void nextIndex(int& index);
 public:
     IntersectionCycle(const BicoloredSegment* graph);
-    void changeWithPath(std::list<const NodeWithColors*>& path);
+    void changeWithPath(std::list<const NodeWithColors*>& path, const NodeWithColors* nodeToInclude);
     bool hasNode(const NodeWithColors* node) const;
     int size() const;
     const NodeWithColors* getPrevOfNode(const NodeWithColors* node) const;
