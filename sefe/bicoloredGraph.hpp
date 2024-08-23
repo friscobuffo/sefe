@@ -5,6 +5,7 @@
 #include <memory>
 #include <cassert>
 
+#include "../basic/utils.hpp"
 #include "../basic/graph.hpp"
 
 enum Color {
@@ -54,6 +55,7 @@ private:
     Graph intersection_m;
 protected:
     std::vector<NodeWithColors> nodes_m;
+    std::vector<const NodeWithColors*> nodesPointers_m;
 public:
     void addEdge(NodeWithColors* from, NodeWithColors* to, Color color);
     void addEdge(const int fromIndex, const int toIndex, Color color);
@@ -61,9 +63,22 @@ public:
     BicoloredGraph(const int numberOfNodes);
     const NodeWithColors* getNode(const int index) const;
     NodeWithColors* getNode(const int index);
+    const std::vector<const NodeWithColors*> getNodes() const;
     const int size() const;
     virtual void print() const;
     const Graph* getIntersection() const;
+};
+
+class BicoloredSubGraph : public BicoloredGraph {
+private:
+    const BicoloredGraph* originalGraph_m;
+    ArrayPointers<const NodeWithColors> originalNodes_m;
+public:
+    BicoloredSubGraph(const int numberOfNodes, const BicoloredGraph* graph);
+    BicoloredSubGraph(const BicoloredGraph* graph);
+    const NodeWithColors* getOriginalNode(const NodeWithColors* node) const;
+    void setOriginalNode(const NodeWithColors* node, const NodeWithColors* originalNode);
+    void print() const override;
 };
 
 #endif
