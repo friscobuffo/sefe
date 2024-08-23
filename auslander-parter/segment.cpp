@@ -7,9 +7,8 @@ Segment::Segment(const int numberOfNodes, const SubGraph* component, const Cycle
 : SubGraph(numberOfNodes, component), originalComponent_m(component),
 originalCycle_m(cycle), componentNodesPointers_m(numberOfNodes) {
     isNodeAnAttachment_m.resize(numberOfNodes);
-    for (int i = 0; i < numberOfNodes; ++i) {
+    for (int i = 0; i < numberOfNodes; ++i)
         isNodeAnAttachment_m[i] = false;
-    }
 }
 
 void Segment::addAttachment(const Node* attachment) {
@@ -25,8 +24,7 @@ bool Segment::isNodeAnAttachment(const Node* node) const {
 // returns true if the segment is just a path inside (or outside) a cycle,
 // false otherwise
 bool Segment::isPath() const {
-    for (int i = 0; i < size(); ++i) {
-        const Node* node = getNode(i);
+    for (const Node* node : getNodes()) {
         if (isNodeAnAttachment(node)) continue;
         if (node->getNeighbors().size() > 2)
             return false;
@@ -90,8 +88,7 @@ void Segment::setComponentNode(const Node* node, const Node* componentNode) {
 }
 
 void SegmentsHandler::segmentCheck(const Segment* segment) {
-    for (int i = 0; i < segment->size(); ++i) {
-        const Node* node = segment->getNode(i);
+    for (const Node* node : segment->getNodes()) {
         const Node* nodeComponent = segment->getComponentNode(node);
         assert(nodeComponent->getGraph() == originalComponent_m);
         assert(segment->getOriginalNode(node) == originalComponent_m->getOriginalNode(nodeComponent));

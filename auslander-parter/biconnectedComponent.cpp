@@ -131,8 +131,7 @@ std::list<std::pair<const Node*, const Node*>>& stackOfEdges) {
 }
 
 void BiconnectedComponentsHandler::componentCheck(const SubGraph* component) {
-    for (int i = 0; i < component->size(); ++i) {
-        const Node* node = component->getNode(i);
+    for (const Node* node : component->getNodes()) {
         const Node* nodeGraph = component->getOriginalNode(node);
         assert(nodeGraph->getGraph() == originalGraph_m);
     }

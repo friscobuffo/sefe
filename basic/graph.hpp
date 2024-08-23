@@ -3,7 +3,6 @@
 
 #include <vector>
 #include <optional>
-#include <memory>
 
 #include "utils.hpp"
 
@@ -28,8 +27,10 @@ private:
     bool bfsBipartition(int node, std::vector<int>& bipartition) const;
 protected:
     std::vector<Node> nodes_m;
+    std::vector<const Node*> nodesPointers_m;
 public:
     Graph(const int numberOfNodes);
+    const std::vector<const Node*> getNodes() const;
     const Node* getNode(const int index) const;
     Node* getNode(const int index);
     void addEdge(Node* from, Node* to);

@@ -30,6 +30,11 @@ Graph::Graph(const int numberOfNodes) {
     assert(numberOfNodes > 0);
     for (int i = 0; i < numberOfNodes; ++i)
         nodes_m.push_back(Node(i, this));
+    for (int i = 0; i < numberOfNodes; ++i)
+        nodesPointers_m.push_back(&nodes_m[i]);
+    assert(nodes_m.size() == nodesPointers_m.size());
+    for (int i = 0; i < size(); ++i)
+        assert(getNode(i) == getNodes()[i]);
 }
 
 // assumes edge is not already in graph
@@ -106,6 +111,9 @@ Node* Graph::getNode(const int index) {
     return &nodes_m[index];
 }
 
+const std::vector<const Node*> Graph::getNodes() const {
+    return nodesPointers_m;
+}
 
 Graph* Graph::computeIntersection(const Graph* graph) const {
     assert(size() == graph->size());

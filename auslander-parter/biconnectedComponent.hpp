@@ -4,6 +4,7 @@
 #include <vector>
 #include <list>
 #include <utility>
+#include <memory>
 
 #include "../basic/graph.hpp"
 
