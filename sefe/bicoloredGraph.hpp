@@ -79,6 +79,7 @@ public:
     const NodeWithColors* getOriginalNode(const NodeWithColors* node) const;
     void setOriginalNode(const NodeWithColors* node, const NodeWithColors* originalNode);
     void print() const override;
+    const BicoloredGraph* getOriginalGraph() const;
 };
 
 #endif

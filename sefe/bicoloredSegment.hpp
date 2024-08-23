@@ -11,17 +11,15 @@
 
 class IntersectionCycle;
 
-class BicoloredSegment : public BicoloredGraph {
+class BicoloredSegment : public BicoloredSubGraph {
 private:
     std::vector<const NodeWithColors*> attachmentNodes_m{};
     std::vector<Color> attachmentColor_m{};
-    const BicoloredSegment* higherLevel_m;
+    const BicoloredSubGraph* higherLevel_m;
     const IntersectionCycle* originalCycle_m;
     ArrayPointers<const NodeWithColors> higherLevelNodesPointers_m;
-    ArrayPointers<const NodeWithColors> originalNodesPointers_m;
 public:
-    BicoloredSegment(const int numberOfNodes, const BicoloredSegment* higherLevel, const IntersectionCycle* cycle);
-    BicoloredSegment(const BicoloredGraph* bicoloredGraph);
+    BicoloredSegment(const int numberOfNodes, const BicoloredSubGraph* higherLevel, const IntersectionCycle* cycle);
     bool isBlackPath() const;
     bool isPath() const;
     const int getNumberOfAttachments() const;
@@ -35,11 +33,9 @@ public:
     std::list<const NodeWithColors*> computeBlackPathBetweenAttachments(const NodeWithColors* start,
         const NodeWithColors* end) const;
     const IntersectionCycle* getOriginalCycle() const;
-    const BicoloredSegment* getHigherLevel() const;
+    const BicoloredSubGraph* getHigherLevel() const;
     const NodeWithColors* getHigherLevelNode(const NodeWithColors* node) const;
     void setHigherLevelNode(const NodeWithColors* node, const NodeWithColors* higherLevelNode);
-    const NodeWithColors* getOriginalNode(const NodeWithColors* node) const;
-    void setOriginalNode(const NodeWithColors* node, const NodeWithColors* originalNode);
     void print() const;
 };
 
@@ -47,7 +43,7 @@ class BicoloredSegmentsHandler {
 private:
     std::vector<std::unique_ptr<const BicoloredSegment>> segments_m{};
     const IntersectionCycle* originalCycle_m;
-    const BicoloredSegment* higherLevel_m;
+    const BicoloredSubGraph* higherLevel_m;
     const BicoloredSegment* buildSegment(std::vector<const NodeWithColors*>& nodes,
         std::vector<std::pair<const NodeWithColors*, const Edge>>& edges);
     const BicoloredSegment* buildChord(const NodeWithColors* attachment1,
@@ -58,7 +54,7 @@ private:
     void findSegments();
     void findChords();
 public:
-    BicoloredSegmentsHandler(const BicoloredSegment* bicoloredSegment, const IntersectionCycle* cycle);
+    BicoloredSegmentsHandler(const BicoloredSubGraph* graph, const IntersectionCycle* cycle);
     const BicoloredSegment* getSegment(const int index) const;
     int size() const;
     void print() const;

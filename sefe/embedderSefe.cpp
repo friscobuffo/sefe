@@ -13,14 +13,14 @@ bool EmbedderSefe::testSefe(const Graph* graph1, const Graph* graph2) const {
         std::cout << "intersection must be biconnected\n";
         return false;
     }
-    BicoloredSegment bicoloredSegment(&bicoloredGraph);
-    IntersectionCycle cycle(&bicoloredSegment);
-    return testSefe(&bicoloredSegment, &cycle);
+    BicoloredSubGraph bicoloredSubGraph(&bicoloredGraph);
+    IntersectionCycle cycle(&bicoloredSubGraph);
+    return testSefe(&bicoloredSubGraph, &cycle);
 }
 
 // assumes intersection is biconnected
-bool EmbedderSefe::testSefe(const BicoloredSegment* bicoloredSegment, IntersectionCycle* cycle) const {
-    const BicoloredSegmentsHandler segmentsHandler = BicoloredSegmentsHandler(bicoloredSegment, cycle);
+bool EmbedderSefe::testSefe(const BicoloredSubGraph* bicoloredGraph, IntersectionCycle* cycle) const {
+    const BicoloredSegmentsHandler segmentsHandler = BicoloredSegmentsHandler(bicoloredGraph, cycle);
     if (segmentsHandler.size() == 0) // entire biconnected component is a cycle
         return true;
     if (segmentsHandler.size() == 1) {
@@ -29,7 +29,7 @@ bool EmbedderSefe::testSefe(const BicoloredSegment* bicoloredSegment, Intersecti
             return true;
         // chosen cycle is bad
         makeCycleGood(cycle, segment);
-        return testSefe(bicoloredSegment, cycle);
+        return testSefe(bicoloredGraph, cycle);
     }
     InterlacementGraphSefe interlacementGraph(cycle, &segmentsHandler);
     std::optional<std::vector<int>> bipartition = interlacementGraph.computeBipartition();

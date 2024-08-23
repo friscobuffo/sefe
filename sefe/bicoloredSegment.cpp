@@ -5,25 +5,9 @@
 
 #include "../basic/utils.hpp"
 
-BicoloredSegment::BicoloredSegment(const BicoloredGraph* bicoloredGraph)
-: BicoloredGraph(bicoloredGraph->size()), higherLevel_m(nullptr), originalCycle_m(nullptr),
-higherLevelNodesPointers_m(bicoloredGraph->size()), originalNodesPointers_m(bicoloredGraph->size()) {
-    for (int i = 0; i < bicoloredGraph->size(); ++i) {
-        const NodeWithColors* node = bicoloredGraph->getNode(i);
-        setHigherLevelNode(getNode(i), node);
-        setOriginalNode(getNode(i), node);
-        for (const Edge& edge : node->getEdges())
-            if (i < edge.node->getIndex())
-                addEdge(i, edge.node->getIndex(), edge.color);
-    }
-    attachmentColor_m.resize(bicoloredGraph->size());
-    for (int i = 0; i < bicoloredGraph->size(); ++i)
-        attachmentColor_m[i] = Color::NONE;
-}
-
-BicoloredSegment::BicoloredSegment(const int numberOfNodes, const BicoloredSegment* higherLevel, const IntersectionCycle* cycle)
-: BicoloredGraph(numberOfNodes), higherLevel_m(higherLevel),
-originalCycle_m(cycle), higherLevelNodesPointers_m(numberOfNodes), originalNodesPointers_m(numberOfNodes) {
+BicoloredSegment::BicoloredSegment(const int numberOfNodes, const BicoloredSubGraph* higherLevel, const IntersectionCycle* cycle)
+: BicoloredSubGraph(numberOfNodes, higherLevel->getOriginalGraph()), higherLevel_m(higherLevel),
+originalCycle_m(cycle), higherLevelNodesPointers_m(numberOfNodes) {
     attachmentColor_m.resize(numberOfNodes);
     for (int i = 0; i < numberOfNodes; ++i)
         attachmentColor_m[i] = Color::NONE;
@@ -220,19 +204,11 @@ bool BicoloredSegment::isPath() const {
     return true;
 }
 
-const NodeWithColors* BicoloredSegment::getOriginalNode(const NodeWithColors* node) const {
-    return originalNodesPointers_m.getPointer(node->getIndex());
-}
-
-void BicoloredSegment::setOriginalNode(const NodeWithColors* node, const NodeWithColors* originalNode) {
-    originalNodesPointers_m.setPointer(node->getIndex(), originalNode);
-}
-
 const IntersectionCycle* BicoloredSegment::getOriginalCycle() const {
     return originalCycle_m;
 }
 
-const BicoloredSegment* BicoloredSegment::getHigherLevel() const {
+const BicoloredSubGraph* BicoloredSegment::getHigherLevel() const {
     return higherLevel_m;
 }
 
@@ -259,8 +235,8 @@ void BicoloredSegment::print() const {
     }
 }
 
-BicoloredSegmentsHandler::BicoloredSegmentsHandler(const BicoloredSegment* bicoloredSegment, const IntersectionCycle* cycle)
-: higherLevel_m(bicoloredSegment), originalCycle_m(cycle) {
+BicoloredSegmentsHandler::BicoloredSegmentsHandler(const BicoloredSubGraph* graph, const IntersectionCycle* cycle)
+: higherLevel_m(graph), originalCycle_m(cycle) {
     findSegments();
     findChords();
 }

@@ -159,3 +159,7 @@ void BicoloredSubGraph::print() const {
         std::cout << "]\n";
     }
 }
+
+const BicoloredGraph* BicoloredSubGraph::getOriginalGraph() const {
+    return originalGraph_m;
+}

@@ -12,7 +12,7 @@ InterlacementGraphSefe::InterlacementGraphSefe(const IntersectionCycle* cycle, c
 void InterlacementGraphSefe::computeCycleLabels(const BicoloredSegment* segment,
 int cycleLabels[], Color color, int& numberOfColoredAttachments) {
     assert(color != Color::BLACK);
-    int originalSegmentSize = cycle_m->getOriginalBicoloredSegmentSize();
+    int originalSegmentSize = cycle_m->getOriginalGraphSize();
     bool isCycleNodeAnAttachment[originalSegmentSize];
     for (int i = 0; i < originalSegmentSize; ++i)
         isCycleNodeAnAttachment[i] = false;
@@ -65,8 +65,8 @@ const BicoloredSegment* segment2, const int cycleLabels[], const Color color, co
 }
 
 void InterlacementGraphSefe::computeConflicts() {
-    int blueCycleLabels[cycle_m->getOriginalBicoloredSegmentSize()];
-    int redCycleLabels[cycle_m->getOriginalBicoloredSegmentSize()];
+    int blueCycleLabels[cycle_m->getOriginalGraphSize()];
+    int redCycleLabels[cycle_m->getOriginalGraphSize()];
     for (int i = 0; i < segmentsHandler_m->size()-1; ++i) {
         const BicoloredSegment* segment = segmentsHandler_m->getSegment(i);
         int numberOfRedAttachments = 0;
