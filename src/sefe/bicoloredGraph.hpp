@@ -27,7 +27,7 @@ inline const char* color2string(const Color color) {
 class NodeWithColors;
 
 struct Edge {
-    const NodeWithColors* node;
+    const NodeWithColors* const node;
     const Color color;
 };
 

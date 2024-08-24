@@ -76,9 +76,6 @@ bool EmbedderSefe::testSefe(const BicoloredSubGraph* bicoloredGraph, Intersectio
 // so the cycle must be recomputed such that it ensures at least two segments
 void EmbedderSefe::makeCycleGood(IntersectionCycle* cycle, const BicoloredSegment* segment) const {
     assert(!segment->isPath());
-    if (segment->isBlackPath()) {
-        std::cout << "black path with some chords\n";
-    }
     bool isCycleNodeAttachment[cycle->size()];
     for (int i = 0; i < cycle->size(); ++i)
         isCycleNodeAttachment[i] = false;
@@ -111,11 +108,6 @@ void EmbedderSefe::makeCycleGood(IntersectionCycle* cycle, const BicoloredSegmen
     if (attachmentToInclude != nullptr) attachmentToInclude = segment->getHigherLevelNode(attachmentToInclude);
     cycle->changeWithPath(pathHigherLevel, attachmentToInclude);
 }
-
-//
-//
-//
-//
 
 // base case: biconnected component is a cycle
 const EmbeddingSefe* EmbedderSefe::baseCaseCycle(const BicoloredSubGraph* cycle) const {

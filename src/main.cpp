@@ -84,7 +84,6 @@ extern "C" {
         }
         delete graph1;
         delete graph2;
-
         std::cout << "all graphs tests\n";
         std::cout << "(boolean values on same row must be the same)\n";
         testGraph("/example-graphs/graphs/g1.txt");

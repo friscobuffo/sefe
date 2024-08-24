@@ -52,7 +52,3 @@ $(TARGET): $(OBJS)
 $(OBJ_DIR)/%.o: %.cpp
 	@mkdir -p $(dir $@)
 	$(EMCC) $(INCLUDES) -c $< -o $@
-
-# Clean up
-clean:
-	rm -rf $(OUT_DIR) $(OBJ_DIR)
