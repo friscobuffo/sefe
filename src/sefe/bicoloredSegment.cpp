@@ -93,6 +93,10 @@ int BicoloredSegmentsHandler::size() const {
     return segments_m.size();
 }
 
+const std::vector<const NodeWithColors*> BicoloredSegment::getAttachments() const {
+    return attachmentNodes_m;
+}
+
 void BicoloredSegment::addAttachment(const NodeWithColors* attachment, const Color color) {
     if (isNodeBlackAttachment(attachment)) return;
     if (!isNodeAnAttachment(attachment))
@@ -161,15 +165,6 @@ bool BicoloredSegment::isNodeAttachmentOfColor(const NodeWithColors* node, const
             return isNodeBlueAttachment(node);
         default: assert(false);
     }
-}
-
-const int BicoloredSegment::getNumberOfAttachments() const {
-    return attachmentNodes_m.size();
-}
-
-const NodeWithColors* BicoloredSegment::getAttachment(const int index) const {
-    assert(index < getNumberOfAttachments());
-    return attachmentNodes_m[index];
 }
 
 // returns true if the segment is just a black path

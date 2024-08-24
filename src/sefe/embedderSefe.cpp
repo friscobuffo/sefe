@@ -1,6 +1,7 @@
 #include "embedderSefe.hpp"
 
 #include <iostream>
+#include <cassert>
 #include <vector>
 
 #include "../auslander-parter/biconnectedComponent.hpp"
@@ -81,8 +82,7 @@ void EmbedderSefe::makeCycleGood(IntersectionCycle* cycle, const BicoloredSegmen
     bool isCycleNodeAttachment[cycle->size()];
     for (int i = 0; i < cycle->size(); ++i)
         isCycleNodeAttachment[i] = false;
-    for (int i = 0; i < segment->getNumberOfAttachments(); ++i) {
-        const NodeWithColors* attachment = segment->getAttachment(i);
+    for (const NodeWithColors* attachment : segment->getAttachments()) {
         const NodeWithColors* attachmentHigherLevel = segment->getHigherLevelNode(attachment);
         isCycleNodeAttachment[cycle->getPositionOfNode(attachmentHigherLevel).value()] = true;
     }
@@ -222,15 +222,15 @@ std::optional<const EmbeddingSefe*> EmbedderSefe::embedGraph(const BicoloredGrap
 // for each segment, it computes the minimum and the maximum of all of its attachments,
 // using attachment notation based on the position in the cycle (0, ..., cycleSize-1)
 void EmbedderSefe::computeMinAndMaxSegmentsAttachments(const BicoloredSegmentsHandler& segmentsHandler,
-int segmentsMinMaxRedAttachment[][2], int segmentsMinMaxBlueAttachment[][2]) const {
+int segmentsMinMaxRedAttachment[][2], int segmentsMinMaxBlueAttachment[][2],
+bool segmentsHaveBetweenRedAttachment[], bool segmentsHaveBetweenBlueAttachment[]) const {
     for (int i = 0; i < segmentsHandler.size(); i++) {
         int minRed = segmentsHandler.getSegment(i)->size();
-        int maxRed = 0;
+        int maxRed = -1;
         int minBlue = segmentsHandler.getSegment(i)->size();
-        int maxBlue = 0;
+        int maxBlue = -1;
         const BicoloredSegment* segment = segmentsHandler.getSegment(i);
-        for (int j = 0; j < segment->getNumberOfAttachments(); ++j) {
-            const NodeWithColors* attachment = segment->getAttachment(j);
+        for (const NodeWithColors* attachment : segment->getAttachments()) {
             const Color color = segment->getColorOfAttachment(attachment);
             int index = attachment->getIndex();
             switch (color) {
@@ -258,6 +258,25 @@ int segmentsMinMaxRedAttachment[][2], int segmentsMinMaxBlueAttachment[][2]) con
         segmentsMinMaxRedAttachment[i][1] = maxRed;
         segmentsMinMaxBlueAttachment[i][0] = minBlue;
         segmentsMinMaxBlueAttachment[i][1] = maxBlue;
+        segmentsHaveBetweenRedAttachment[i] = false;
+        segmentsHaveBetweenBlueAttachment[i] = false;
+        for (const NodeWithColors* attachment : segment->getAttachments()) {
+            int index = attachment->getIndex();
+            if (segment->isNodeRedAttachment(attachment)) {
+                if (minRed < index && index < maxRed)
+                    segmentsHaveBetweenRedAttachment[i] = true;
+                else
+                    assert(index == minRed || index == maxRed);
+            }
+            if (segment->isNodeBlueAttachment(attachment)) {
+                if (minBlue < index && index < maxBlue)
+                    segmentsHaveBetweenBlueAttachment[i] = true;
+                else
+                    assert(index == minBlue || index == maxBlue);
+            }
+            if (segmentsHaveBetweenRedAttachment[i] && segmentsHaveBetweenBlueAttachment[i])
+                break;
+        }
     }
 }
 
@@ -267,7 +286,10 @@ const std::vector<int>& bipartition) const {
     EmbeddingSefe* output = new EmbeddingSefe(graph);
     int segmentsMinMaxRedAttachment[segmentsHandler.size()][2];
     int segmentsMinMaxBlueAttachment[segmentsHandler.size()][2];
-    computeMinAndMaxSegmentsAttachments(segmentsHandler, segmentsMinMaxRedAttachment, segmentsMinMaxBlueAttachment);
+    bool segmentsHaveBetweenRedAttachment[segmentsHandler.size()]; // true if segment has a red attachment between its min and max red attachments
+    bool segmentsHaveBetweenBlueAttachment[segmentsHandler.size()]; // true if segment has a blue attachment between its min and max blue attachments
+    computeMinAndMaxSegmentsAttachments(segmentsHandler, segmentsMinMaxRedAttachment, segmentsMinMaxBlueAttachment,
+        segmentsHaveBetweenRedAttachment, segmentsHaveBetweenBlueAttachment);
     std::vector<bool> isSegmentCompatible = compatibilityEmbeddingsAndCycle(graph, cycle, embeddings, segmentsHandler);
     for (int cycleNodePosition = 0; cycleNodePosition < cycle->size(); ++cycleNodePosition) {
         std::vector<int> insideSegments{};
@@ -283,12 +305,12 @@ const std::vector<int>& bipartition) const {
         const NodeWithColors* prevCycleNode = cycle->getPrevOfNode(cycleNode);
         const NodeWithColors* nextCycleNode = cycle->getNextOfNode(cycleNode);
         // order of the segments inside the cycle
-        std::vector<int> insideOrder = computeOrder(cycleNode, insideSegments,
-            segmentsMinMaxRedAttachment, segmentsMinMaxBlueAttachment, segmentsHandler, cycleNodePosition);
+        std::vector<int> insideOrder = computeOrder(cycleNode, insideSegments, segmentsMinMaxRedAttachment, segmentsMinMaxBlueAttachment,
+            segmentsHandler, cycleNodePosition, segmentsHaveBetweenRedAttachment, segmentsHaveBetweenBlueAttachment);
         reverseVector(insideOrder);
         // order of the segments outside the cycle
-        std::vector<int> outsideOrder = computeOrder(cycleNode, outsideSegments,
-            segmentsMinMaxRedAttachment, segmentsMinMaxBlueAttachment, segmentsHandler, cycleNodePosition);
+        std::vector<int> outsideOrder = computeOrder(cycleNode, outsideSegments, segmentsMinMaxRedAttachment, segmentsMinMaxBlueAttachment,
+            segmentsHandler, cycleNodePosition, segmentsHaveBetweenRedAttachment, segmentsHaveBetweenBlueAttachment);
         for (int index : outsideOrder)
             isSegmentCompatible[index] = !isSegmentCompatible[index];
         output->addSingleEdge(cycleNode->getIndex(), nextCycleNode->getIndex(), Color::BLACK);
@@ -396,7 +418,7 @@ const std::vector<std::unique_ptr<const EmbeddingSefe>>& embeddings, const Bicol
     for (int i = 0; i < segmentsHandler.size(); ++i) {
         const BicoloredSegment* segment = segmentsHandler.getSegment(i);
         const EmbeddingSefe* embedding = embeddings[i].get();
-        const NodeWithColors* attachment = segment->getAttachment(0); // any attachment is good
+        const NodeWithColors* attachment = segment->getAttachments()[0]; // any attachment is good
         const NodeWithColors* higherLevelNode = segment->getHigherLevelNode(attachment);
         const NodeWithColors* next = cycle->getNextOfNode(higherLevelNode);
         const NodeWithColors* prev = cycle->getPrevOfNode(higherLevelNode);
@@ -417,4 +439,108 @@ const std::vector<std::unique_ptr<const EmbeddingSefe>>& embeddings, const Bicol
         isCompatible[i] = (segment->getHigherLevelNode(edges[nextPosition].node) != prev);
     }
     return isCompatible;
+}
+
+// returns -1 if the first segment goes before the second,
+// returns 1 if the first segment goes after the second,
+// returns 0 if they can go in any order
+// (considering the segments to be placed outside the cycle)
+int compareSegments(const NodeWithColors* cycleNode, const BicoloredSegment* segment1, const BicoloredSegment* segment2,
+int segmentsMinMaxAttachment[][2], int segment1index, int segment2index,
+int cycleNodePosition, bool segmentsHasBetweenAttachment[]) {
+    int seg1min = segmentsMinMaxAttachment[segment1index][0];
+    int seg1max = segmentsMinMaxAttachment[segment1index][1];
+    bool hasSeg1between = segmentsHasBetweenAttachment[segment1index];
+
+    int seg2min = segmentsMinMaxAttachment[segment2index][0];
+    int seg2max = segmentsMinMaxAttachment[segment2index][1];
+    bool hasSeg2between = segmentsHasBetweenAttachment[segment2index];
+
+    if (cycleNodePosition == seg1min && cycleNodePosition == seg2min) {
+        if (seg1max < seg2max)
+            return 1;
+        if (seg1max > seg2max)
+            return -1;
+        if (hasSeg1between) {
+            assert(!hasSeg2between);
+            return 1;
+        }
+        if (hasSeg2between) {
+            assert(!hasSeg1between);
+            return -1;
+        }
+        return 0;
+    }
+    if (cycleNodePosition == seg1min) {
+        if (seg2min < seg1min)
+            return 1;
+        return 0;
+    }
+    if (cycleNodePosition == seg2min) {
+        if (seg1min < seg2min)
+            return -1;
+        return 0;
+    }
+    if (cycleNodePosition == seg1max && cycleNodePosition == seg2max) {
+        if (seg1min < seg2min)
+            return 1;
+        if (seg1min > seg2min)
+            return -1;
+        if (hasSeg1between) {
+            assert(!hasSeg2between);
+            return -1;
+        }
+        if (hasSeg2between) {
+            assert(!hasSeg1between);
+            return 1;
+        }
+        return 0;
+    }
+    if (cycleNodePosition == seg1max) {
+        if (seg2max > seg1max)
+            return -1;
+        return 0;
+    }
+    if (cycleNodePosition == seg2min) {
+        if (seg1min < seg2min)
+            return 1;
+        return 0;
+    }
+    return 0;
+}
+
+// assuming the cycle is drawn CLOCKWISE, and assuming the segments incident to the
+// attachment "cycleNode" must be drawn OUTSIDE the cycle, computes the order of
+// placement of these segments such that they don't intersect
+std::vector<int> EmbedderSefe::computeOrder(const NodeWithColors* cycleNode, const std::vector<int>& segmentsIndexes,
+int segmentsMinMaxRedAttachment[][2], int segmentsMinMaxBlueAttachment[][2], const BicoloredSegmentsHandler& segmentsHandler,
+int cycleNodePosition, bool segmentsHasBetweenRedAttachment[], bool segmentsHasBetweenBlueAttachment[]) const {
+    std::vector<int> order(segmentsIndexes);
+    for (int i = 0; i < int(order.size())-1; ++i) {
+        int min = i;
+        const BicoloredSegment* segment = segmentsHandler.getSegment(order[min]);
+        for (int j = i+1; j < order.size(); ++j) {
+            const BicoloredSegment* segmentCandidate = segmentsHandler.getSegment(order[j]);
+            int v = compareSegments(cycleNode, segment, segmentCandidate, segmentsMinMaxRedAttachment,
+                order[min], order[j], cycleNodePosition, segmentsHasBetweenRedAttachment);
+            if (v == 0)
+                v = compareSegments(cycleNode, segment, segmentCandidate, segmentsMinMaxBlueAttachment,
+                    order[min], order[j], cycleNodePosition, segmentsHasBetweenBlueAttachment);
+            if (v < 0)
+                continue;
+            if (v > 0) {
+                min = j;
+                segment = segmentsHandler.getSegment(order[min]);
+                continue;
+            }
+            if (order[min] < order[j]) {
+                min = j;
+                segment = segmentsHandler.getSegment(order[min]);
+            }
+        }
+        int temp = order[min];
+        order[min] = order[i];
+        order[i] = temp;
+    }
+    return order;
 }

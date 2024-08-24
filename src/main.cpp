@@ -76,6 +76,12 @@ extern "C" {
         bicoloredGraph.print();
         EmbedderSefe embedderSefe{};
         std::cout << embedderSefe.testSefe(graph1, graph2) << "\n";
+        std::optional<const EmbeddingSefe*> embeddingSefe = embedderSefe.embedGraph(&bicoloredGraph);
+        std::cout << embeddingSefe.has_value() << "\n";
+        if (embeddingSefe.has_value()) {
+            embeddingSefe.value()->print();
+            delete embeddingSefe.value();
+        }
         delete graph1;
         delete graph2;
 

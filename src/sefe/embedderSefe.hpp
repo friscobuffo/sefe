@@ -25,7 +25,7 @@ private:
     //
     const EmbeddingSefe* baseCaseGraph(const BicoloredGraph* graph) const;
     std::optional<const EmbeddingSefe*> embedGraph(const BicoloredSubGraph* graph) const;
-    std::optional<const EmbeddingSefe*> embedGraph(const BicoloredSubGraph* component,
+    std::optional<const EmbeddingSefe*> embedGraph(const BicoloredSubGraph* graph,
         IntersectionCycle* cycle) const;
     const EmbeddingSefe* baseCaseCycle(const BicoloredSubGraph* cycle) const;
     const EmbeddingSefe* baseCasePath(const BicoloredSubGraph* component, const IntersectionCycle* cycle) const;
@@ -33,12 +33,14 @@ private:
         const std::vector<std::unique_ptr<const EmbeddingSefe>>& embeddings, const BicoloredSegmentsHandler& segmentsHandler,
         const std::vector<int>& bipartition) const;
     void computeMinAndMaxSegmentsAttachments(const BicoloredSegmentsHandler& segmentsHandler,
-        int segmentsMinMaxRedAttachment[][2], int segmentsMinMaxBlueAttachment[][2]) const;
+        int segmentsMinMaxRedAttachment[][2], int segmentsMinMaxBlueAttachment[][2],
+        bool segmentsHaveBetweenRedAttachment[], bool segmentsHaveBetweenBlueAttachment[]) const;
     std::vector<bool> compatibilityEmbeddingsAndCycle(const BicoloredSubGraph* component, const IntersectionCycle* cycle,
     const std::vector<std::unique_ptr<const EmbeddingSefe>>& embeddings, const BicoloredSegmentsHandler& segmentsHandler) const;
     std::vector<int> computeOrder(const NodeWithColors* cycleNode, const std::vector<int>& segmentsIndexes,
         int segmentsMinMaxRedAttachment[][2], int segmentsMinMaxBlueAttachment[][2],
-        const BicoloredSegmentsHandler& segmentsHandler, int cycleNodePosition) const;
+        const BicoloredSegmentsHandler& segmentsHandler, int cycleNodePosition,
+        bool segmentsHaveBetweenRedAttachment[], bool segmentsHaveBetweenBlueAttachment[]) const;
     void addMiddleEdges(const BicoloredSegment* segment, const EmbeddingSefe* embedding, int cycleNodeIndex,
         const BicoloredSubGraph* higherLevel, bool compatible, EmbeddingSefe* output) const;
 public:

@@ -20,8 +20,7 @@ public:
     BicoloredSegment(const int numberOfNodes, const BicoloredSubGraph* higherLevel, const IntersectionCycle* cycle);
     bool isBlackPath() const;
     bool isPath() const;
-    const int getNumberOfAttachments() const;
-    const NodeWithColors* getAttachment(const int index) const;
+    const std::vector<const NodeWithColors*> getAttachments() const;
     void addAttachment(const NodeWithColors* attachment, const Color color);
     bool isNodeAnAttachment(const NodeWithColors* node) const;
     bool isNodeRedAttachment(const NodeWithColors* node) const;

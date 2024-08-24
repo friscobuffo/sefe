@@ -16,8 +16,7 @@ int cycleLabels[], Color color, int& numberOfColoredAttachments) {
         isCycleNodeAnAttachment[i] = false;
     int foundAttachments = 0;
     int totalAttachments = 0;
-    for (int i = 0; i < segment->getNumberOfAttachments(); ++i) {
-        const NodeWithColors* attachment = segment->getAttachment(i);
+    for (const NodeWithColors* attachment : segment->getAttachments()) {
         if (segment->isNodeAttachmentOfColor(attachment, color)) {
             isCycleNodeAnAttachment[segment->getHigherLevelNode(attachment)->getIndex()] = true;
             ++totalAttachments;
@@ -42,8 +41,7 @@ const BicoloredSegment* segment2, const int cycleLabels[], const Color color, co
     int labels[numberOfLabels];
     for (int i = 0; i < numberOfLabels; ++i)
         labels[i] = 0;
-    for (int i = 0; i < segment2->getNumberOfAttachments(); ++i) {
-        const NodeWithColors* attachment = segment2->getAttachment(i);
+    for (const NodeWithColors* attachment : segment2->getAttachments()) {
         if (!segment2->isNodeAttachmentOfColor(attachment, color))
             continue;
         int attachmentHigherLevel = segment2->getHigherLevelNode(attachment)->getIndex();
