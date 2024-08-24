@@ -189,9 +189,7 @@ const EmbeddingSefe* EmbedderSefe::baseCasePath(const BicoloredSubGraph* compone
 
 std::optional<const EmbeddingSefe*> EmbedderSefe::embedGraph(const BicoloredSubGraph* graph) const {
     IntersectionCycle cycle(graph);
-    std::optional<const EmbeddingSefe*> embedding = embedGraph(graph, &cycle);
-    if (!embedding.has_value()) return std::nullopt;
-    return embedding;
+    return embedGraph(graph, &cycle);
 }
 
 // base case: graph has <4 nodes
@@ -449,10 +447,8 @@ int cycleNodePosition, bool segmentsHasBetweenAttachment[]) {
     bool hasSeg2between = segmentsHasBetweenAttachment[segment2index];
 
     if (cycleNodePosition == seg1min && cycleNodePosition == seg2min) {
-        if (seg1max < seg2max)
-            return 1;
-        if (seg1max > seg2max)
-            return -1;
+        if (seg1max < seg2max) return 1;
+        if (seg1max > seg2max) return -1;
         if (hasSeg1between) {
             assert(!hasSeg2between);
             return 1;
@@ -464,20 +460,16 @@ int cycleNodePosition, bool segmentsHasBetweenAttachment[]) {
         return 0;
     }
     if (cycleNodePosition == seg1min) {
-        if (seg2min < seg1min)
-            return 1;
+        if (seg2min < seg1min) return 1;
         return 0;
     }
     if (cycleNodePosition == seg2min) {
-        if (seg1min < seg2min)
-            return -1;
+        if (seg1min < seg2min) return -1;
         return 0;
     }
     if (cycleNodePosition == seg1max && cycleNodePosition == seg2max) {
-        if (seg1min < seg2min)
-            return 1;
-        if (seg1min > seg2min)
-            return -1;
+        if (seg1min < seg2min) return 1;
+        if (seg1min > seg2min) return -1;
         if (hasSeg1between) {
             assert(!hasSeg2between);
             return -1;
@@ -489,13 +481,11 @@ int cycleNodePosition, bool segmentsHasBetweenAttachment[]) {
         return 0;
     }
     if (cycleNodePosition == seg1max) {
-        if (seg2max > seg1max)
-            return -1;
+        if (seg2max > seg1max) return -1;
         return 0;
     }
     if (cycleNodePosition == seg2min) {
-        if (seg1min < seg2min)
-            return 1;
+        if (seg1min < seg2min) return 1;
         return 0;
     }
     return 0;
