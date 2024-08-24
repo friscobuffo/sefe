@@ -3,13 +3,11 @@
 
 #include <optional>
 #include <vector>
-#include <string>
 
 #include "../basic/graph.hpp"
 #include "bicoloredGraph.hpp"
 #include "bicoloredSegment.hpp"
 #include "intersectionCycle.hpp"
-
 
 class EmbeddingSefe : public BicoloredSubGraph {
 public:
@@ -34,6 +32,15 @@ private:
     const EmbeddingSefe* mergeSegmentsEmbeddings(const BicoloredSubGraph* graph, const IntersectionCycle* cycle,
         const std::vector<std::unique_ptr<const EmbeddingSefe>>& embeddings, const BicoloredSegmentsHandler& segmentsHandler,
         const std::vector<int>& bipartition) const;
+    void computeMinAndMaxSegmentsAttachments(const BicoloredSegmentsHandler& segmentsHandler,
+        int segmentsMinMaxRedAttachment[][2], int segmentsMinMaxBlueAttachment[][2]) const;
+    std::vector<bool> compatibilityEmbeddingsAndCycle(const BicoloredSubGraph* component, const IntersectionCycle* cycle,
+    const std::vector<std::unique_ptr<const EmbeddingSefe>>& embeddings, const BicoloredSegmentsHandler& segmentsHandler) const;
+    std::vector<int> computeOrder(const NodeWithColors* cycleNode, const std::vector<int>& segmentsIndexes,
+        int segmentsMinMaxRedAttachment[][2], int segmentsMinMaxBlueAttachment[][2],
+        const BicoloredSegmentsHandler& segmentsHandler, int cycleNodePosition) const;
+    void addMiddleEdges(const BicoloredSegment* segment, const EmbeddingSefe* embedding, int cycleNodeIndex,
+        const BicoloredSubGraph* higherLevel, bool compatible, EmbeddingSefe* output) const;
 public:
     bool testSefe(const Graph* graph1, const Graph* graph2) const;
     bool testSefe(const BicoloredGraph* bicoloredGraph);

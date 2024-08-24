@@ -5,7 +5,6 @@
 #include <sstream>
 
 #include "basic/graph.hpp"
-#include "basic/graphLoader.hpp"
 #include "auslander-parter/embedder.hpp"
 
 #include "sefe/bicoloredGraph.hpp"
@@ -84,7 +83,7 @@ extern "C" {
         std::cout << "(boolean values on same row must be the same)\n";
         testGraph("/example-graphs/graphs/g1.txt");
         testGraph("/example-graphs/graphs/g2.txt");
-        // testGraph("/example-graphs/graphs/g3.txt"); 
+        // testGraph("/example-graphs/graphs/g3.txt");
         testGraph("/example-graphs/graphs/g4.txt");
         testGraph("/example-graphs/graphs/g5.txt");
         testGraph("/example-graphs/graphs/g6.txt");

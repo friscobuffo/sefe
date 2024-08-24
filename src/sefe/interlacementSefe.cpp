@@ -2,9 +2,7 @@
 
 #include <cassert>
 
-#include "../basic/utils.hpp"
-
-InterlacementGraphSefe::InterlacementGraphSefe(const IntersectionCycle* cycle, const BicoloredSegmentsHandler* segmentsHandler) 
+InterlacementGraphSefe::InterlacementGraphSefe(const IntersectionCycle* cycle, const BicoloredSegmentsHandler* segmentsHandler)
     : Graph(segmentsHandler->size()), cycle_m(cycle) , segmentsHandler_m(segmentsHandler) {
     computeConflicts();
 }
@@ -79,5 +77,5 @@ void InterlacementGraphSefe::computeConflicts() {
             bool conflictBlue = areInConflict(segment, otherSegment, blueCycleLabels, Color::BLUE, numberOfBlueAttachments);
             if (conflictRed || conflictBlue) addEdge(i, j);
         }
-    }   
+    }
 }

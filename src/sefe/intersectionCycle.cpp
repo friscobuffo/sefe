@@ -2,10 +2,8 @@
 
 #include <cassert>
 
-#include "../basic/utils.hpp"
-
 // assumes intersection of graph is biconnected
-IntersectionCycle::IntersectionCycle(const BicoloredSubGraph* graph) 
+IntersectionCycle::IntersectionCycle(const BicoloredSubGraph* graph)
 : graph_m(graph) {
     int size = graph->size();
     bool isNodeVisited[size];

@@ -9,8 +9,6 @@
 #include "intersectionCycle.hpp"
 #include "bicoloredGraph.hpp"
 
-class IntersectionCycle;
-
 class BicoloredSegment : public BicoloredSubGraph {
 private:
     std::vector<const NodeWithColors*> attachmentNodes_m{};
@@ -37,6 +35,7 @@ public:
     const NodeWithColors* getHigherLevelNode(const NodeWithColors* node) const;
     void setHigherLevelNode(const NodeWithColors* node, const NodeWithColors* higherLevelNode);
     void print() const;
+    const Color getColorOfAttachment(const NodeWithColors* attachment) const;
 };
 
 class BicoloredSegmentsHandler {

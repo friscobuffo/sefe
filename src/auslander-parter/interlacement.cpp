@@ -2,9 +2,7 @@
 
 #include <cassert>
 
-#include "../basic/utils.hpp"
-
-InterlacementGraph::InterlacementGraph(const Cycle* cycle, const SegmentsHandler& segmentsHandler) 
+InterlacementGraph::InterlacementGraph(const Cycle* cycle, const SegmentsHandler& segmentsHandler)
     : Graph(segmentsHandler.size()), cycle_m(cycle) , segmentsHandler_m(segmentsHandler) {
     computeConflicts();
 }
@@ -62,5 +60,5 @@ void InterlacementGraph::computeConflicts() {
             }
             if (areInConflict) addEdge(i, j);
         }
-    }   
+    }
 }

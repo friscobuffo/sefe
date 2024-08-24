@@ -5,10 +5,7 @@
 #include <list>
 #include <optional>
 
-#include "bicoloredSegment.hpp"
 #include "bicoloredGraph.hpp"
-
-class BicoloredSegment;
 
 class IntersectionCycle {
 private:

@@ -1,8 +1,6 @@
 #ifndef MY_INTERLACEMENT_H
 #define MY_INTERLACEMENT_H
 
-#include <vector>
-
 #include "../basic/graph.hpp"
 #include "segment.hpp"
 #include "cycle.hpp"

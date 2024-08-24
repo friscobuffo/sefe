@@ -13,10 +13,10 @@ def count_lines_in_folder(folder_path):
     return total_lines
 
 total_lines = 0
-total_lines += count_lines_in_folder("basic")
-total_lines += count_lines_in_folder("auslander-parter")
-total_lines += count_lines_in_folder("sefe")
+total_lines += count_lines_in_folder("src/basic")
+total_lines += count_lines_in_folder("src/auslander-parter")
+total_lines += count_lines_in_folder("src/sefe")
 
-total_lines += count_lines_in_file("main.cpp")
+total_lines += count_lines_in_file("src/main.cpp")
 
 print(f'Total number of lines in all files: {total_lines}')

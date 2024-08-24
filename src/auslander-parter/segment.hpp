@@ -7,7 +7,7 @@
 #include <memory>
 
 #include "cycle.hpp"
-#include "biconnectedComponent.hpp"
+#include "../basic/graph.hpp"
 #include "../basic/utils.hpp"
 
 class Segment : public SubGraph {

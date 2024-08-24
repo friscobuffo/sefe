@@ -1,8 +1,6 @@
 #ifndef MY_INTERLACEMENT_SEFE_H
 #define MY_INTERLACEMENT_SEFE_H
 
-#include <vector>
-
 #include "../basic/graph.hpp"
 #include "bicoloredSegment.hpp"
 #include "intersectionCycle.hpp"

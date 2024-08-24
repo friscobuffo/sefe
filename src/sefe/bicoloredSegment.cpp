@@ -341,3 +341,8 @@ std::vector<std::pair<const NodeWithColors*, const Edge>>& edges) {
     segment->addEdge(0, originalCycle_m->size()-1, Color::BLACK);
     return segment;
 }
+
+const Color BicoloredSegment::getColorOfAttachment(const NodeWithColors* attachment) const {
+    assert(isNodeAnAttachment(attachment));
+    return attachmentColor_m[attachment->getIndex()];
+}

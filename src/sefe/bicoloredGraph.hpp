@@ -2,7 +2,6 @@
 #define MY_BICOLORED_GRAPH_H
 
 #include <vector>
-#include <memory>
 #include <cassert>
 
 #include "../basic/utils.hpp"

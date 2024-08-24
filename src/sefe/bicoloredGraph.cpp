@@ -2,8 +2,6 @@
 
 #include <iostream>
 
-#include "../auslander-parter/biconnectedComponent.hpp"
-
 NodeWithColors::NodeWithColors(const int index, const BicoloredGraph* graph)
 : index_m(index), graph_m(graph) {}
 
@@ -69,7 +67,7 @@ BicoloredGraph::BicoloredGraph(const Graph* graph1, const Graph* graph2)
     }
 }
 
-BicoloredGraph::BicoloredGraph(const int numberOfNodes) 
+BicoloredGraph::BicoloredGraph(const int numberOfNodes)
 : intersection_m(numberOfNodes) {
     assert(numberOfNodes > 0);
     for (int i = 0; i < numberOfNodes; ++i)

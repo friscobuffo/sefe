@@ -5,7 +5,7 @@
 #include <list>
 #include <optional>
 
-#include "biconnectedComponent.hpp"
+#include "../basic/graph.hpp"
 
 class Cycle {
 private:
