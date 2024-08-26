@@ -7,7 +7,7 @@
 </head>
 <body>
     <div class="box">
-        <h1>Upload and Embed a Graph</h1>
+        <h1>Auslander & Parter</h1>
         <input type="file" id="fileInput">
         <button id="embed" onclick="embed()">Embed</button>
         <button id="visualize">Visualize Embedding</button>
@@ -16,11 +16,10 @@
 
     <div class="box">
         <h1>SEFE</h1>
-        <input type="file" id="graph1">
-        <input type="file" id="graph2">
-        <button id="sefe" onclick="sefe()">Sefe</button>
-        <button id="visualize-sefe">Visualize Sefe</button>
-        <div id="svg-sefe"></div>
+        <input type="file" id="file1InputSefe">
+        <input type="file" id="file2InputSefe">
+        <button id="sefe" onclick="sefe()">Compute Sefe</button>
+        <button id="visualize-sefe" onclick="visualizeSefe()">Visualize Sefe</button>
         <button id="sefe-test" onclick="testSefe()">Sefe Test</button>
         <button id="visualize-sefe-test" onclick="visualizeTestSefe()">Visualize Sefe Test</button>
         <div id="sefe-svg">
