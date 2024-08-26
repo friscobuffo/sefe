@@ -39,7 +39,7 @@ if (ENVIRONMENT_IS_NODE) {
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
-// include: /tmp/tmpoovjecfe.js
+// include: /tmp/tmpn2ifiyp4.js
 
   if (!Module.expectedDataFileDownloads) {
     Module.expectedDataFileDownloads = 0;
@@ -60,7 +60,7 @@ if (ENVIRONMENT_IS_NODE) {
         // web worker
         PACKAGE_PATH = encodeURIComponent(location.pathname.toString().substring(0, location.pathname.toString().lastIndexOf('/')) + '/');
       }
-      var PACKAGE_NAME = 'static/main.data';
+      var PACKAGE_NAME = 'main.data';
       var REMOTE_PACKAGE_BASE = 'main.data';
       if (typeof Module['locateFilePackage'] === 'function' && !Module['locateFile']) {
         Module['locateFile'] = Module['locateFilePackage'];
@@ -194,10 +194,10 @@ Module['FS_createPath']("/example-graphs", "graphs", true, true);
           var files = metadata['files'];
           for (var i = 0; i < files.length; ++i) {
             DataRequest.prototype.requests[files[i].filename].onload();
-          }          Module['removeRunDependency']('datafile_static/main.data');
+          }          Module['removeRunDependency']('datafile_main.data');
 
       };
-      Module['addRunDependency']('datafile_static/main.data');
+      Module['addRunDependency']('datafile_main.data');
 
       if (!Module.preloadResults) Module.preloadResults = {};
 
@@ -222,21 +222,21 @@ Module['FS_createPath']("/example-graphs", "graphs", true, true);
 
   })();
 
-// end include: /tmp/tmpoovjecfe.js
-// include: /tmp/tmpl8epti8n.js
+// end include: /tmp/tmpn2ifiyp4.js
+// include: /tmp/tmp3cehdxjy.js
 
     // All the pre-js content up to here must remain later on, we need to run
     // it.
     if (Module['$ww'] || (typeof ENVIRONMENT_IS_PTHREAD != 'undefined' && ENVIRONMENT_IS_PTHREAD)) Module['preRun'] = [];
     var necessaryPreJSTasks = Module['preRun'].slice();
-  // end include: /tmp/tmpl8epti8n.js
-// include: /tmp/tmpf00a9t4w.js
+  // end include: /tmp/tmp3cehdxjy.js
+// include: /tmp/tmpz09m00dd.js
 
     if (!Module['preRun']) throw 'Module.preRun should exist because file support used it; did a pre-js delete it?';
     necessaryPreJSTasks.forEach((task) => {
       if (Module['preRun'].indexOf(task) < 0) throw 'All preRun tasks that exist before user pre-js code should remain after; did you replace Module or modify Module.preRun?';
     });
-  // end include: /tmp/tmpf00a9t4w.js
+  // end include: /tmp/tmpz09m00dd.js
 
 
 // Sometimes an existing Module object exists with properties
@@ -4588,6 +4588,7 @@ var wasmExports = createWasm();
 var ___wasm_call_ctors = createExportWrapper('__wasm_call_ctors', 0);
 var _embedLoadedFile = Module['_embedLoadedFile'] = createExportWrapper('embedLoadedFile', 0);
 var _sefeMainTest = Module['_sefeMainTest'] = createExportWrapper('sefeMainTest', 0);
+var _sefeLoadedFiles = Module['_sefeLoadedFiles'] = createExportWrapper('sefeLoadedFiles', 0);
 var _fflush = createExportWrapper('fflush', 1);
 var _strerror = createExportWrapper('strerror', 1);
 var _setThrew = createExportWrapper('setThrew', 2);

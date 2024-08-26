@@ -98,3 +98,26 @@ extern "C" {
         testGraph("/example-graphs/graphs/k33.txt");
     }
 }
+
+extern "C" {
+    void sefeLoadedFiles() {
+        const Graph* red = loadFromfile("red.txt");
+        const Graph* blue = loadFromfile("blue.txt");
+        const BicoloredGraph graph(red, blue);
+        std::cout << "graph:\n";
+        graph.print();
+        EmbedderSefe embedder{};
+        std::optional<const EmbeddingSefe*> embedding = embedder.embedGraph(&graph);
+        std::cout << std::boolalpha << "graph is planar: " << embedding.has_value() << ".\n";
+        if (embedding.has_value()) {
+            std::cout << "embedding:\n";
+            embedding.value()->print();
+            embedder.embedToSvg(&graph);
+            delete embedding.value();
+        }
+        std::cout << "\n";
+        std::cout << "all good\n";
+        delete red;
+        delete blue;
+    }
+}

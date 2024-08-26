@@ -24,17 +24,16 @@ SRCS = src/main.cpp \
 OBJS = $(SRCS:%.cpp=$(OBJ_DIR)/%.o)
 
 # Output directories
-OUT_DIR = static
 OBJ_DIR = bin
 
 # Target output
-TARGET = $(OUT_DIR)/main.js
+TARGET = main.js
 
 # Libraries to link
 LDFLAGS = -lOGDF -lCOIN
 
 # Emscripten options
-EMFLAGS = -s EXPORTED_FUNCTIONS='["_embedLoadedFile", "_sefeMainTest"]' \
+EMFLAGS = -s EXPORTED_FUNCTIONS='["_embedLoadedFile", "_sefeMainTest", "_sefeLoadedFiles"]' \
           -s EXPORTED_RUNTIME_METHODS='["ccall", "cwrap", "FS"]'
 
 # Preload files
@@ -45,7 +44,6 @@ all: $(TARGET)
 
 # Rule to build the target
 $(TARGET): $(OBJS)
-	mkdir -p $(OUT_DIR)
 	$(EMCC) $(INCLUDES) $(LIBS) $(OBJS) $(LDFLAGS) -o $(TARGET) $(EMFLAGS) $(PRELOAD_FILES)
 
 # Rule to compile .cpp files to .o files

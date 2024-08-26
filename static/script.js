@@ -47,7 +47,7 @@ function testSefe() {
 const sefeSvgOutputRed = document.getElementById('sefe-svg-output-red');
 const sefeSvgOutputBlue = document.getElementById('sefe-svg-output-blue');
 
-function visualizeTestSefe() {
+function visualizeSefe() {
     visualizeSvg('/embedding-blue.svg', sefeSvgOutputBlue);
     visualizeSvg('/embedding-red.svg', sefeSvgOutputRed);
 }
@@ -58,6 +58,10 @@ fileInput1.addEventListener('change', (event) => {
 });
 
 const fileInput2 = document.getElementById('file2InputSefe');
-fileInput1.addEventListener('change', (event) => {
+fileInput2.addEventListener('change', (event) => {
     loadFile('/blue.txt', event);
 });
+
+function sefe() {
+    Module.ccall('sefeLoadedFiles', null, [], []);
+}
