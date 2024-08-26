@@ -79,6 +79,32 @@ BicoloredGraph::BicoloredGraph(const int numberOfNodes)
         assert(getNode(i) == getNodes()[i]);
 }
 
+const Graph* BicoloredGraph::computeRed() const {
+    Graph* red = new Graph(size());
+    for (int i = 0; i < size(); ++i) {
+        const NodeWithColors* node = getNode(i);
+        for (const Edge& edge : node->getEdges()) {
+            if (edge.color == Color::BLACK || edge.color == Color::RED)
+                if (node->getIndex() < edge.node->getIndex())
+                    red->addEdge(node->getIndex(), edge.node->getIndex());
+        }
+    }
+    return red;
+}
+
+const Graph* BicoloredGraph::computeBlue() const {
+    Graph* blue = new Graph(size());
+    for (int i = 0; i < size(); ++i) {
+        const NodeWithColors* node = getNode(i);
+        for (const Edge& edge : node->getEdges()) {
+            if (edge.color == Color::BLACK || edge.color == Color::BLUE)
+                if (node->getIndex() < edge.node->getIndex())
+                    blue->addEdge(node->getIndex(), edge.node->getIndex());
+        }
+    }
+    return blue;
+}
+
 const NodeWithColors* BicoloredGraph::getNode(const int index) const {
     return &nodes_m[index];
 }

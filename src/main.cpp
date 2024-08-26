@@ -71,6 +71,7 @@ extern "C" {
     void sefeMainTest() {
         std::cout << std::boolalpha;
         const Graph* graph1 = loadFromfile("/example-graphs/graphs-sefe/a0.txt");
+        graph1->print();
         const Graph* graph2 = loadFromfile("/example-graphs/graphs-sefe/a1.txt");
         const BicoloredGraph bicoloredGraph(graph1, graph2);
         bicoloredGraph.print();
@@ -79,9 +80,10 @@ extern "C" {
         std::optional<const EmbeddingSefe*> embeddingSefe = embedderSefe.embedGraph(&bicoloredGraph);
         std::cout << embeddingSefe.has_value() << "\n";
         if (embeddingSefe.has_value()) {
-            embeddingSefe.value()->print();
+            // embeddingSefe.value()->print();
             delete embeddingSefe.value();
         }
+        embedderSefe.embedToSvg(&bicoloredGraph);
         delete graph1;
         delete graph2;
         std::cout << "all graphs tests\n";

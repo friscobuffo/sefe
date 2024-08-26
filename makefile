@@ -8,7 +8,7 @@ LIBS = -LOGDF
 # Source Files
 SRCS = src/main.cpp \
        src/basic/graph.cpp \
-       src/basic/graphLoader.cpp \
+       src/basic/utils.cpp \
        src/auslander-parter/biconnectedComponent.cpp \
        src/auslander-parter/cycle.cpp \
        src/auslander-parter/segment.cpp \

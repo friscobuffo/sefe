@@ -7,18 +7,9 @@
 #include <algorithm>
 #include <cassert>
 
-template <typename T>
-bool contains(const std::vector<T>& vec, T value) {
-    return std::find(vec.begin(), vec.end(), value) != vec.end();
-}
+#include <ogdf/basic/Graph.h>
 
-template <typename T>
-int findIndex(const std::vector<T>& vec, T value) {
-    for (int i = 0; i < vec.size(); ++i)
-        if (vec[i] == value)
-            return i;
-    return -1;
-}
+class Graph;
 
 template <typename Iterable>
 void printIterable(const Iterable& container, const std::string& end = "\n") {
@@ -68,5 +59,22 @@ public:
         pointers_m[index] = pointer;
     }
 };
+
+class OgdfUtils {
+public:
+    static ogdf::Graph* myGraphToOgdf(const Graph* myGraph);
+    static const Graph* ogdfGraphToMyGraph(ogdf::Graph* graph);
+    static void printOgdfGraph(ogdf::Graph* graph);
+};
+
+inline void saveStringToFile(const char* filename, std::string& content) {
+    std::ofstream outfile(filename);
+    if (outfile.is_open()) {
+        outfile << content;
+        outfile.close();
+        std::cout << "File saved successfully." << std::endl;
+    } else
+        std::cerr << "Unable to open file" << std::endl;
+}
 
 #endif

@@ -66,6 +66,8 @@ public:
     const int size() const;
     virtual void print() const;
     const Graph* getIntersection() const;
+    const Graph* computeRed() const;
+    const Graph* computeBlue() const;
 };
 
 class BicoloredSubGraph : public BicoloredGraph {

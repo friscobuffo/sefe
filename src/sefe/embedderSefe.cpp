@@ -4,6 +4,12 @@
 #include <cassert>
 #include <vector>
 
+#include <ogdf/basic/Graph.h>
+#include <ogdf/basic/GraphAttributes.h>
+#include <ogdf/planarlayout/PlanarDrawLayout.h>
+#include <ogdf/fileformats/GraphIO.h>
+#include <ogdf/planarity/EmbedderModule.h>
+
 #include "../auslander-parter/biconnectedComponent.hpp"
 #include "bicoloredGraph.hpp"
 #include "bicoloredSegment.hpp"
@@ -33,6 +39,30 @@ void EmbeddingSefe::addSingleEdge(int fromIndex, int toIndex, Color color) {
     NodeWithColors* from = getNode(fromIndex);
     NodeWithColors* to = getNode(toIndex);
     addSingleEdge(from, to, color);
+}
+
+const Embedding* EmbeddingSefe::computeRedEmbedding(const Graph* red) const {
+    Embedding* embedding = new Embedding(red);
+    for (int i = 0; i < size(); ++i) {
+        const NodeWithColors* node = getNode(i);
+        for (const Edge& edge : node->getEdges()) {
+            if (edge.color == Color::BLACK || edge.color == Color::RED)
+                embedding->addSingleEdge(node->getIndex(), edge.node->getIndex());
+        }
+    }
+    return embedding;
+}
+
+const Embedding* EmbeddingSefe::computeBlueEmbedding(const Graph* blue) const {
+    Embedding* embedding = new Embedding(blue);
+    for (int i = 0; i < size(); ++i) {
+        const NodeWithColors* node = getNode(i);
+        for (const Edge& edge : node->getEdges()) {
+            if (edge.color == Color::BLACK || edge.color == Color::BLUE)
+                embedding->addSingleEdge(node->getIndex(), edge.node->getIndex());
+        }
+    }
+    return embedding;
 }
 
 bool EmbedderSefe::testSefe(const Graph* graph1, const Graph* graph2) const {
@@ -205,6 +235,12 @@ const EmbeddingSefe* EmbedderSefe::baseCaseGraph(const BicoloredGraph* graph) co
 
 std::optional<const EmbeddingSefe*> EmbedderSefe::embedGraph(const BicoloredGraph* graph) const {
     if (graph->size() < 4) return baseCaseGraph(graph);
+    const Graph* intersection = graph->getIntersection();
+    BiconnectedComponentsHandler bch(intersection);
+    if (bch.size() > 1) {
+        std::cout << "intersection must be biconnected\n";
+        return std::nullopt;
+    }
     const BicoloredSubGraph sGraph(graph);
     return embedGraph(&sGraph);
 }
@@ -525,4 +561,102 @@ int cycleNodePosition, bool segmentsHasBetweenRedAttachment[], bool segmentsHasB
         order[i] = temp;
     }
     return order;
+}
+class AuslanderParterEmbedderSefe : public ogdf::EmbedderModule {
+private:
+    const Embedding* embedding_m;
+public:
+    AuslanderParterEmbedderSefe(const Embedding* embedding) 
+    : embedding_m(embedding) {}
+    void doCall(ogdf::Graph& graph, ogdf::adjEntry &adjExternal) {
+        std::vector<int> position(embedding_m->size());
+        for (ogdf::node n : graph.nodes) {
+            const int index = n->index();
+            const Node* node = embedding_m->getNode(index);
+            const std::vector<const Node*>& neighbors = node->getNeighbors();
+            for (int i = 0; i < neighbors.size(); ++i)
+                position[neighbors[i]->getIndex()] = i;
+            std::vector<ogdf::adjEntry> order(neighbors.size());
+            for (ogdf::adjEntry& adj : n->adjEntries) {
+                const int neighbor = adj->twinNode()->index();
+                order[position[neighbor]] = adj;
+            }
+            ogdf::List<ogdf::adjEntry> newOrder;
+            for (ogdf::adjEntry& adj : order)
+                newOrder.pushBack(adj);
+            graph.sort(n, newOrder);
+        }
+    }
+};
+
+void EmbedderSefe::embedToSvg(const BicoloredGraph* graph) const {
+    EmbedderSefe embedder{};
+    std::optional<const EmbeddingSefe*> embedding = embedder.embedGraph(graph);
+    if (!embedding.has_value()) {
+        std::cout << "graph admits no sefe\n";
+        return;
+    }
+    // red embedding
+    const Graph* red = graph->computeRed();
+    const Embedding* redEmbedding = embedding.value()->computeRedEmbedding(red);
+    std::unique_ptr<ogdf::Graph> ogdfGraphRed = std::unique_ptr<ogdf::Graph>(OgdfUtils::myGraphToOgdf(red));
+    ogdf::GraphAttributes GAred(*ogdfGraphRed, ogdf::GraphAttributes::nodeGraphics |
+                        ogdf::GraphAttributes::edgeGraphics |
+                        ogdf::GraphAttributes::nodeLabel | ogdf::GraphAttributes::edgeStyle |
+                        ogdf::GraphAttributes::nodeStyle | ogdf::GraphAttributes::edgeArrow);
+    for (ogdf::node v : ogdfGraphRed->nodes) {
+        GAred.label(v) = std::to_string(v->index());
+        GAred.shape(v) = ogdf::Shape::Ellipse;
+    }
+    for (ogdf::edge e : ogdfGraphRed->edges) {
+        GAred.strokeWidth(e) = 1.5;
+        GAred.arrowType(e) = ogdf::EdgeArrow::None;
+    }
+
+    ogdf::PlanarDrawLayout layoutRed;
+    layoutRed.setEmbedder(new AuslanderParterEmbedderSefe(redEmbedding));
+    layoutRed.call(GAred);
+
+    std::ostringstream svgStreamRed;
+    ogdf::GraphIO::SVGSettings svgSettingsRed;
+    if (ogdf::GraphIO::drawSVG(GAred, svgStreamRed, svgSettingsRed)) {
+        std::string svgContent = svgStreamRed.str();
+        saveStringToFile("/embedding-red.svg", svgContent);
+    } else
+        std::cerr << "Error generating SVG content." << std::endl;
+    delete red;
+    delete redEmbedding;
+
+    // blue embedding
+    const Graph* blue = graph->computeBlue();
+    const Embedding* blueEmbedding = embedding.value()->computeBlueEmbedding(blue);
+    std::unique_ptr<ogdf::Graph> ogdfGraphBlue = std::unique_ptr<ogdf::Graph>(OgdfUtils::myGraphToOgdf(blue));
+    ogdf::GraphAttributes GAblue(*ogdfGraphBlue, ogdf::GraphAttributes::nodeGraphics |
+                        ogdf::GraphAttributes::edgeGraphics |
+                        ogdf::GraphAttributes::nodeLabel | ogdf::GraphAttributes::edgeStyle |
+                        ogdf::GraphAttributes::nodeStyle | ogdf::GraphAttributes::edgeArrow);
+    for (ogdf::node v : ogdfGraphBlue->nodes) {
+        GAblue.label(v) = std::to_string(v->index());
+        GAblue.shape(v) = ogdf::Shape::Ellipse;
+    }
+    for (ogdf::edge e : ogdfGraphBlue->edges) {
+        GAblue.strokeWidth(e) = 1.5;
+        GAblue.arrowType(e) = ogdf::EdgeArrow::None;
+    }
+
+    ogdf::PlanarDrawLayout layoutBlue;
+    layoutBlue.setEmbedder(new AuslanderParterEmbedderSefe(blueEmbedding));
+    layoutBlue.call(GAblue);
+
+    std::ostringstream svgStreamBlue;
+    ogdf::GraphIO::SVGSettings svgSettingsBlue;
+    if (ogdf::GraphIO::drawSVG(GAblue, svgStreamBlue, svgSettingsBlue)) {
+        std::string svgContent = svgStreamBlue.str();
+        saveStringToFile("/embedding-blue.svg", svgContent);
+    } else
+        std::cerr << "Error generating SVG content." << std::endl;
+    delete blue;
+    delete blueEmbedding;
+
+    delete embedding.value();
 }

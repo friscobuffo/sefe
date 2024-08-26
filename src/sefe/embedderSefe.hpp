@@ -8,6 +8,7 @@
 #include "bicoloredGraph.hpp"
 #include "bicoloredSegment.hpp"
 #include "intersectionCycle.hpp"
+#include "../auslander-parter/embedder.hpp"
 
 class EmbeddingSefe : public BicoloredSubGraph {
 public:
@@ -15,14 +16,14 @@ public:
     EmbeddingSefe(const BicoloredGraph* originalGraph);
     void addSingleEdge(int fromIndex, int toIndex, Color color);
     void addSingleEdge(NodeWithColors* from, const NodeWithColors* to, Color color);
+    const Embedding* computeRedEmbedding(const Graph* red) const;
+    const Embedding* computeBlueEmbedding(const Graph* blue) const;
 };
 
 class EmbedderSefe {
 private:
     bool testSefe(const BicoloredSubGraph* bicoloredGraph, IntersectionCycle* cycle) const;
     void makeCycleGood(IntersectionCycle* cycle, const BicoloredSegment* segment) const;
-    bool testSefe(const BicoloredSubGraph* bicoloredGraph);
-    //
     const EmbeddingSefe* baseCaseGraph(const BicoloredGraph* graph) const;
     std::optional<const EmbeddingSefe*> embedGraph(const BicoloredSubGraph* graph) const;
     std::optional<const EmbeddingSefe*> embedGraph(const BicoloredSubGraph* graph,
@@ -45,9 +46,8 @@ private:
         const BicoloredSubGraph* higherLevel, bool compatible, EmbeddingSefe* output) const;
 public:
     bool testSefe(const Graph* graph1, const Graph* graph2) const;
-    bool testSefe(const BicoloredGraph* bicoloredGraph);
-    //
     std::optional<const EmbeddingSefe*> embedGraph(const BicoloredGraph* graph) const;
+    void embedToSvg(const BicoloredGraph* graph) const;
 };
 
 #endif

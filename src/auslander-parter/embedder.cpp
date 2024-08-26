@@ -498,50 +498,12 @@ const Embedding* Embedder::baseCaseCycle(const SubGraph* cycle) const {
     return embedding;
 }
 
-ogdf::Graph myGraphToOgdf(const Graph* myGraph) {
-    ogdf::Graph graph;
-    std::vector<ogdf::node> nodes(myGraph->size());
-    for (int i = 0; i < myGraph->size(); ++i)
-        nodes[i] = graph.newNode();
-    for (int i = 0; i < myGraph->size(); ++i) {
-        const Node* node = myGraph->getNode(i);
-        for (const Node* neighbor : node->getNeighbors())
-            if (i < neighbor->getIndex())
-                graph.newEdge(nodes[i], nodes[neighbor->getIndex()]);
-    }
-    return graph;
-}
-
-Graph ogdfGraphToMyGraph(const ogdf::Graph& graph) {
-    Graph myGraph(graph.numberOfNodes());
-    for (ogdf::node n : graph.nodes) {
-        const int node = n->index();
-        for (ogdf::adjEntry& adj : n->adjEntries) {
-            const int neighbor = adj->twinNode()->index();
-            if (node > neighbor) continue;
-            myGraph.addEdge(node, neighbor);
-        }
-    }
-    return myGraph;
-}
-
-void printOgdfGraph(ogdf::Graph& graph) {
-    for (ogdf::node node : graph.nodes) {
-        std::cout << node->index() << ": [ ";
-        for (ogdf::adjEntry& adj : node->adjEntries) {
-            const int neighbor = adj->twinNode()->index();
-            std::cout << neighbor << " ";
-        }
-        std::cout << "]\n";
-    }
-}
-
-class AuslanderParterEmbedder : public ogdf::EmbedderModule {
+class AuslanderParterEmbedderSefe : public ogdf::EmbedderModule {
 public:
     void doCall(ogdf::Graph& graph, ogdf::adjEntry &adjExternal) {
-        Graph myGraph = ogdfGraphToMyGraph(graph);
+        const Graph* myGraph = OgdfUtils::ogdfGraphToMyGraph(&graph);
         Embedder embedder;
-        std::optional<const Embedding*> embeddingOpt = embedder.embedGraph(&myGraph);
+        std::optional<const Embedding*> embeddingOpt = embedder.embedGraph(myGraph);
         if (!embeddingOpt) {
             std::cout << "error\n";
             exit(1);
@@ -564,36 +526,26 @@ public:
                 newOrder.pushBack(adj);
             graph.sort(n, newOrder);
         }
+        delete myGraph;
         delete embedding;
     }
 };
 
-void saveStringToFile(const char* filename, std::string content) {
-    std::ofstream outfile(filename);
-    if (outfile.is_open()) {
-        outfile << content;
-        outfile.close();
-        std::cout << "File saved successfully." << std::endl;
-    } else {
-        std::cerr << "Unable to open file" << std::endl;
-    }
-}
-
 void Embedder::embedToSvg(const Graph* graph, std::string& outputPath) const {
-    ogdf::Graph ogdfGraph = myGraphToOgdf(graph);
-    ogdf::GraphAttributes GA(ogdfGraph, ogdf::GraphAttributes::nodeGraphics | ogdf::GraphAttributes::edgeGraphics |
+    std::unique_ptr<ogdf::Graph> ogdfGraph = std::unique_ptr<ogdf::Graph>(OgdfUtils::myGraphToOgdf(graph));
+    ogdf::GraphAttributes GA(*ogdfGraph, ogdf::GraphAttributes::nodeGraphics | ogdf::GraphAttributes::edgeGraphics |
                         ogdf::GraphAttributes::nodeLabel | ogdf::GraphAttributes::edgeStyle |
                         ogdf::GraphAttributes::nodeStyle | ogdf::GraphAttributes::edgeArrow);
-    for (ogdf::node v : ogdfGraph.nodes) {
+    for (ogdf::node v : ogdfGraph->nodes) {
         GA.label(v) = std::to_string(v->index());
         GA.shape(v) = ogdf::Shape::Ellipse;
     }
-    for (ogdf::edge e : ogdfGraph.edges) {
+    for (ogdf::edge e : ogdfGraph->edges) {
         GA.strokeWidth(e) = 1.5;
         GA.arrowType(e) = ogdf::EdgeArrow::None;
     }
     ogdf::PlanarDrawLayout layout;
-    layout.setEmbedder(new AuslanderParterEmbedder);
+    layout.setEmbedder(new AuslanderParterEmbedderSefe);
     layout.call(GA);
 
     std::ostringstream svgStream;
@@ -601,7 +553,6 @@ void Embedder::embedToSvg(const Graph* graph, std::string& outputPath) const {
     if (ogdf::GraphIO::drawSVG(GA, svgStream, svgSettings)) {
         std::string svgContent = svgStream.str();
         saveStringToFile("/embedding.svg", svgContent);
-    } else {
+    } else
         std::cerr << "Error generating SVG content." << std::endl;
-    }
 }
