@@ -1,3 +1,13 @@
+function printToConsole(text) {
+    const outputDiv = document.getElementById('output');
+    outputDiv.innerHTML += text + '<br>';
+}
+
+function resetConsoleText() {
+    const outputDiv = document.getElementById('output');
+    outputDiv.innerHTML = "";
+}
+
 function loadFile(fileName, event) {
     const file = event.target.files[0];
     if (file) {
@@ -19,7 +29,14 @@ function visualizeSvg(fileName, svgElement) {
     }
 }
 
+if (typeof Module === 'undefined') Module = {};
+Module.print = function(text) {
+    printToConsole(text);
+};
+
+/////////////////////////////////////
 // AUSLANDER & PARTER
+/////////////////////////////////////
 
 const fileInput = document.getElementById('fileInput');
 
@@ -38,7 +55,9 @@ visualizeButton.addEventListener('click', () => {
     visualizeSvg('/embedding.svg', svgOutput);
 });
 
+/////////////////////////////////////
 // SEFE
+/////////////////////////////////////
 
 function testSefe() {
     Module.ccall('sefeMainTest', null, [], []);

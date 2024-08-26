@@ -71,22 +71,22 @@ extern "C" {
     void sefeMainTest() {
         std::cout << std::boolalpha;
         const Graph* graph1 = loadFromfile("/example-graphs/graphs-sefe/a0.txt");
-        graph1->print();
         const Graph* graph2 = loadFromfile("/example-graphs/graphs-sefe/a1.txt");
         const BicoloredGraph bicoloredGraph(graph1, graph2);
+        std::cout << "union graph:\n";
         bicoloredGraph.print();
         EmbedderSefe embedderSefe{};
-        std::cout << embedderSefe.testSefe(graph1, graph2) << "\n";
+        std::cout << "\nadmits sefe: " << embedderSefe.testSefe(graph1, graph2) << "\n";
         std::optional<const EmbeddingSefe*> embeddingSefe = embedderSefe.embedGraph(&bicoloredGraph);
-        std::cout << embeddingSefe.has_value() << "\n";
         if (embeddingSefe.has_value()) {
-            // embeddingSefe.value()->print();
+            std::cout << "\nunion graph sefe:\n";
+            embeddingSefe.value()->print();
             delete embeddingSefe.value();
         }
         embedderSefe.embedToSvg(&bicoloredGraph);
         delete graph1;
         delete graph2;
-        std::cout << "all graphs tests\n";
+        std::cout << "\nall graphs tests\n";
         std::cout << "(boolean values on same row must be the same)\n";
         testGraph("/example-graphs/graphs/g1.txt");
         testGraph("/example-graphs/graphs/g2.txt");
