@@ -26,6 +26,8 @@ void IntersectionCycle::dfsBuildCycle(const NodeWithColors* node, bool isNodeVis
         const NodeWithColors* neighbor = edge.node;
         if (neighbor == prev)
             continue;
+        if (edge.color != Color::BLACK)
+            continue;
         if (!isNodeVisited[neighbor->getIndex()]) {
             dfsBuildCycle(neighbor, isNodeVisited, node);
             break;

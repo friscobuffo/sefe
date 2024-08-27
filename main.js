@@ -39,7 +39,7 @@ if (ENVIRONMENT_IS_NODE) {
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
-// include: /tmp/tmpqg2ecvp8.js
+// include: /tmp/tmplyo9i7yj.js
 
   if (!Module.expectedDataFileDownloads) {
     Module.expectedDataFileDownloads = 0;
@@ -218,25 +218,25 @@ Module['FS_createPath']("/example-graphs", "graphs", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/example-graphs/graphs-sefe/a0.txt", "start": 0, "end": 37}, {"filename": "/example-graphs/graphs-sefe/a1.txt", "start": 37, "end": 70}, {"filename": "/example-graphs/graphs/g1.txt", "start": 70, "end": 103}, {"filename": "/example-graphs/graphs/g2.txt", "start": 103, "end": 132}, {"filename": "/example-graphs/graphs/g3.txt", "start": 132, "end": 185}, {"filename": "/example-graphs/graphs/g4.txt", "start": 185, "end": 243}, {"filename": "/example-graphs/graphs/g5.txt", "start": 243, "end": 276}, {"filename": "/example-graphs/graphs/g6.txt", "start": 276, "end": 309}, {"filename": "/example-graphs/graphs/k33.txt", "start": 309, "end": 346}, {"filename": "/example-graphs/graphs/k5.txt", "start": 346, "end": 387}], "remote_package_size": 387});
+    loadPackage({"files": [{"filename": "/example-graphs/graphs-sefe/a0.txt", "start": 0, "end": 37}, {"filename": "/example-graphs/graphs-sefe/a1.txt", "start": 37, "end": 74}, {"filename": "/example-graphs/graphs/g1.txt", "start": 74, "end": 107}, {"filename": "/example-graphs/graphs/g2.txt", "start": 107, "end": 136}, {"filename": "/example-graphs/graphs/g3.txt", "start": 136, "end": 189}, {"filename": "/example-graphs/graphs/g4.txt", "start": 189, "end": 247}, {"filename": "/example-graphs/graphs/g5.txt", "start": 247, "end": 280}, {"filename": "/example-graphs/graphs/g6.txt", "start": 280, "end": 313}, {"filename": "/example-graphs/graphs/k33.txt", "start": 313, "end": 350}, {"filename": "/example-graphs/graphs/k5.txt", "start": 350, "end": 391}], "remote_package_size": 391});
 
   })();
 
-// end include: /tmp/tmpqg2ecvp8.js
-// include: /tmp/tmppseh2v0l.js
+// end include: /tmp/tmplyo9i7yj.js
+// include: /tmp/tmpafnfjs6z.js
 
     // All the pre-js content up to here must remain later on, we need to run
     // it.
     if (Module['$ww'] || (typeof ENVIRONMENT_IS_PTHREAD != 'undefined' && ENVIRONMENT_IS_PTHREAD)) Module['preRun'] = [];
     var necessaryPreJSTasks = Module['preRun'].slice();
-  // end include: /tmp/tmppseh2v0l.js
-// include: /tmp/tmpostb8n7k.js
+  // end include: /tmp/tmpafnfjs6z.js
+// include: /tmp/tmp4984k56x.js
 
     if (!Module['preRun']) throw 'Module.preRun should exist because file support used it; did a pre-js delete it?';
     necessaryPreJSTasks.forEach((task) => {
       if (Module['preRun'].indexOf(task) < 0) throw 'All preRun tasks that exist before user pre-js code should remain after; did you replace Module or modify Module.preRun?';
     });
-  // end include: /tmp/tmpostb8n7k.js
+  // end include: /tmp/tmp4984k56x.js
 
 
 // Sometimes an existing Module object exists with properties

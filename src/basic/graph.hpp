@@ -40,6 +40,7 @@ public:
     const std::optional<std::vector<int>> computeBipartition() const;
     Graph* computeIntersection(const Graph* graph) const;
     void computeIntersection(const Graph* graph, Graph* intersection) const;
+    bool hasEdge(int fromIndex, int toIndex) const;
 };
 
 class SubGraph : public Graph {

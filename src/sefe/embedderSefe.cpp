@@ -45,10 +45,9 @@ const Embedding* EmbeddingSefe::computeRedEmbedding(const Graph* red) const {
     Embedding* embedding = new Embedding(red);
     for (int i = 0; i < size(); ++i) {
         const NodeWithColors* node = getNode(i);
-        for (const Edge& edge : node->getEdges()) {
+        for (const Edge& edge : node->getEdges())
             if (edge.color == Color::BLACK || edge.color == Color::RED)
                 embedding->addSingleEdge(node->getIndex(), edge.node->getIndex());
-        }
     }
     return embedding;
 }
@@ -57,10 +56,9 @@ const Embedding* EmbeddingSefe::computeBlueEmbedding(const Graph* blue) const {
     Embedding* embedding = new Embedding(blue);
     for (int i = 0; i < size(); ++i) {
         const NodeWithColors* node = getNode(i);
-        for (const Edge& edge : node->getEdges()) {
+        for (const Edge& edge : node->getEdges())
             if (edge.color == Color::BLACK || edge.color == Color::BLUE)
                 embedding->addSingleEdge(node->getIndex(), edge.node->getIndex());
-        }
     }
     return embedding;
 }
@@ -80,6 +78,10 @@ bool EmbedderSefe::testSefe(const Graph* graph1, const Graph* graph2) const {
 
 // assumes intersection is biconnected
 bool EmbedderSefe::testSefe(const BicoloredSubGraph* bicoloredGraph, IntersectionCycle* cycle) const {
+    // std::cout << "bicolored graph:\n";
+    // bicoloredGraph->print();
+    // std::cout << "cycle:\n";
+    // cycle->print();
     const BicoloredSegmentsHandler segmentsHandler = BicoloredSegmentsHandler(bicoloredGraph, cycle);
     if (segmentsHandler.size() == 0) // entire biconnected component is a cycle
         return true;
@@ -191,8 +193,10 @@ const EmbeddingSefe* EmbedderSefe::baseCasePath(const BicoloredSubGraph* compone
         assert(edges.size() == 3);
         int neighborsOrder[3];
         Color neighborsOrderColor[3];
-        for (int i = 0; i < 3; ++i)
+        for (int i = 0; i < 3; ++i) {
             neighborsOrder[i] = -1;
+            neighborsOrderColor[i] = Color::NONE;
+        }
         for (const Edge& edge : edges) {
             const NodeWithColors* neighbor = edge.node;
             Color color = edge.color;
@@ -211,6 +215,7 @@ const EmbeddingSefe* EmbedderSefe::baseCasePath(const BicoloredSubGraph* compone
         }
         for (int i = 0; i < 3; ++i) {
             assert(neighborsOrder[i] != -1);
+            assert(neighborsOrderColor[i] != Color::NONE);
             embedding->addSingleEdge(node->getIndex(), neighborsOrder[i], neighborsOrderColor[i]);
         }
     }
@@ -590,6 +595,7 @@ public:
 };
 
 void EmbedderSefe::embedToSvg(const BicoloredGraph* graph) const {
+    const Graph* intersection = graph->getIntersection();
     EmbedderSefe embedder{};
     std::optional<const EmbeddingSefe*> embedding = embedder.embedGraph(graph);
     if (!embedding.has_value()) {
@@ -609,6 +615,12 @@ void EmbedderSefe::embedToSvg(const BicoloredGraph* graph) const {
         GAred.shape(v) = ogdf::Shape::Ellipse;
     }
     for (ogdf::edge e : ogdfGraphRed->edges) {
+        ogdf::node from = e->source();
+        ogdf::node to = e->target();
+        int fromIndex = from->index();
+        int toIndex = to->index();
+        if (!intersection->hasEdge(fromIndex, toIndex))
+            GAred.strokeColor(e) = ogdf::Color(255, 0, 0);
         GAred.strokeWidth(e) = 1.5;
         GAred.arrowType(e) = ogdf::EdgeArrow::None;
     }
@@ -640,6 +652,12 @@ void EmbedderSefe::embedToSvg(const BicoloredGraph* graph) const {
         GAblue.shape(v) = ogdf::Shape::Ellipse;
     }
     for (ogdf::edge e : ogdfGraphBlue->edges) {
+        ogdf::node from = e->source();
+        ogdf::node to = e->target();
+        int fromIndex = from->index();
+        int toIndex = to->index();
+        if (!intersection->hasEdge(fromIndex, toIndex))
+            GAblue.strokeColor(e) = ogdf::Color(0, 0, 255);
         GAblue.strokeWidth(e) = 1.5;
         GAblue.arrowType(e) = ogdf::EdgeArrow::None;
     }

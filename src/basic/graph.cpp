@@ -144,6 +144,19 @@ void Graph::computeIntersection(const Graph* graph, Graph* intersection) const {
     }
 }
 
+bool Graph::hasEdge(int fromIndex, int toIndex) const {
+    if (getNode(fromIndex)->getNeighbors().size() > getNode(toIndex)->getNeighbors().size()) {
+        int temp = fromIndex;
+        fromIndex = toIndex;
+        toIndex = temp;
+    }
+    const Node* node = getNode(fromIndex);
+    for (const Node* neighbor : node->getNeighbors())
+        if (neighbor->getIndex() == toIndex)
+            return true;
+    return false;
+}
+
 SubGraph::SubGraph(const int numberOfNodes, const Graph* graph) 
 : Graph(numberOfNodes), originalNodes_m(numberOfNodes), originalGraph_m(graph) {
     assert(numberOfNodes <= graph->size());

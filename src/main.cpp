@@ -76,7 +76,8 @@ extern "C" {
         std::cout << "union graph:\n";
         bicoloredGraph.print();
         EmbedderSefe embedderSefe{};
-        std::cout << "\nadmits sefe: " << embedderSefe.testSefe(graph1, graph2) << "\n";
+        bool admitsSefe = embedderSefe.testSefe(graph1, graph2);
+        std::cout << "\nadmits sefe: " << admitsSefe << "\n";
         std::optional<const EmbeddingSefe*> embeddingSefe = embedderSefe.embedGraph(&bicoloredGraph);
         if (embeddingSefe.has_value()) {
             std::cout << "\nunion graph sefe:\n";
