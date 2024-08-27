@@ -605,6 +605,8 @@ void EmbedderSefe::embedToSvg(const BicoloredGraph* graph) const {
     // red embedding
     const Graph* red = graph->computeRed();
     const Embedding* redEmbedding = embedding.value()->computeRedEmbedding(red);
+    std::cout << "red embedding:\n";
+    redEmbedding->print();
     std::unique_ptr<ogdf::Graph> ogdfGraphRed = std::unique_ptr<ogdf::Graph>(OgdfUtils::myGraphToOgdf(red));
     ogdf::GraphAttributes GAred(*ogdfGraphRed, ogdf::GraphAttributes::nodeGraphics |
                         ogdf::GraphAttributes::edgeGraphics |
@@ -642,6 +644,8 @@ void EmbedderSefe::embedToSvg(const BicoloredGraph* graph) const {
     // blue embedding
     const Graph* blue = graph->computeBlue();
     const Embedding* blueEmbedding = embedding.value()->computeBlueEmbedding(blue);
+    std::cout << "blue embedding:\n";
+    blueEmbedding->print();
     std::unique_ptr<ogdf::Graph> ogdfGraphBlue = std::unique_ptr<ogdf::Graph>(OgdfUtils::myGraphToOgdf(blue));
     ogdf::GraphAttributes GAblue(*ogdfGraphBlue, ogdf::GraphAttributes::nodeGraphics |
                         ogdf::GraphAttributes::edgeGraphics |
