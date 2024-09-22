@@ -42,6 +42,8 @@ private:
         int segmentsMinMaxRedAttachment[][2], int segmentsMinMaxBlueAttachment[][2],
         const BicoloredSegmentsHandler& segmentsHandler, int cycleNodePosition,
         bool segmentsHaveBetweenRedAttachment[], bool segmentsHaveBetweenBlueAttachment[]) const;
+    bool handleDrawsOfSegments(const NodeWithColors* cycleNode, const BicoloredSegmentsHandler& segmentsHandler,
+        int segmentsMinMaxRedAttachment[][2], int segmentsMinMaxBlueAttachment[][2], int segmentIndex1, int segmentIndex2) const;
     void addMiddleEdges(const BicoloredSegment* segment, const EmbeddingSefe* embedding, int cycleNodeIndex,
         const BicoloredSubGraph* higherLevel, bool compatible, EmbeddingSefe* output) const;
 public:

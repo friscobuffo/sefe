@@ -39,7 +39,7 @@ if (ENVIRONMENT_IS_NODE) {
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
-// include: /tmp/tmpeoddmmu6.js
+// include: /tmp/tmp8r0q8a1x.js
 
   if (!Module.expectedDataFileDownloads) {
     Module.expectedDataFileDownloads = 0;
@@ -218,25 +218,25 @@ Module['FS_createPath']("/example-graphs", "graphs", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/example-graphs/graphs-sefe/a0.txt", "start": 0, "end": 37}, {"filename": "/example-graphs/graphs-sefe/a1.txt", "start": 37, "end": 74}, {"filename": "/example-graphs/graphs/g1.txt", "start": 74, "end": 107}, {"filename": "/example-graphs/graphs/g2.txt", "start": 107, "end": 136}, {"filename": "/example-graphs/graphs/g3.txt", "start": 136, "end": 189}, {"filename": "/example-graphs/graphs/g4.txt", "start": 189, "end": 247}, {"filename": "/example-graphs/graphs/g5.txt", "start": 247, "end": 280}, {"filename": "/example-graphs/graphs/g6.txt", "start": 280, "end": 313}, {"filename": "/example-graphs/graphs/k33.txt", "start": 313, "end": 350}, {"filename": "/example-graphs/graphs/k5.txt", "start": 350, "end": 391}], "remote_package_size": 391});
+    loadPackage({"files": [{"filename": "/example-graphs/graphs-sefe/a0.txt", "start": 0, "end": 37}, {"filename": "/example-graphs/graphs-sefe/a1.txt", "start": 37, "end": 74}, {"filename": "/example-graphs/graphs-sefe/b0.txt", "start": 74, "end": 107}, {"filename": "/example-graphs/graphs-sefe/b1.txt", "start": 107, "end": 140}, {"filename": "/example-graphs/graphs/g1.txt", "start": 140, "end": 173}, {"filename": "/example-graphs/graphs/g2.txt", "start": 173, "end": 202}, {"filename": "/example-graphs/graphs/g3.txt", "start": 202, "end": 255}, {"filename": "/example-graphs/graphs/g4.txt", "start": 255, "end": 313}, {"filename": "/example-graphs/graphs/g5.txt", "start": 313, "end": 346}, {"filename": "/example-graphs/graphs/g6.txt", "start": 346, "end": 379}, {"filename": "/example-graphs/graphs/k33.txt", "start": 379, "end": 416}, {"filename": "/example-graphs/graphs/k5.txt", "start": 416, "end": 457}], "remote_package_size": 457});
 
   })();
 
-// end include: /tmp/tmpeoddmmu6.js
-// include: /tmp/tmpnr73ot_8.js
+// end include: /tmp/tmp8r0q8a1x.js
+// include: /tmp/tmpi2ub_tfk.js
 
     // All the pre-js content up to here must remain later on, we need to run
     // it.
     if (Module['$ww'] || (typeof ENVIRONMENT_IS_PTHREAD != 'undefined' && ENVIRONMENT_IS_PTHREAD)) Module['preRun'] = [];
     var necessaryPreJSTasks = Module['preRun'].slice();
-  // end include: /tmp/tmpnr73ot_8.js
-// include: /tmp/tmpa54p277t.js
+  // end include: /tmp/tmpi2ub_tfk.js
+// include: /tmp/tmpdn9ic2jp.js
 
     if (!Module['preRun']) throw 'Module.preRun should exist because file support used it; did a pre-js delete it?';
     necessaryPreJSTasks.forEach((task) => {
       if (Module['preRun'].indexOf(task) < 0) throw 'All preRun tasks that exist before user pre-js code should remain after; did you replace Module or modify Module.preRun?';
     });
-  // end include: /tmp/tmpa54p277t.js
+  // end include: /tmp/tmpdn9ic2jp.js
 
 
 // Sometimes an existing Module object exists with properties

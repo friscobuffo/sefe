@@ -78,10 +78,6 @@ bool EmbedderSefe::testSefe(const Graph* graph1, const Graph* graph2) const {
 
 // assumes intersection is biconnected
 bool EmbedderSefe::testSefe(const BicoloredSubGraph* bicoloredGraph, IntersectionCycle* cycle) const {
-    // std::cout << "bicolored graph:\n";
-    // bicoloredGraph->print();
-    // std::cout << "cycle:\n";
-    // cycle->print();
     const BicoloredSegmentsHandler segmentsHandler = BicoloredSegmentsHandler(bicoloredGraph, cycle);
     if (segmentsHandler.size() == 0) // entire biconnected component is a cycle
         return true;
@@ -532,6 +528,26 @@ int cycleNodePosition, bool segmentsHasBetweenAttachment[]) {
     return 0;
 }
 
+bool EmbedderSefe::handleDrawsOfSegments(const NodeWithColors* cycleNode, const BicoloredSegmentsHandler& segmentsHandler,
+int segmentsMinMaxRedAttachment[][2], int segmentsMinMaxBlueAttachment[][2], int segmentIndex1, int segmentIndex2) const {
+    int cycleNodeIndex = cycleNode->getIndex();
+    bool isCycleNodeMinAttachment = false;
+    if (segmentsMinMaxRedAttachment[segmentIndex1][0] == cycleNodeIndex ||
+        segmentsMinMaxBlueAttachment[segmentIndex1][0] == cycleNodeIndex ||
+        segmentsMinMaxRedAttachment[segmentIndex2][0] == cycleNodeIndex ||
+        segmentsMinMaxBlueAttachment[segmentIndex2][0] == cycleNodeIndex)
+        isCycleNodeMinAttachment = true;
+    if (!isCycleNodeMinAttachment) { // then it has to be max attachment
+        assert(segmentsMinMaxRedAttachment[segmentIndex1][1] == cycleNodeIndex ||
+            segmentsMinMaxBlueAttachment[segmentIndex1][1] == cycleNodeIndex ||
+            segmentsMinMaxRedAttachment[segmentIndex2][1] == cycleNodeIndex ||
+            segmentsMinMaxBlueAttachment[segmentIndex2][1] == cycleNodeIndex);
+    }
+    bool change = segmentIndex1 < segmentIndex2;
+    if (isCycleNodeMinAttachment) change = !change;
+    return change;
+}
+
 // assuming the cycle is drawn CLOCKWISE, and assuming the segments incident to the
 // attachment "cycleNode" must be drawn OUTSIDE the cycle, computes the order of
 // placement of these segments such that they don't intersect
@@ -541,24 +557,30 @@ int cycleNodePosition, bool segmentsHasBetweenRedAttachment[], bool segmentsHasB
     std::vector<int> order(segmentsIndexes);
     for (int i = 0; i < int(order.size())-1; ++i) {
         int min = i;
-        const BicoloredSegment* segment = segmentsHandler.getSegment(order[min]);
+        const BicoloredSegment* minSegment = segmentsHandler.getSegment(order[min]);
         for (int j = i+1; j < order.size(); ++j) {
             const BicoloredSegment* segmentCandidate = segmentsHandler.getSegment(order[j]);
-            int v = compareSegments(cycleNode, segment, segmentCandidate, segmentsMinMaxRedAttachment,
+            int v = compareSegments(cycleNode, minSegment, segmentCandidate, segmentsMinMaxRedAttachment,
                 order[min], order[j], cycleNodePosition, segmentsHasBetweenRedAttachment);
             if (v == 0)
-                v = compareSegments(cycleNode, segment, segmentCandidate, segmentsMinMaxBlueAttachment,
+                v = compareSegments(cycleNode, minSegment, segmentCandidate, segmentsMinMaxBlueAttachment,
                     order[min], order[j], cycleNodePosition, segmentsHasBetweenBlueAttachment);
             if (v < 0)
                 continue;
             if (v > 0) {
                 min = j;
-                segment = segmentsHandler.getSegment(order[min]);
+                minSegment = segmentsHandler.getSegment(order[min]);
                 continue;
             }
-            if (order[min] < order[j]) {
+            assert(!segmentsHasBetweenBlueAttachment[order[min]]);
+            assert(!segmentsHasBetweenBlueAttachment[order[j]]);
+            assert(!segmentsHasBetweenRedAttachment[order[min]]);
+            assert(!segmentsHasBetweenRedAttachment[order[j]]);
+            bool changeMinSegment = handleDrawsOfSegments(cycleNode, segmentsHandler, segmentsMinMaxRedAttachment,
+                segmentsMinMaxBlueAttachment, order[j], order[min]);
+            if (changeMinSegment) {
                 min = j;
-                segment = segmentsHandler.getSegment(order[min]);
+                minSegment = segmentsHandler.getSegment(order[min]);
             }
         }
         int temp = order[min];

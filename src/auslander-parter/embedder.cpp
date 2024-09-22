@@ -1,6 +1,6 @@
 #include "embedder.hpp"
-
 #include <cassert>
+
 #include <iostream>
 #include <sstream>
 
@@ -123,28 +123,32 @@ int segmentsMinAttachment[], int segmentsMaxAttachment[], const SegmentsHandler&
         middleSegment = segIndex;
     }
     for (int i = 0; i < int(maxSegments.size())-1; ++i) {
-        int min = maxSegments[i];
+        int min = i;
+        int minSeg = maxSegments[i];
         for (int j = i+1; j < maxSegments.size(); ++j) {
             int candidate = maxSegments[j];
-            if (segmentsMinAttachment[candidate] < segmentsMinAttachment[min])
+            if (segmentsMinAttachment[candidate] < segmentsMinAttachment[minSeg])
                 continue;
-            if (segmentsMinAttachment[candidate] > segmentsMinAttachment[min]) {
-                min = maxSegments[candidate];
+            if (segmentsMinAttachment[candidate] > segmentsMinAttachment[minSeg]) {
+                minSeg = maxSegments[candidate];
+                min = j;
                 continue;
             }
-            int numAttachmentsMin = segmentsHandler.getSegment(min)->getAttachments().size();
+            int numAttachmentsMin = segmentsHandler.getSegment(minSeg)->getAttachments().size();
             int numAttachmentsCandidate = segmentsHandler.getSegment(candidate)->getAttachments().size();
             assert(numAttachmentsMin == 2 || numAttachmentsMin == 3);
             assert(numAttachmentsCandidate == 2 || numAttachmentsCandidate == 3);
             if (numAttachmentsMin == 2 && numAttachmentsCandidate == 2) {
-                if (min > candidate)
+                if (minSeg > candidate)
                     continue;
-                min = candidate;
+                minSeg = candidate;
+                min = j;
                 continue;
             }
             if (numAttachmentsCandidate == 3) {
                 assert(numAttachmentsMin == 2);
-                min = candidate;
+                minSeg = candidate;
+                min = j;
             }
         }
         int temp = maxSegments[min];
@@ -153,28 +157,32 @@ int segmentsMinAttachment[], int segmentsMaxAttachment[], const SegmentsHandler&
     }
     // ordering minSegments
     for (int i = 0; i < int(minSegments.size())-1; ++i) {
-        int min = minSegments[i];
+        int min = i;
+        int minSeg = minSegments[i];
         for (int j = i+1; j < minSegments.size(); ++j) {
             int candidate = minSegments[j];
-            if (segmentsMaxAttachment[candidate] < segmentsMaxAttachment[min])
+            if (segmentsMaxAttachment[candidate] < segmentsMaxAttachment[minSeg])
                 continue;
-            if (segmentsMaxAttachment[candidate] > segmentsMaxAttachment[min]) {
-                min = minSegments[candidate];
+            if (segmentsMaxAttachment[candidate] > segmentsMaxAttachment[minSeg]) {
+                min = j;
+                minSeg = minSegments[j];
                 continue;
             }
-            int numAttachmentsMax = segmentsHandler.getSegment(min)->getAttachments().size();
+            int numAttachmentsMax = segmentsHandler.getSegment(minSeg)->getAttachments().size();
             int numAttachmentsCandidate = segmentsHandler.getSegment(candidate)->getAttachments().size();
             assert(numAttachmentsMax == 2 || numAttachmentsMax == 3);
             assert(numAttachmentsCandidate == 2 || numAttachmentsCandidate == 3);
             if (numAttachmentsMax == 2 && numAttachmentsCandidate == 2) {
-                if (min > candidate)
+                if (minSeg < candidate)
                     continue;
-                min = candidate;
+                minSeg = candidate;
+                min = j;
                 continue;
             }
             if (numAttachmentsMax == 3) {
                 assert(numAttachmentsCandidate == 2);
-                min = candidate;
+                minSeg = candidate;
+                min = j;
             }
         }
         int temp = minSegments[min];
@@ -498,7 +506,7 @@ const Embedding* Embedder::baseCaseCycle(const SubGraph* cycle) const {
     return embedding;
 }
 
-class AuslanderParterEmbedderSefe : public ogdf::EmbedderModule {
+class AuslanderParterEmbedder : public ogdf::EmbedderModule {
 public:
     void doCall(ogdf::Graph& graph, ogdf::adjEntry &adjExternal) {
         const Graph* myGraph = OgdfUtils::ogdfGraphToMyGraph(&graph);
@@ -545,7 +553,7 @@ void Embedder::embedToSvg(const Graph* graph, std::string& outputPath) const {
         GA.arrowType(e) = ogdf::EdgeArrow::None;
     }
     ogdf::PlanarDrawLayout layout;
-    layout.setEmbedder(new AuslanderParterEmbedderSefe);
+    layout.setEmbedder(new AuslanderParterEmbedder);
     layout.call(GA);
 
     std::ostringstream svgStream;

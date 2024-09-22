@@ -70,8 +70,8 @@ void testGraph(std::string path) {
 extern "C" {
     void sefeMainTest() {
         std::cout << std::boolalpha;
-        const Graph* graph1 = loadFromfile("/example-graphs/graphs-sefe/a0.txt");
-        const Graph* graph2 = loadFromfile("/example-graphs/graphs-sefe/a1.txt");
+        const Graph* graph1 = loadFromfile("/example-graphs/graphs-sefe/b0.txt");
+        const Graph* graph2 = loadFromfile("/example-graphs/graphs-sefe/b1.txt");
         const BicoloredGraph bicoloredGraph(graph1, graph2);
         std::cout << "union graph:\n";
         bicoloredGraph.print();
@@ -83,8 +83,8 @@ extern "C" {
             std::cout << "\nunion graph sefe:\n";
             embeddingSefe.value()->print();
             delete embeddingSefe.value();
+            embedderSefe.embedToSvg(&bicoloredGraph);
         }
-        embedderSefe.embedToSvg(&bicoloredGraph);
         delete graph1;
         delete graph2;
         std::cout << "\nall graphs tests\n";

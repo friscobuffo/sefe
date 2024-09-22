@@ -7,21 +7,19 @@ InterlacementGraphSefe::InterlacementGraphSefe(const IntersectionCycle* cycle, c
     computeConflicts();
 }
 
-void InterlacementGraphSefe::computeCycleLabels(const BicoloredSegment* segment,
-int cycleLabels[], Color color, int& numberOfColoredAttachments) {
+void InterlacementGraphSefe::computeCycleLabels(const BicoloredSegment* segment, int cycleLabels[], Color color, int& numberOfAttachments) {
     assert(color != Color::BLACK);
-    int originalSegmentSize = cycle_m->getOriginalGraphSize();
-    bool isCycleNodeAnAttachment[originalSegmentSize];
-    for (int i = 0; i < originalSegmentSize; ++i)
-        isCycleNodeAnAttachment[i] = false;
-    int foundAttachments = 0;
+    int originalComponentSize = cycle_m->getOriginalGraphSize();
     int totalAttachments = 0;
-    for (const NodeWithColors* attachment : segment->getAttachments()) {
+    bool isCycleNodeAnAttachment[originalComponentSize];
+    for (int i = 0; i < originalComponentSize; ++i)
+        isCycleNodeAnAttachment[i] = false;
+    for (const NodeWithColors* attachment : segment->getAttachments())
         if (segment->isNodeAttachmentOfColor(attachment, color)) {
             isCycleNodeAnAttachment[segment->getHigherLevelNode(attachment)->getIndex()] = true;
             ++totalAttachments;
         }
-    }
+    int foundAttachments = 0;
     for (int i = 0; i < cycle_m->size(); ++i) {
         const NodeWithColors* node = cycle_m->getNode(i);
         if (isCycleNodeAnAttachment[node->getIndex()])
@@ -32,48 +30,56 @@ int cycleLabels[], Color color, int& numberOfColoredAttachments) {
             else
                 cycleLabels[node->getIndex()] = 2*foundAttachments-1;
     }
-    numberOfColoredAttachments = totalAttachments;
+    assert(foundAttachments == totalAttachments);
+    numberOfAttachments = totalAttachments;
 }
 
-bool InterlacementGraphSefe::areInConflict(const BicoloredSegment* segment1,
-const BicoloredSegment* segment2, const int cycleLabels[], const Color color, const int numberOfAttachments) {
-    int numberOfLabels = 2*numberOfAttachments;
-    int labels[numberOfLabels];
-    for (int i = 0; i < numberOfLabels; ++i)
-        labels[i] = 0;
-    for (const NodeWithColors* attachment : segment2->getAttachments()) {
-        if (!segment2->isNodeAttachmentOfColor(attachment, color))
-            continue;
-        int attachmentHigherLevel = segment2->getHigherLevelNode(attachment)->getIndex();
-        labels[cycleLabels[attachmentHigherLevel]] = 1;
-    }
-    int sum = 0;
-    for (int i = 0; i < numberOfLabels; ++i)
-        sum += labels[i];
-    int partSum = labels[0] + labels[1] + labels[2];
-    for (int i = 0; i <= numberOfLabels-2; i += 2) {
-        if (partSum == sum)
-            return false;
-        partSum = partSum + labels[(3+i) % numberOfLabels] + labels[(4+i) % numberOfLabels];
-        partSum = partSum - labels[i] - labels[(1+i) % numberOfLabels];
-    }
-    return true;
-}
-
+// two segments are in conflict if any of their non cycle edges may intersect
 void InterlacementGraphSefe::computeConflicts() {
-    int blueCycleLabels[cycle_m->getOriginalGraphSize()];
     int redCycleLabels[cycle_m->getOriginalGraphSize()];
+    int blueCycleLabels[cycle_m->getOriginalGraphSize()];
     for (int i = 0; i < segmentsHandler_m->size()-1; ++i) {
         const BicoloredSegment* segment = segmentsHandler_m->getSegment(i);
-        int numberOfRedAttachments = 0;
-        int numberOfBlueAttachments = 0;
+        int numberOfRedAttachments;
+        int numberOfBlueAttachments;
+        computeCycleLabels(segment, redCycleLabels, Color::RED, numberOfRedAttachments);
         computeCycleLabels(segment, blueCycleLabels, Color::BLUE, numberOfBlueAttachments);
-        computeCycleLabels(segment, blueCycleLabels, Color::RED, numberOfRedAttachments);
         for (int j = i+1; j < segmentsHandler_m->size(); ++j) {
             const BicoloredSegment* otherSegment = segmentsHandler_m->getSegment(j);
-            bool conflictRed = areInConflict(segment, otherSegment, redCycleLabels, Color::RED, numberOfRedAttachments);
-            bool conflictBlue = areInConflict(segment, otherSegment, blueCycleLabels, Color::BLUE, numberOfBlueAttachments);
-            if (conflictRed || conflictBlue) addEdge(i, j);
+            if (areInConflict(segment, otherSegment, redCycleLabels, Color::RED, numberOfRedAttachments) ||
+                areInConflict(segment, otherSegment, blueCycleLabels, Color::BLUE, numberOfBlueAttachments)) {
+                addEdge(i, j);
+            }
         }
     }
+}
+
+bool InterlacementGraphSefe::areInConflict(const BicoloredSegment* segment1, const BicoloredSegment* segment2,
+const int cycleLabels[], const Color color, const int numberOfAttachments) {
+    if (numberOfAttachments == 0) return false;
+    int numberOfLabels = 2*numberOfAttachments;
+    int labels[numberOfLabels];
+    for (int k = 0; k < numberOfLabels; ++k)
+        labels[k] = 0;
+    int numberOfAttachments2 = 0;
+    for (const NodeWithColors* attachment : segment2->getAttachments()) {
+        if (!segment2->isNodeAttachmentOfColor(attachment, color)) continue;
+        int attachmentComponent = segment2->getHigherLevelNode(attachment)->getIndex();
+        labels[cycleLabels[attachmentComponent]] = 1;
+        numberOfAttachments2++;
+    }
+    if (numberOfAttachments2 == 0) return false;
+    int sum = 0;
+    for (int k = 0; k < numberOfLabels; ++k)
+        sum += labels[k];
+    int partSum = labels[0] + labels[1] + labels[2];
+    bool areInConflict = true;
+    for (int k = 0; k <= numberOfLabels-2; k += 2) {
+        if (partSum == sum) {
+            return false;
+        }
+        partSum = partSum + labels[(3+k) % numberOfLabels] + labels[(4+k) % numberOfLabels];
+        partSum = partSum - labels[k] - labels[(1+k) % numberOfLabels];
+    }
+    return true;
 }
