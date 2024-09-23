@@ -483,6 +483,8 @@ int cycleNodePosition, bool segmentsHasBetweenAttachment[]) {
     int seg2max = segmentsMinMaxAttachment[segment2index][1];
     bool hasSeg2between = segmentsHasBetweenAttachment[segment2index];
 
+    if (seg1max == -1 || seg2max == -1) return 0;
+
     if (cycleNodePosition == seg1min && cycleNodePosition == seg2min) {
         if (seg1max < seg2max) return 1;
         if (seg1max > seg2max) return -1;
@@ -528,20 +530,19 @@ int cycleNodePosition, bool segmentsHasBetweenAttachment[]) {
     return 0;
 }
 
-bool EmbedderSefe::handleDrawsOfSegments(const NodeWithColors* cycleNode, const BicoloredSegmentsHandler& segmentsHandler,
+bool EmbedderSefe::handleDrawsOfSegments(int cycleNodePosition, const BicoloredSegmentsHandler& segmentsHandler,
 int segmentsMinMaxRedAttachment[][2], int segmentsMinMaxBlueAttachment[][2], int segmentIndex1, int segmentIndex2) const {
-    int cycleNodeIndex = cycleNode->getIndex();
     bool isCycleNodeMinAttachment = false;
-    if (segmentsMinMaxRedAttachment[segmentIndex1][0] == cycleNodeIndex ||
-        segmentsMinMaxBlueAttachment[segmentIndex1][0] == cycleNodeIndex ||
-        segmentsMinMaxRedAttachment[segmentIndex2][0] == cycleNodeIndex ||
-        segmentsMinMaxBlueAttachment[segmentIndex2][0] == cycleNodeIndex)
+    if (segmentsMinMaxRedAttachment[segmentIndex1][0] == cycleNodePosition ||
+        segmentsMinMaxBlueAttachment[segmentIndex1][0] == cycleNodePosition ||
+        segmentsMinMaxRedAttachment[segmentIndex2][0] == cycleNodePosition ||
+        segmentsMinMaxBlueAttachment[segmentIndex2][0] == cycleNodePosition)
         isCycleNodeMinAttachment = true;
     if (!isCycleNodeMinAttachment) { // then it has to be max attachment
-        assert(segmentsMinMaxRedAttachment[segmentIndex1][1] == cycleNodeIndex ||
-            segmentsMinMaxBlueAttachment[segmentIndex1][1] == cycleNodeIndex ||
-            segmentsMinMaxRedAttachment[segmentIndex2][1] == cycleNodeIndex ||
-            segmentsMinMaxBlueAttachment[segmentIndex2][1] == cycleNodeIndex);
+        assert(segmentsMinMaxRedAttachment[segmentIndex1][1] == cycleNodePosition ||
+            segmentsMinMaxBlueAttachment[segmentIndex1][1] == cycleNodePosition ||
+            segmentsMinMaxRedAttachment[segmentIndex2][1] == cycleNodePosition ||
+            segmentsMinMaxBlueAttachment[segmentIndex2][1] == cycleNodePosition);
     }
     bool change = segmentIndex1 < segmentIndex2;
     if (isCycleNodeMinAttachment) change = !change;
@@ -576,7 +577,7 @@ int cycleNodePosition, bool segmentsHasBetweenRedAttachment[], bool segmentsHasB
             assert(!segmentsHasBetweenBlueAttachment[order[j]]);
             assert(!segmentsHasBetweenRedAttachment[order[min]]);
             assert(!segmentsHasBetweenRedAttachment[order[j]]);
-            bool changeMinSegment = handleDrawsOfSegments(cycleNode, segmentsHandler, segmentsMinMaxRedAttachment,
+            bool changeMinSegment = handleDrawsOfSegments(cycleNodePosition, segmentsHandler, segmentsMinMaxRedAttachment,
                 segmentsMinMaxBlueAttachment, order[j], order[min]);
             if (changeMinSegment) {
                 min = j;
