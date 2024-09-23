@@ -46,7 +46,10 @@ all: $(TARGET)
 $(TARGET): $(OBJS)
 	$(EMCC) $(INCLUDES) $(LIBS) $(OBJS) $(LDFLAGS) -o $(TARGET) $(EMFLAGS) $(PRELOAD_FILES)
 
+# Optimization flags
+OPTFLAGS = -O3
+
 # Rule to compile .cpp files to .o files
 $(OBJ_DIR)/%.o: %.cpp
 	@mkdir -p $(dir $@)
-	$(EMCC) $(INCLUDES) -c $< -o $@
+	$(EMCC) $(INCLUDES) $(OPTFLAGS) -c $< -o $@

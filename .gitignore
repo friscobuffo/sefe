@@ -1,6 +1,6 @@
 /.vscode
 main
-main-debug
 /bin
 /embeddings
 /OGDF
+to-*.txt
