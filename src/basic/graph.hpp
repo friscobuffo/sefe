@@ -8,6 +8,14 @@
 
 class Graph;
 
+/**
+ * @class Node
+ * @brief Represents a node in a graph.
+ * 
+ * The Node class encapsulates the properties and behaviors of a node within a graph.
+ * Each node has a unique index, a list of neighboring nodes, and a reference
+ * to the graph it belongs to.
+ */
 class Node {
 private:
     const int index_m;
@@ -22,6 +30,13 @@ public:
     const Graph* getGraph() const;
 };
 
+/**
+ * @class Graph
+ * @brief A class representing an undirected graph structure with nodes and edges.
+ * 
+ * The Graph class provides functionalities to manage a graph, including adding edges,
+ * retrieving nodes, computing bipartitions, and intersections with other graphs.
+ */
 class Graph {
 private:
     bool bfsBipartition(int node, std::vector<int>& bipartition) const;
@@ -43,6 +58,14 @@ public:
     bool hasEdge(int fromIndex, int toIndex) const;
 };
 
+/**
+ * @class SubGraph
+ * @brief A class representing a subgraph derived from an original graph.
+ * 
+ * The SubGraph class inherits from the Graph class and represents a subgraph
+ * that is part of a larger, original graph. It maintains a reference to the 
+ * original graph and a mapping of nodes to their counterparts in the original graph.
+ */
 class SubGraph : public Graph {
 private:
     const Graph* originalGraph_m;
