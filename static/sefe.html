@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Graph Embedder</title>
+  <link rel="stylesheet" href="sefe.css">
+</head>
+<body>
+  <div class="topnav">
+    <span>Graphs Embedder</span>
+    <a href="">Thesis PDF</a>
+    <a href="">Graph Examples</a>
+    <a href="auslander-parter.html">Auslander & Parter</a>
+    <a class="active">SEFE</a>
+  </div>
+
+  <div id="control-panel">
+    <div>
+      <label class="custom-file-upload" id="red-graph-upload">
+        <input type="file" id="file1InputSefe">
+        Upload Red Graph
+      </label>
+    </div>
+    <div>
+      <label class="custom-file-upload" id="blue-graph-upload">
+        <input type="file" id="file2InputSefe">
+        Upload Blue Graph
+      </label>
+    </div>
+    <div>
+      <button class="button" onclick="sefe()">Compute SEFE</button>
+    </div>
+  </div>
+
+  <div id="drawings-container">
+    <div class="svg-container">
+      <div id="sefe-svg-red"></div>
+      <div class="download-buttons">
+        <button class="button">Download Embedding</button>
+        <button class="button download-svg" id="download-svg-red">Download SVG</button>
+      </div>
+    </div>
+    <div class="svg-container">
+      <div id="sefe-svg-blue"></div>
+      <div class="download-buttons">
+        <button class="button">Download Embedding</button>
+        <button class="button download-svg" id="download-svg-blue">Download SVG</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>2023 Your Name</p>
+  </footer>
+
+  <script src="sefe.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>

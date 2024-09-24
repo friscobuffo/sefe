@@ -27,13 +27,13 @@ OBJS = $(SRCS:%.cpp=$(OBJ_DIR)/%.o)
 OBJ_DIR = bin
 
 # Target output
-TARGET = main.js
+TARGET = static/main.js
 
 # Libraries to link
 LDFLAGS = -lOGDF -lCOIN
 
 # Emscripten options
-EMFLAGS = -s EXPORTED_FUNCTIONS='["_embedLoadedFile", "_sefeMainTest", "_sefeLoadedFiles"]' \
+EMFLAGS = -s EXPORTED_FUNCTIONS='["_embedLoadedFile", "_sefeLoadedFiles"]' \
           -s EXPORTED_RUNTIME_METHODS='["ccall", "cwrap", "FS"]'
 
 # Preload files

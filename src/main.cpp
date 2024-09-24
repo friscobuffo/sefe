@@ -54,53 +54,8 @@ extern "C" {
     }
 }
 
-void testGraph(std::string path) {
-    EmbedderSefe embedderSefe{};
-    Embedder embedder{};
-    const Graph* g1 = loadFromfile(path);
-    const Graph* g2 = loadFromfile(path);
-    std::optional<const Embedding*> embedding = embedder.embedGraph(g1);
-    std::cout << embedding.has_value() << " - " << embedderSefe.testSefe(g1, g2) << "\n";
-    delete g1;
-    delete g2;
-    if (embedding.has_value()) delete embedding.value();
-}
-
 extern "C" {
-    void sefeMainTest() {
-        std::cout << std::boolalpha;
-        const Graph* graph1 = loadFromfile("/example-graphs/graphs-sefe/b0.txt");
-        const Graph* graph2 = loadFromfile("/example-graphs/graphs-sefe/b1.txt");
-        const BicoloredGraph bicoloredGraph(graph1, graph2);
-        std::cout << "union graph:\n";
-        bicoloredGraph.print();
-        EmbedderSefe embedderSefe{};
-        bool admitsSefe = embedderSefe.testSefe(graph1, graph2);
-        std::cout << "\nadmits sefe: " << admitsSefe << "\n";
-        std::optional<const EmbeddingSefe*> embeddingSefe = embedderSefe.embedGraph(&bicoloredGraph);
-        if (embeddingSefe.has_value()) {
-            std::cout << "\nunion graph sefe:\n";
-            embeddingSefe.value()->print();
-            delete embeddingSefe.value();
-            embedderSefe.embedToSvg(&bicoloredGraph);
-        }
-        delete graph1;
-        delete graph2;
-        std::cout << "\nall graphs tests\n";
-        std::cout << "(boolean values on same row must be the same)\n";
-        testGraph("/example-graphs/graphs/g1.txt");
-        testGraph("/example-graphs/graphs/g2.txt");
-        // testGraph("/example-graphs/graphs/g3.txt");
-        testGraph("/example-graphs/graphs/g4.txt");
-        testGraph("/example-graphs/graphs/g5.txt");
-        testGraph("/example-graphs/graphs/g6.txt");
-        testGraph("/example-graphs/graphs/k5.txt");
-        testGraph("/example-graphs/graphs/k33.txt");
-    }
-}
-
-extern "C" {
-    void sefeLoadedFiles() {
+    int sefeLoadedFiles() {
         const Graph* red = loadFromfile("red.txt");
         const Graph* blue = loadFromfile("blue.txt");
         const BicoloredGraph graph(red, blue);
@@ -108,7 +63,8 @@ extern "C" {
         graph.print();
         EmbedderSefe embedder{};
         std::optional<const EmbeddingSefe*> embedding = embedder.embedGraph(&graph);
-        std::cout << std::boolalpha << "graph is planar: " << embedding.has_value() << ".\n";
+        bool admitsSefe = embedder.testSefe(red, blue);
+        std::cout << std::boolalpha << "graph is planar: " << admitsSefe << ".\n";
         if (embedding.has_value()) {
             std::cout << "embedding:\n";
             embedding.value()->print();
@@ -119,5 +75,7 @@ extern "C" {
         std::cout << "all good\n";
         delete red;
         delete blue;
+        if (admitsSefe) return 1;
+        return 0;
     }
 }
