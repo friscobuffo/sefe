@@ -5,6 +5,17 @@
 #include "segment.hpp"
 #include "cycle.hpp"
 
+/**
+ * @class InterlacementGraph
+ * @brief Represents a specialized graph used for analysis of conflicts between segments.
+ * 
+ * Each node of the graph represents a segment of the cycle and each edge represents
+ * a conflict between two segments.
+ * 
+ * @see Graph
+ * @see Cycle
+ * @see SegmentsHandler
+ */
 class InterlacementGraph : public Graph {
 private:
     const Cycle* cycle_m;

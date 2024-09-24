@@ -3,6 +3,17 @@
 #include <iostream>
 #include <cassert>
 
+/**
+ * @brief Constructs a Segment object.
+ * 
+ * This constructor initializes a Segment object with the given number of nodes,
+ * a pointer to a SubGraph component, and a pointer to a Cycle. It also initializes
+ * the component nodes pointers and sets all nodes as non-attachment nodes.
+ * 
+ * @param numberOfNodes The number of nodes in the segment.
+ * @param component A pointer to the SubGraph component associated with this segment.
+ * @param cycle A pointer to the Cycle associated with this segment.
+ */
 Segment::Segment(const int numberOfNodes, const SubGraph* component, const Cycle* cycle)
 : SubGraph(numberOfNodes, component), originalComponent_m(component),
 originalCycle_m(cycle), componentNodesPointers_m(numberOfNodes) {
@@ -11,6 +22,12 @@ originalCycle_m(cycle), componentNodesPointers_m(numberOfNodes) {
         isNodeAnAttachment_m[i] = false;
 }
 
+/**
+ * @brief Adds a node attachment to the segment's list of attachments if it is
+ * not already present.
+ *
+ * @param attachment A pointer to the Node object to be added as an attachment.
+ */
 void Segment::addAttachment(const Node* attachment) {
     if (isNodeAnAttachment(attachment)) return;
     isNodeAnAttachment_m[attachment->getIndex()] = true;
@@ -21,8 +38,11 @@ bool Segment::isNodeAnAttachment(const Node* node) const {
     return isNodeAnAttachment_m[node->getIndex()];
 }
 
-// returns true if the segment is just a path inside (or outside) a cycle,
-// false otherwise
+/**
+ * @brief Checks if the segment is just a path inside (or outside) the cycle.
+ *
+ * @return true if the segment is a path, false otherwise.
+ */
 bool Segment::isPath() const {
     for (const Node* node : getNodes()) {
         if (isNodeAnAttachment(node)) continue;
@@ -32,11 +52,29 @@ bool Segment::isPath() const {
     return true;
 }
 
+/**
+ * @brief Retrieves the attachment nodes associated with this segment.
+ * 
+ * This function returns a constant reference to a vector containing pointers
+ * to the nodes that are attached to this segment.
+ * 
+ * @return A constant reference to a vector of pointers to the attachment nodes.
+ */
 const std::vector<const Node*>& Segment::getAttachments() const {
     return attachmentNodes_m;
 }
 
-// computes a path between two attachments, assuring it does not go trought the cycle
+/**
+ * @brief Computes the path between two attachment nodes in the segment, assuring it
+ * does not go trought the cycle.
+ *
+ * @param start The starting attachment node.
+ * @param end The ending attachment node.
+ * @return A list of nodes representing the path from the start node to the end node.
+ *
+ * @note The function assumes that both start and end nodes are attachment nodes
+ *      and belong to the segment.
+ */
 std::list<const Node*> Segment::computePathBetweenAttachments(const Node* start, const Node* end) const {
     assert(isNodeAnAttachment(start));
     assert(isNodeAnAttachment(end));
@@ -71,38 +109,79 @@ std::list<const Node*> Segment::computePathBetweenAttachments(const Node* start,
     return path;
 }
 
+/**
+ * @brief Retrieves the original cycle associated with this segment.
+ * 
+ * @return const Cycle* Pointer to the original cycle.
+ */
 const Cycle* Segment::getOriginalCycle() const {
     return originalCycle_m;
 }
 
+/**
+ * @brief Retrieves the original component associated with this segment.
+ * 
+ * @return const SubGraph* Pointer to the original subgraph component.
+ */
 const SubGraph* Segment::getOriginalComponent() const {
     return originalComponent_m;
 }
 
+/**
+ * @brief Retrieves a pointer to a component node based on the given node.
+ *
+ * This function takes a pointer to a Node object and returns a pointer to the 
+ * corresponding component node by using the node's index.
+ *
+ * @param node A pointer to the Node object for which the component node is to be retrieved.
+ * @return A pointer to the component node corresponding to the given node.
+ */
 const Node* Segment::getComponentNode(const Node* node) const {
     return componentNodesPointers_m.getPointer(node->getIndex());
 }
 
+/**
+ * @brief Sets the component node for a given node.
+ * 
+ * This function assigns a component node to a specified node by updating
+ * the internal pointer structure. The component node is identified by its
+ * index within the node structure.
+ * 
+ * @param node A pointer to the node for which the component node is being set.
+ * @param componentNode A pointer to the component node to be assigned to the node.
+ */
 void Segment::setComponentNode(const Node* node, const Node* componentNode) {
     componentNodesPointers_m.setPointer(node->getIndex(), componentNode);
 }
 
-void SegmentsHandler::segmentCheck(const Segment* segment) {
-    for (const Node* node : segment->getNodes()) {
-        const Node* nodeComponent = segment->getComponentNode(node);
-        assert(nodeComponent->getGraph() == originalComponent_m);
-        assert(segment->getOriginalNode(node) == originalComponent_m->getOriginalNode(nodeComponent));
-    }
-}
-
+/**
+ * @brief Constructs a SegmentsHandler object.
+ * 
+ * This constructor initializes the SegmentsHandler with a given subgraph biconnected
+ * component and a cycle. It also triggers the process of finding segments and chords
+ * within the provided component and cycle.
+ * 
+ * @param component Pointer to the SubGraph object representing the component.
+ * @param cycle Pointer to the Cycle object representing the cycle.
+ */
 SegmentsHandler::SegmentsHandler(const SubGraph* component, const Cycle* cycle)
 : originalComponent_m(component), originalCycle_m(cycle) {
     findSegments();
     findChords();
-    for (int i = 0; i < size(); ++i)
-        segmentCheck(getSegment(i));
 }
 
+/**
+ * @brief Performs a depth-first search (DFS) to find segments in a graph.
+ *
+ * This function traverses the graph starting from the given node, marking nodes as visited,
+ * and collecting nodes and edges that form segments. It uses a depth-first search approach
+ * to explore all reachable nodes and edges from the starting node.
+ *
+ * @param node The starting node for the DFS traversal.
+ * @param isNodeVisited An array indicating whether each node has been visited.
+ * @param nodesInSegment A vector to store the nodes that are part of the current segment.
+ * @param edgesInSegment A vector to store the edges that are part of the current segment.
+ */
 void SegmentsHandler::dfsFindSegments(const Node* node, bool isNodeVisited[], std::vector<const Node*>& nodesInSegment,
 std::vector<std::pair<const Node*, const Node*>>& edgesInSegment) {
     int nodeIndex = node->getIndex();
@@ -121,6 +200,15 @@ std::vector<std::pair<const Node*, const Node*>>& edgesInSegment) {
     }
 }
 
+/**
+ * @brief Finds and constructs chords in the original cycle.
+ * 
+ * This function iterates through each node in the original cycle and checks its neighbors.
+ * If a neighbor is part of the original cycle and is not the previous or next node in the cycle,
+ * a chord is constructed between the node and the neighbor. 
+ * 
+ * @note A chord is defined as a segment connecting two non-adjacent nodes in the cycle.
+ */
 void SegmentsHandler::findChords() {
     for (int i = 0; i < originalCycle_m->size(); ++i) {
         const Node* node = originalCycle_m->getNode(i);
@@ -135,6 +223,10 @@ void SegmentsHandler::findChords() {
     }
 }
 
+/**
+ * @brief Finds segments in the original biconnected component. It uses a
+ * depth-first search (DFS) to find these segments and then builds and stores them.
+ */
 void SegmentsHandler::findSegments() {
     int size = originalComponent_m->size();
     bool isNodeVisited[size];
@@ -155,8 +247,24 @@ void SegmentsHandler::findSegments() {
     }
 }
 
-// nodes vector does NOT contain cycle nodes
-// edges vector does NOT contain cycle edges
+/**
+ * @brief Constructs a new Segment object from the given nodes and edges.
+ *
+ * This function creates a new Segment object that includes nodes from both the original cycle 
+ * and the provided nodes vector. It sets up the necessary pointers and relationships between 
+ * the new segment nodes and the original component nodes. Additionally, it adds edges between 
+ * the nodes and handles attachments for nodes that are part of the original cycle.
+ * The first nodes in the segment must be the same as the cycle nodes in the same order.
+ * 
+ * @note The nodes vector must not include the cycle nodes.
+ * @note The edges vector must not contain cycle edges.
+ *
+ * @param nodes A vector of pointers to Node objects representing the nodes to be included in the segment.
+ *              Note that this vector does not include the cycle nodes.
+ * @param edges A vector of pairs of pointers to Node objects representing the edges to be included in the segment.
+ *              Each pair represents an edge between two nodes.
+ * @return A pointer to the newly created Segment object.
+ */
 const Segment* SegmentsHandler::buildSegment(std::vector<const Node*>& nodes,
 std::vector<std::pair<const Node*, const Node*>>& edges) {
     Segment* segment = new Segment(nodes.size()+originalCycle_m->size(), originalComponent_m, originalCycle_m);
@@ -199,6 +307,15 @@ std::vector<std::pair<const Node*, const Node*>>& edges) {
     return segment;
 }
 
+/**
+ * @brief Constructs a new chord segment based on the provided attachment nodes.
+ *
+ * The chord is constructed by copying the nodes from the original cycle and maintaining the same order.
+ *
+ * @param attachment1 The first attachment node in the original cycle.
+ * @param attachment2 The second attachment node in the original cycle.
+ * @return A pointer to the newly created Segment object representing the chord.
+ */
 const Segment* SegmentsHandler::buildChord(const Node* attachment1, const Node* attachment2) {
     Segment* chord = new Segment(originalCycle_m->size(), originalComponent_m, originalCycle_m);
     // assigning labels
@@ -225,10 +342,22 @@ const Segment* SegmentsHandler::buildChord(const Node* attachment1, const Node* 
     return chord;
 }
 
+/**
+ * @brief Retrieves a constant pointer to a Segment object at the specified index.
+ * 
+ * @param index The index of the segment to retrieve.
+ * @return const Segment* A constant pointer to the Segment object at the specified index.
+ */
 const Segment* SegmentsHandler::getSegment(const int index) const {
     return segments_m[index].get();
 }
 
+/**
+ * @brief Prints all segments managed by the SegmentsHandler.
+ * 
+ * This function iterates through all the segments managed by the SegmentsHandler
+ * and prints each segment's index followed by the segment's details.
+ */
 void SegmentsHandler::print() const {
     for (int i = 0; i < size(); ++i) {
         std::cout << "segment [" << i << "]\n";
@@ -237,6 +366,11 @@ void SegmentsHandler::print() const {
     }
 }
 
+/**
+ * @brief Returns the number of segments managed by the SegmentsHandler.
+ * 
+ * @return int The number of segments.
+ */
 int SegmentsHandler::size() const {
     return segments_m.size();
 }

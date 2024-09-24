@@ -2,11 +2,30 @@
 
 #include <cassert>
 
+/**
+ * @brief Constructs an InterlacementGraph object.
+ * 
+ * This constructor initializes an InterlacementGraph with a given cycle and segments handler.
+ * It computes conflicts between segments.
+ * 
+ * @param cycle Pointer to a Cycle object representing the cycle to be used.
+ * @param segmentsHandler Reference to a SegmentsHandler object managing the segments.
+ */
 InterlacementGraph::InterlacementGraph(const Cycle* cycle, const SegmentsHandler& segmentsHandler)
     : Graph(segmentsHandler.size()), cycle_m(cycle) , segmentsHandler_m(segmentsHandler) {
     computeConflicts();
 }
 
+/**
+ * @brief Computes the cycle labels for the nodes in the interlacement graph.
+ *
+ * This function assigns labels to the nodes in the interlacement graph based on
+ * their attachment status and their position within the cycle. The labels are used
+ * to quickly determine conflicts between segments.
+ *
+ * @param segment A pointer to the Segment object containing the attachments.
+ * @param cycleLabels An array to store the computed cycle labels for each node.
+ */
 void InterlacementGraph::computeCycleLabels(const Segment* segment, int cycleLabels[]) {
     int originalComponentSize = cycle_m->getOriginalComponentSize();
     bool isCycleNodeAnAttachment[originalComponentSize];
@@ -29,7 +48,13 @@ void InterlacementGraph::computeCycleLabels(const Segment* segment, int cycleLab
     assert(foundAttachments == totalAttachments);
 }
 
-// two segments are in conflict if any of their non cycle edges may intersect
+/**
+ * @brief Computes conflicts between segments.
+ *
+ * This function computes conflicts between segments based on their attachments and
+ * their position within the cycle. Two segments are in conflict if any of their non-cycle
+ * edges may intersect.
+ */
 void InterlacementGraph::computeConflicts() {
     int cycleLabels[cycle_m->getOriginalComponentSize()];
     for (int i = 0; i < segmentsHandler_m.size()-1; ++i) {

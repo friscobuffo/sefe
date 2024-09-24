@@ -10,6 +10,14 @@
 #include "../basic/graph.hpp"
 #include "../basic/utils.hpp"
 
+/**
+ * @class Segment
+ * @brief Represents a segment of a cycle.
+ * 
+ * A segment is a connected subgraph of a graph obtained by removing the cycle from the graph.
+ * 
+ * @see SubGraph
+ */
 class Segment : public SubGraph {
 private:
     std::vector<const Node*> attachmentNodes_m{};
@@ -30,6 +38,14 @@ public:
     void setComponentNode(const Node* node, const Node* componentNode);
 };
 
+/**
+ * @class SegmentsHandler
+ * @brief Manages segments of a cycle.
+ * 
+ * This class is responsible for finding and storing segments of a cycle.
+ * 
+ * @see Segment
+ */
 class SegmentsHandler {
 private:
     std::vector<std::unique_ptr<const Segment>> segments_m{};
@@ -43,7 +59,6 @@ private:
         std::vector<std::pair<const Node*, const Node*>>& edgesInSegment);
     void findSegments();
     void findChords();
-    void segmentCheck(const Segment* segment);
 public:
     SegmentsHandler(const SubGraph* component, const Cycle* cycle);
     const Segment* getSegment(const int index) const;

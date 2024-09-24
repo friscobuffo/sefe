@@ -313,7 +313,6 @@ const std::vector<std::unique_ptr<const Embedding>>& embeddings, const SegmentsH
     return isCompatible;
 }
 
-
 /**
  * @brief Adds middle edges of a segment to the final embedding. Middle edges are edges,
  * of the segment, that are not incident to the cycle node.
@@ -524,11 +523,6 @@ std::optional<const Embedding*> Embedder::embedComponent(const SubGraph* compone
     return embedding;
 }
 
-// it may happen that a cycle induces only one segment, which is not a base case
-// so the cycle must be recomputed such that it ensures at least two segments
-
-
-
 /**
  * @brief Ensures that the given not "separating" cycle becomes "separating" by modifying
  * it based on the provided segment.
@@ -570,7 +564,15 @@ void Embedder::makeCycleGood(Cycle* cycle, const Segment* segment) const {
     cycle->changeWithPath(pathComponent, attachmentToInclude);
 }
 
-// base case: graph has <4 nodes
+/**
+ * @brief Creates an embedding for a base case graph with fewer than 4 nodes.
+ *
+ * This function handles the base case for graphs with fewer than 4 nodes by creating
+ * an embedding of the graph.
+ *
+ * @param graph A pointer to the graph to be embedded. The graph must have fewer than 4 nodes.
+ * @return A pointer to the created Embedding object.
+ */
 const Embedding* Embedder::baseCaseGraph(const Graph* graph) const {
     assert(graph->size() < 4);
     Embedding* embedding = new Embedding(graph);
@@ -582,7 +584,16 @@ const Embedding* Embedder::baseCaseGraph(const Graph* graph) const {
     return embedding;
 }
 
-// base case: segment is a path
+/**
+ * @brief Constructs an embedding for a base case component of a graph,
+ * when the segment is a just a path.
+ * 
+ * If the cycle is drawn clockwise, the segment is placed inside the cycle.
+ *
+ * @param component A pointer to the subgraph component to be embedded.
+ * @param cycle A pointer to the cycle used to determine the order of neighbors for nodes with three neighbors.
+ * @return A pointer to the constructed Embedding object.
+ */
 const Embedding* Embedder::baseCaseComponent(const SubGraph* component, const Cycle* cycle) const {
     Embedding* embedding = new Embedding(component);
     for (int nodeIndex = 0; nodeIndex < component->size(); ++nodeIndex) {
@@ -616,7 +627,13 @@ const Embedding* Embedder::baseCaseComponent(const SubGraph* component, const Cy
     return embedding;
 }
 
-// base case: biconnected component is a cycle
+/**
+ * @brief Creates an embedding for a graph base case, when the graph is
+ * just a cycle.
+ *
+ * @param cycle A pointer to the SubGraph representing the cycle to be embedded.
+ * @return A pointer to the newly created Embedding object representing the cycle.
+ */
 const Embedding* Embedder::baseCaseCycle(const SubGraph* cycle) const {
     Embedding* embedding = new Embedding(cycle);
     for (int i = 0; i < cycle->size()-1; ++i)
@@ -626,6 +643,13 @@ const Embedding* Embedder::baseCaseCycle(const SubGraph* cycle) const {
     return embedding;
 }
 
+/**
+ * @class AuslanderParterEmbedder
+ * @brief A class that implements the Auslander-Parter embedding algorithm.
+ *
+ * This class inherits from the ogdf::EmbedderModule and provides an implementation
+ * of the Auslander-Parter embedding algorithm for a given graph.
+ */
 class AuslanderParterEmbedder : public ogdf::EmbedderModule {
 public:
     void doCall(ogdf::Graph& graph, ogdf::adjEntry &adjExternal) {
@@ -659,6 +683,14 @@ public:
     }
 };
 
+/**
+ * @brief Embeds a given connected graph into an SVG file using the Auslander-Parter
+ * embedding algorithm and saves the svg to file "embedding.svg".
+ *
+ * @param graph A pointer to the graph to be embedded.
+ * @return Returns 1 if the SVG content is successfully generated and saved, -1 if
+ *          the graph is not connected, and -2 if there is an error generating the SVG content.
+ */
 int Embedder::embedToSvg(const Graph* graph) const {
     if (!graph->isConnected()) {
         std::cerr << "Graph is not connected." << std::endl;

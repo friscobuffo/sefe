@@ -7,6 +7,18 @@
 
 #include "../basic/graph.hpp"
 
+/**
+ * @class Cycle
+ * @brief Represents a cycle within a subgraph.
+ *
+ * The Cycle class encapsulates the concept of a cycle in a graph, providing
+ * methods to manipulate and query the cycle.
+ *
+ * @details This class maintains a list of nodes that form the cycle and their
+ * positions within the cycle. It provides methods to build the cycle using
+ * depth-first search, modify the cycle by including a path, and query various
+ * properties of the cycle.
+ */
 class Cycle {
 private:
     std::vector<const Node*> nodes_m{};
