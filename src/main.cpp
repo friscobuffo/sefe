@@ -45,8 +45,7 @@ extern "C" {
         if (embedding.has_value()) {
             std::cout << "embedding:\n";
             embedding.value()->print();
-            std::string path = "embedding.svg";
-            embedder.embedToSvg(graph, path);
+            embedder.embedToSvg(graph);
             delete embedding.value();
         }
         std::cout << "\n";

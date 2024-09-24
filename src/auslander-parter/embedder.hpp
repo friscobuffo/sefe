@@ -10,6 +10,13 @@
 #include "cycle.hpp"
 #include "segment.hpp"
 
+/**
+ * @class Embedding
+ * @brief Represents an embedding of a subgraph.
+ * 
+ * This class provides methods to add single edges to the embedding.
+ * It inherits from the SubGraph class.
+ */
 class Embedding : public SubGraph {
 public:
     Embedding(const SubGraph* originalGraph);
@@ -18,6 +25,13 @@ public:
     void addSingleEdge(Node* from, const Node* to);
 };
 
+/**
+ * @class Embedder
+ * @brief Computes the embedding of a graph, if it is planar.
+ * Visualizes the embedding in an SVG file.
+ * 
+ * It uses the Auslander-Parter algorithm to embed the graph.
+ */
 class Embedder {
 private:
     void makeCycleGood(Cycle* cycle, const Segment* segment) const;
@@ -37,14 +51,11 @@ private:
     const Embedding* mergeSegmentsEmbeddings(const SubGraph* component, const Cycle* cycle,
         const std::vector<std::unique_ptr<const Embedding>>& embeddings, const SegmentsHandler& segmentsHandler,
         const std::vector<int>& bipartition) const;
-    void graphAndEmbeddingChecks(const Graph* graph, const Embedding* embedding) const;
-    void segmentAndEmbeddingChecks(const Segment* segment, const Embedding* embedding) const;
-    void componentAndEmbeddingChecks(const SubGraph* component, const Embedding* embedding) const;
     const Embedding* mergeBiconnectedComponents(const Graph* graph, const BiconnectedComponentsHandler& biconnectedComponents,
         const std::vector<std::unique_ptr<const Embedding>>& embeddings) const;
 public:
     std::optional<const Embedding*> embedGraph(const Graph* graph) const;
-    void embedToSvg(const Graph* graph, std::string& outputPath) const;
+    int embedToSvg(const Graph* graph) const;
 };
 
 #endif

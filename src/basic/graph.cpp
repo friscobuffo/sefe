@@ -261,6 +261,45 @@ bool Graph::hasEdge(int fromIndex, int toIndex) const {
 }
 
 /**
+ * @brief Checks if the graph is connected.
+ * 
+ * @return bool true if the graph is connected, false otherwise.
+ */
+bool Graph::isConnected() const {
+    std::vector<bool> visited(size(), false);
+    std::list<int> queue{};
+    queue.push_back(0);
+    visited[0] = true;
+    while (queue.size() > 0) {
+        int nodeIndex = queue.front();
+        queue.pop_front();
+        const Node* node = getNode(nodeIndex);
+        for (const Node* neighbor : node->getNeighbors()) {
+            int neighborIndex = neighbor->getIndex();
+            if (!visited[neighborIndex]) {
+                visited[neighborIndex] = true;
+                queue.push_back(neighborIndex);
+            }
+        }
+    }
+    for (bool visit : visited)
+        if (!visit) return false;
+    return true;
+}
+
+/**
+ * @brief Gets the number of edges in the graph.
+ * 
+ * @return int The number of edges.
+ */
+int Graph::numberOfEdges() const {
+    int edges = 0;
+    for (int i = 0; i < size(); ++i)
+        edges += getNode(i)->getNeighbors().size();
+    return edges/2;
+}
+
+/**
  * @brief Constructs a SubGraph with a given number of nodes and an original graph.
  * 
  * @param numberOfNodes The number of nodes in the subgraph.

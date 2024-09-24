@@ -56,6 +56,8 @@ public:
     Graph* computeIntersection(const Graph* graph) const;
     void computeIntersection(const Graph* graph, Graph* intersection) const;
     bool hasEdge(int fromIndex, int toIndex) const;
+    bool isConnected() const;
+    int numberOfEdges() const;
 };
 
 /**

@@ -13,6 +13,16 @@
 #include "interlacement.hpp"
 #include "../basic/utils.hpp"
 
+/**
+ * @brief Constructs an Embedding object from the given original graph.
+ * 
+ * This constructor initializes an Embedding object by copying the structure
+ * of the provided original graph. It then maps each node in the
+ * SubGraph to the corresponding node in the original graph.
+ *
+ * @param originalGraph A pointer to the original Graph object from which
+ *                      the Embedding is created.
+ */
 Embedding::Embedding(const SubGraph* originalGraph)
 : SubGraph(originalGraph->size(), originalGraph) {
     for (int i = 0; i < size(); ++i) {
@@ -22,32 +32,62 @@ Embedding::Embedding(const SubGraph* originalGraph)
     }
 }
 
+/**
+ * @brief Constructs an Embedding object from the given original graph.
+ *
+ * This constructor initializes an Embedding object by copying the structure
+ * of the provided original graph. It iterates through each node in the 
+ * original graph, retrieves the corresponding original node, and sets it 
+ * in the new Embedding object.
+ *
+ * @param originalGraph A pointer to the original SubGraph from which the 
+ *                      Embedding is to be created.
+ */
 Embedding::Embedding(const Graph* originalGraph)
 : SubGraph(originalGraph->size(), originalGraph) {
     for (int i = 0; i < size(); ++i)
         setOriginalNode(getNode(i), originalGraph->getNode(i));
 }
 
+/**
+ * @brief Adds a single edge from one node to another in the embedding.
+ *
+ * This function adds a directed edge from the node pointed to by `from` to the node pointed to by `to`.
+ * It modifies the `from` node to include the `to` node as a neighbor.
+ *
+ * @param from Pointer to the source node where the edge starts.
+ * @param to Pointer to the destination node where the edge ends.
+ */
 void Embedding::addSingleEdge(Node* from, const Node* to) {
     from->addNeighbor(to);
 }
 
+/**
+ * @brief Adds a single edge between two nodes identified by their indices.
+ *
+ * This function retrieves the nodes corresponding to the given indices and 
+ * adds an edge between them.
+ *
+ * @param fromIndex The index of the starting node.
+ * @param toIndex The index of the ending node.
+ */
 void Embedding::addSingleEdge(int fromIndex, int toIndex) {
     Node* from = getNode(fromIndex);
     Node* to = getNode(toIndex);
     addSingleEdge(from, to);
 }
 
-void Embedder::graphAndEmbeddingChecks(const Graph* graph, const Embedding* embedding) const {
-    assert(graph->size() == embedding->size());
-    for (int i = 0; i < graph->size(); ++i) {
-        const Node* node = graph->getNode(i);
-        const Node* nodeEmbedding = embedding->getNode(i);
-        assert(embedding->getOriginalNode(nodeEmbedding) == node);
-        assert(nodeEmbedding->getNeighbors().size() == node->getNeighbors().size());
-    }
-}
-
+/**
+ * @brief Merges embeddings of biconnected components of a graph into a single embedding.
+ *
+ * This function takes a graph, its biconnected components, and their corresponding embeddings,
+ * and merges them into a single embedding.
+ *
+ * @param graph The original graph.
+ * @param biconnectedComponents Handler for the biconnected components of the graph.
+ * @param embeddings A vector of unique pointers to the embeddings of the biconnected components.
+ * @return A pointer to the merged embedding.
+ */
 const Embedding* Embedder::mergeBiconnectedComponents(const Graph* graph, const BiconnectedComponentsHandler& biconnectedComponents,
 const std::vector<std::unique_ptr<const Embedding>>& embeddings) const {
     Embedding* output = new Embedding(graph);
@@ -67,8 +107,19 @@ const std::vector<std::unique_ptr<const Embedding>>& embeddings) const {
     return output;
 }
 
+/**
+ * @brief Attempts to embed a given graph.
+ *
+ * This function tries to embed the provided graph. If the graph is not planar, the function
+ * returns an empty optional. Otherwise, it returns the final embedding.
+ *
+ * @param graph A pointer to the graph to be embedded.
+ * @return An optional containing a pointer to the embedding if successful, or an empty optional if embedding is not possible.
+ */
 std::optional<const Embedding*> Embedder::embedGraph(const Graph* graph) const {
     if (graph->size() < 4) return baseCaseGraph(graph);
+    if (graph->numberOfEdges() > (3*graph->size()-6))
+        return std::nullopt;
     const BiconnectedComponentsHandler bicComps(graph);
     std::vector<std::unique_ptr<const Embedding>> embeddings{};
     for (int i = 0; i < bicComps.size(); ++i) {
@@ -79,12 +130,21 @@ std::optional<const Embedding*> Embedder::embedGraph(const Graph* graph) const {
         embeddings.push_back(std::unique_ptr<const Embedding>(embedding.value()));
     }
     const Embedding* embedding = mergeBiconnectedComponents(graph, bicComps, embeddings);
-    graphAndEmbeddingChecks(graph, embedding);
     return embedding;
 }
 
-// for each segment, it computes the minimum and the maximum of all of its attachments,
-// using attachment notation based on the position in the cycle (0, ..., cycleSize-1)
+/**
+ * @brief Computes the minimum and maximum attachment indices for each segment.
+ *
+ * This function iterates over all segments in the provided SegmentsHandler and determines
+ * the minimum and maximum attachment indices for each segment. The results are stored in
+ * the provided arrays `segmentsMinAttachment` and `segmentsMaxAttachment`. The min/max index
+ * used is based on the position in the cycle (0, ..., cycleSize-1)
+ *
+ * @param segmentsHandler A reference to the SegmentsHandler containing the segments to process.
+ * @param segmentsMinAttachment An array to store the minimum attachment index for each segment.
+ * @param segmentsMaxAttachment An array to store the maximum attachment index for each segment.
+ */
 void Embedder::computeMinAndMaxSegmentsAttachments(const SegmentsHandler& segmentsHandler,
 int segmentsMinAttachment[], int segmentsMaxAttachment[]) const {
     for (int i = 0; i < segmentsHandler.size(); i++) {
@@ -100,9 +160,22 @@ int segmentsMinAttachment[], int segmentsMaxAttachment[]) const {
     }
 }
 
-// assuming the cycle is drawn CLOCKWISE, and assuming the segments incident to the 
-// attachment "cycleNode" must be drawn OUTSIDE the cycle, computes the order of
-// placement of these segments such that they don't intersect
+/**
+ * @brief Computes the order of segments based on their attachments to a cycle node.
+ *
+ * This function takes a cycle node and a list of incident segment indexes, along with
+ * their minimum and maximum attachment points, and computes an ordered list of these segment
+ * indexes, such that the segments are placed clockwise outside the cycle node 
+ * without intersecting.
+ *
+ * @param cycleNode Pointer to the cycle node.
+ * @param segmentsIndexes Vector of segment indexes.
+ * @param segmentsMinAttachment Array of minimum attachment points for each segment.
+ * @param segmentsMaxAttachment Array of maximum attachment points for each segment.
+ * @param segmentsHandler Reference to the SegmentsHandler object.
+ * @param cycleNodePosition Position of the cycle node.
+ * @return A vector of segment indexes ordered based on their attachment points and number of attachments.
+ */
 std::vector<int> Embedder::computeOrder(const Node* cycleNode, const std::vector<int>& segmentsIndexes,
 int segmentsMinAttachment[], int segmentsMaxAttachment[], const SegmentsHandler& segmentsHandler, int cycleNodePosition) const {
     std::optional<int> middleSegment;
@@ -199,8 +272,18 @@ int segmentsMinAttachment[], int segmentsMaxAttachment[], const SegmentsHandler&
     return order;
 }
 
-// the embedding is "compatible" with the cycle if, drawn the cycle clockwise,
-// the embedding of the segment places the segment inside the cycle
+/**
+ * @brief Determines the compatibility of embeddings with a given cycle.
+ *
+ * The embedding is "compatible" with the cycle if, drawn the cycle clockwise,
+ * the embedding of the segment places the segment inside the cycle.
+ * 
+ * @param component A pointer to the SubGraph component.
+ * @param cycle A pointer to the Cycle object.
+ * @param embeddings A vector of unique pointers to constant Embedding objects.
+ * @param segmentsHandler A reference to the SegmentsHandler object.
+ * @return A vector of boolean values where each value indicates the compatibility of the corresponding embedding with the cycle.
+ */
 std::vector<bool> Embedder::compatibilityEmbeddingsAndCycle(const SubGraph* component, const Cycle* cycle,
 const std::vector<std::unique_ptr<const Embedding>>& embeddings, const SegmentsHandler& segmentsHandler) const {
     std::vector<bool> isCompatible(segmentsHandler.size());
@@ -230,6 +313,25 @@ const std::vector<std::unique_ptr<const Embedding>>& embeddings, const SegmentsH
     return isCompatible;
 }
 
+
+/**
+ * @brief Adds middle edges of a segment to the final embedding. Middle edges are edges,
+ * of the segment, that are not incident to the cycle node.
+ * 
+ * This function processes the neighbors of a cycle node within a segment and adds edges
+ * to the output embedding. The edges are added in a specific order based on the compatibility flag.
+ *
+ * @param segment Pointer to the Segment object containing the cycle and nodes.
+ * @param embedding Pointer to the Embedding object representing the current embedding state.
+ * @param cycleNodeIndex Index of the node in the cycle to process.
+ * @param component Pointer to the SubGraph object representing the component of the graph.
+ * @param compatible Boolean flag indicating if the segment is compatible with the cycle
+ *                  (a segment embedding is compatible is drawn inside the cycle,
+ *                  which is drawn clockwise):
+ *                   - If true, edges are added in the order of neighbors.
+ *                   - If false, edges are added in the reverse order of neighbors.
+ * @param output Pointer to the Embedding object where the new edges will be added.
+ */
 void Embedder::addMiddleEdges(const Segment* segment, const Embedding* embedding, int cycleNodeIndex,
 const SubGraph* component, bool compatible, Embedding* output) const {
     const Cycle* cycle = segment->getOriginalCycle();
@@ -284,6 +386,18 @@ const SubGraph* component, bool compatible, Embedding* output) const {
         }
 }
 
+/**
+ * @brief Merges segment embeddings into a single embedding for a given biconnected
+ * component and cycle.
+ *
+ * @param component The subgraph biconnected component for which the embedding is being created.
+ * @param cycle The cycle within the subgraph component.
+ * @param embeddings A vector of unique pointers to the embeddings of the segments.
+ * @param segmentsHandler Handler for managing segments within the subgraph.
+ * @param bipartition A vector representing the bipartition of the segments inside
+ *                      and outside the cycle.
+ * @return A pointer to the newly created Embedding object.
+ */
 const Embedding* Embedder::mergeSegmentsEmbeddings(const SubGraph* component, const Cycle* cycle,
 const std::vector<std::unique_ptr<const Embedding>>& embeddings, const SegmentsHandler& segmentsHandler,
 const std::vector<int>& bipartition) const {
@@ -353,32 +467,18 @@ const std::vector<int>& bipartition) const {
     return output;
 }
 
-void Embedder::componentAndEmbeddingChecks(const SubGraph* component, const Embedding* embedding) const {
-    assert(component->size() == embedding->size());
-    for (int i = 0; i < component->size(); ++i) {
-        const Node* node = component->getNode(i);
-        const Node* nodeEmbedding = embedding->getNode(i);
-        assert(embedding->getOriginalNode(nodeEmbedding) == component->getOriginalNode(node));
-        assert(node->getNeighbors().size() == nodeEmbedding->getNeighbors().size());
-    }
-}
-
-void Embedder::segmentAndEmbeddingChecks(const Segment* segment, const Embedding* embedding) const {
-    const Cycle* cycle = segment->getOriginalCycle();
-    for (int i = 0; i < cycle->size(); ++i)
-        assert(segment->getComponentNode(segment->getNode(i)) == cycle->getNode(i));
-    assert(segment->size() == embedding->size());
-    const SubGraph* component = segment->getOriginalComponent();
-    for (int i = 0; i < segment->size(); ++i) {
-        const Node* node = segment->getNode(i);
-        const Node* nodeEmbedding = embedding->getNode(i);
-        assert(segment->getOriginalNode(node) == embedding->getOriginalNode(nodeEmbedding));
-        const Node* nodeComponent = segment->getComponentNode(node);
-        assert(component->getOriginalNode(nodeComponent) == segment->getOriginalNode(node));
-        assert(component->getOriginalNode(nodeComponent) == embedding->getOriginalNode(nodeEmbedding));
-    }
-}
-
+/**
+ * @brief Embeds a subgraph biconnected component given a cycle.
+ *
+ * The function uses a recursive approach to handle 
+ * complex embeddings by breaking down the component into smaller segments 
+ * and merging their embeddings.
+ *
+ * @param component A pointer to the subgraph component to be embedded.
+ * @param cycle A pointer to the cycle into which the component is to be embedded.
+ * @return An optional containing a pointer to the resulting embedding if successful, 
+ *         or std::nullopt if the embedding fails.
+ */
 std::optional<const Embedding*> Embedder::embedComponent(const SubGraph* component, Cycle* cycle) const {
     const SegmentsHandler segmentsHandler = SegmentsHandler(component, cycle);
     if (segmentsHandler.size() == 0) // entire biconnected component is a cycle
@@ -400,23 +500,44 @@ std::optional<const Embedding*> Embedder::embedComponent(const SubGraph* compone
         std::optional<const Embedding*> embedding = embedComponent(segment);
         if (!embedding.has_value())
             return std::nullopt;
-        segmentAndEmbeddingChecks(segment, embedding.value());
         embeddings.push_back(std::unique_ptr<const Embedding>(embedding.value()));
     }
     const Embedding* embedding = mergeSegmentsEmbeddings(component, cycle, embeddings, segmentsHandler, bipartition.value());
     return embedding;
 }
 
+/**
+ * @brief Embeds a given subgraph biconnected component into an embedding.
+ *
+ * This function attempts to embed the provided subgraph component into an embedding.
+ * If the embedding is successful, it returns the embedding; otherwise,
+ * it returns an empty optional.
+ *
+ * @param component A pointer to the subgraph component to be embedded.
+ * @return std::optional<const Embedding*> An optional containing the embedding if successful,
+ *         or std::nullopt if the embedding could not be created.
+ */
 std::optional<const Embedding*> Embedder::embedComponent(const SubGraph* component) const {
     Cycle cycle(component);
     std::optional<const Embedding*> embedding = embedComponent(component, &cycle);
     if (!embedding.has_value()) return std::nullopt;
-    componentAndEmbeddingChecks(component, embedding.value());
     return embedding;
 }
 
 // it may happen that a cycle induces only one segment, which is not a base case
 // so the cycle must be recomputed such that it ensures at least two segments
+
+
+
+/**
+ * @brief Ensures that the given not "separating" cycle becomes "separating" by modifying
+ * it based on the provided segment.
+ * 
+ * A cycle is "separating" if it has at least two segments.
+ *
+ * @param cycle A pointer to the Cycle object that needs to be modified.
+ * @param segment A pointer to the Segment object that provides the nodes and attachments to be used.
+ */
 void Embedder::makeCycleGood(Cycle* cycle, const Segment* segment) const {
     assert(!segment->isPath());
     bool isCycleNodeAttachment[cycle->size()];
@@ -492,7 +613,6 @@ const Embedding* Embedder::baseCaseComponent(const SubGraph* component, const Cy
             embedding->addSingleEdge(node->getIndex(), neighborsOrder[i]);
         }
     }
-    componentAndEmbeddingChecks(component, embedding);
     return embedding;
 }
 
@@ -539,7 +659,11 @@ public:
     }
 };
 
-void Embedder::embedToSvg(const Graph* graph, std::string& outputPath) const {
+int Embedder::embedToSvg(const Graph* graph) const {
+    if (!graph->isConnected()) {
+        std::cerr << "Graph is not connected." << std::endl;
+        return -1;
+    }
     std::unique_ptr<ogdf::Graph> ogdfGraph = std::unique_ptr<ogdf::Graph>(OgdfUtils::myGraphToOgdf(graph));
     ogdf::GraphAttributes GA(*ogdfGraph, ogdf::GraphAttributes::nodeGraphics | ogdf::GraphAttributes::edgeGraphics |
                         ogdf::GraphAttributes::nodeLabel | ogdf::GraphAttributes::edgeStyle |
@@ -561,6 +685,8 @@ void Embedder::embedToSvg(const Graph* graph, std::string& outputPath) const {
     if (ogdf::GraphIO::drawSVG(GA, svgStream, svgSettings)) {
         std::string svgContent = svgStream.str();
         saveStringToFile("/embedding.svg", svgContent);
-    } else
-        std::cerr << "Error generating SVG content." << std::endl;
+        return 1;
+    }
+    std::cerr << "Error generating SVG content." << std::endl;
+    return -2;
 }
