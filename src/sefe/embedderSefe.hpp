@@ -49,7 +49,6 @@ private:
 public:
     bool testSefe(const Graph* graph1, const Graph* graph2) const;
     std::optional<const EmbeddingSefe*> embedGraph(const BicoloredGraph* graph) const;
-    void embedToSvg(const BicoloredGraph* graph) const;
 };
 
 #endif

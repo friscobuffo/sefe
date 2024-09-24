@@ -23,6 +23,7 @@ public:
     Embedding(const Graph* originalGraph);
     void addSingleEdge(int fromIndex, int toIndex);
     void addSingleEdge(Node* from, const Node* to);
+    std::string toString() const;
 };
 
 /**
@@ -55,7 +56,6 @@ private:
         const std::vector<std::unique_ptr<const Embedding>>& embeddings) const;
 public:
     std::optional<const Embedding*> embedGraph(const Graph* graph) const;
-    int embedToSvg(const Graph* graph) const;
 };
 
 #endif

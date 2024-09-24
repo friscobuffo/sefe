@@ -161,7 +161,7 @@ public:
  * @param filename The name of the file to which the content will be saved.
  * @param content The string content to be written to the file.
  */
-inline void saveStringToFile(const char* filename, std::string& content) {
+inline void saveStringToFile(std::string filename, std::string& content) {
     std::ofstream outfile(filename);
     if (outfile.is_open()) {
         outfile << content;

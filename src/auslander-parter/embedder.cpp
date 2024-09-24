@@ -4,12 +4,6 @@
 #include <iostream>
 #include <sstream>
 
-#include <ogdf/basic/Graph.h>
-#include <ogdf/basic/GraphAttributes.h>
-#include <ogdf/planarlayout/PlanarDrawLayout.h>
-#include <ogdf/fileformats/GraphIO.h>
-#include <ogdf/planarity/EmbedderModule.h>
-
 #include "interlacement.hpp"
 #include "../basic/utils.hpp"
 
@@ -75,6 +69,26 @@ void Embedding::addSingleEdge(int fromIndex, int toIndex) {
     Node* from = getNode(fromIndex);
     Node* to = getNode(toIndex);
     addSingleEdge(from, to);
+}
+
+/**
+ * @brief Converts the embedding to a string representation.
+ * 
+ * This function generates a string that represents the embedding. For each node in the embedding,
+ * it includes the node's index followed by a list of indices of its neighboring nodes.
+ * 
+ * @return A string representation of the embedding.
+ */
+std::string Embedding::toString() const {
+    std::stringstream ss;
+    for (int i = 0; i < size(); ++i) {
+        const Node* node = getNode(i);
+        ss << node->getIndex() << ": [ ";
+        for (const Node* neighbor : node->getNeighbors())
+            ss << neighbor->getIndex() << " ";
+        ss << "]\n";
+    }
+    return ss.str();
 }
 
 /**
@@ -641,84 +655,4 @@ const Embedding* Embedder::baseCaseCycle(const SubGraph* cycle) const {
             if (i < neighbor->getIndex())
                 embedding->addEdge(i, neighbor->getIndex());
     return embedding;
-}
-
-/**
- * @class AuslanderParterEmbedder
- * @brief A class that implements the Auslander-Parter embedding algorithm.
- *
- * This class inherits from the ogdf::EmbedderModule and provides an implementation
- * of the Auslander-Parter embedding algorithm for a given graph.
- */
-class AuslanderParterEmbedder : public ogdf::EmbedderModule {
-public:
-    void doCall(ogdf::Graph& graph, ogdf::adjEntry &adjExternal) {
-        const Graph* myGraph = OgdfUtils::ogdfGraphToMyGraph(&graph);
-        Embedder embedder;
-        std::optional<const Embedding*> embeddingOpt = embedder.embedGraph(myGraph);
-        if (!embeddingOpt) {
-            std::cout << "error\n";
-            exit(1);
-        }
-        const Embedding* embedding = embeddingOpt.value();
-        std::vector<int> position(embedding->size());
-        for (ogdf::node n : graph.nodes) {
-            const int index = n->index();
-            const Node* node = embedding->getNode(index);
-            const std::vector<const Node*>& neighbors = node->getNeighbors();
-            for (int i = 0; i < neighbors.size(); ++i)
-                position[neighbors[i]->getIndex()] = i;
-            std::vector<ogdf::adjEntry> order(neighbors.size());
-            for (ogdf::adjEntry& adj : n->adjEntries) {
-                const int neighbor = adj->twinNode()->index();
-                order[position[neighbor]] = adj;
-            }
-            ogdf::List<ogdf::adjEntry> newOrder;
-            for (ogdf::adjEntry& adj : order)
-                newOrder.pushBack(adj);
-            graph.sort(n, newOrder);
-        }
-        delete myGraph;
-        delete embedding;
-    }
-};
-
-/**
- * @brief Embeds a given connected graph into an SVG file using the Auslander-Parter
- * embedding algorithm and saves the svg to file "embedding.svg".
- *
- * @param graph A pointer to the graph to be embedded.
- * @return Returns 1 if the SVG content is successfully generated and saved, -1 if
- *          the graph is not connected, and -2 if there is an error generating the SVG content.
- */
-int Embedder::embedToSvg(const Graph* graph) const {
-    if (!graph->isConnected()) {
-        std::cerr << "Graph is not connected." << std::endl;
-        return -1;
-    }
-    std::unique_ptr<ogdf::Graph> ogdfGraph = std::unique_ptr<ogdf::Graph>(OgdfUtils::myGraphToOgdf(graph));
-    ogdf::GraphAttributes GA(*ogdfGraph, ogdf::GraphAttributes::nodeGraphics | ogdf::GraphAttributes::edgeGraphics |
-                        ogdf::GraphAttributes::nodeLabel | ogdf::GraphAttributes::edgeStyle |
-                        ogdf::GraphAttributes::nodeStyle | ogdf::GraphAttributes::edgeArrow);
-    for (ogdf::node v : ogdfGraph->nodes) {
-        GA.label(v) = std::to_string(v->index());
-        GA.shape(v) = ogdf::Shape::Ellipse;
-    }
-    for (ogdf::edge e : ogdfGraph->edges) {
-        GA.strokeWidth(e) = 1.5;
-        GA.arrowType(e) = ogdf::EdgeArrow::None;
-    }
-    ogdf::PlanarDrawLayout layout;
-    layout.setEmbedder(new AuslanderParterEmbedder);
-    layout.call(GA);
-
-    std::ostringstream svgStream;
-    ogdf::GraphIO::SVGSettings svgSettings;
-    if (ogdf::GraphIO::drawSVG(GA, svgStream, svgSettings)) {
-        std::string svgContent = svgStream.str();
-        saveStringToFile("/embedding.svg", svgContent);
-        return 1;
-    }
-    std::cerr << "Error generating SVG content." << std::endl;
-    return -2;
 }
