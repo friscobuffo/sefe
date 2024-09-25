@@ -18,7 +18,8 @@ SRCS = src/main.cpp \
        src/sefe/intersectionCycle.cpp \
        src/sefe/bicoloredSegment.cpp \
        src/sefe/interlacementSefe.cpp \
-       src/sefe/embedderSefe.cpp
+       src/sefe/embedderSefe.cpp \
+       src/ogdf-drawers.cpp
 
 # Object Files (stored in obj/ directory)
 OBJS = $(SRCS:%.cpp=$(OBJ_DIR)/%.o)

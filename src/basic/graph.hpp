@@ -3,6 +3,9 @@
 
 #include <vector>
 #include <optional>
+#include <fstream>
+#include <sstream>
+#include <string>
 
 #include "utils.hpp"
 
@@ -58,6 +61,29 @@ public:
     bool hasEdge(int fromIndex, int toIndex) const;
     bool isConnected() const;
     int numberOfEdges() const;
+    static const Graph* loadFromFile(std::string filename) {
+        int nodesNumber{};
+        std::ifstream infile(filename);
+        if (infile.is_open()) {
+            std::string line;
+            std::getline(infile, line);
+            nodesNumber = stoi(line);
+            Graph* graph = new Graph(nodesNumber);
+            int fromIndex, toIndex;
+            while (std::getline(infile, line)) {
+                if (line.find("//") == 0)
+                    continue;
+                std::istringstream iss(line);
+                if (iss >> fromIndex >> toIndex)
+                    graph->addEdge(fromIndex, toIndex);
+            }
+            infile.close();
+            return graph;
+        } else {
+            std::cerr << "Unable to open file" << std::endl;
+            return nullptr;
+        }
+    }
 };
 
 /**

@@ -494,10 +494,12 @@ int cycleNodePosition, bool segmentsHasBetweenAttachment[]) {
     }
     if (cycleNodePosition == seg1min) {
         if (seg2min < seg1min) return 1;
+        if (seg2min > seg1min) return -1;
         return 0;
     }
     if (cycleNodePosition == seg2min) {
         if (seg1min < seg2min) return -1;
+        if (seg1min > seg2min) return 1;
         return 0;
     }
     if (cycleNodePosition == seg1max && cycleNodePosition == seg2max) {
@@ -515,10 +517,12 @@ int cycleNodePosition, bool segmentsHasBetweenAttachment[]) {
     }
     if (cycleNodePosition == seg1max) {
         if (seg2max > seg1max) return -1;
+        if (seg2max < seg1max) return 1;
         return 0;
     }
-    if (cycleNodePosition == seg2min) {
-        if (seg1min < seg2min) return 1;
+    if (cycleNodePosition == seg2max) {
+        if (seg1max > seg2max) return 1;
+        if (seg1max < seg2max) return -1;
         return 0;
     }
     return 0;

@@ -294,24 +294,33 @@ const Graph* BicoloredGraph::getIntersection() const {
 }
 
 /**
- * @brief Prints the details of the bicolored graph.
+ * @brief Computes a string with the details of the bicolored graph.
  *
- * This function iterates through all the nodes in the graph and prints each node's index,
+ * This function iterates through all the nodes in the graph and saves each node's index,
  * the number of its neighboring edges, and the details of each edge. The details of each
  * edge include the index of the connected node and the color of the edge.
  *
- * The output format for each node is:
+ * The string format for each node is:
  * node: <index> neighbors: <number_of_edges> [ (<connected_node_index> <edge_color>) ... ]
  */
-void BicoloredGraph::print() const {
+std::string BicoloredGraph::toString() const {
+    std::ostringstream result;
     for (auto& node : nodes_m) {
         const int index = node.getIndex();
         const std::vector<Edge>& edges = node.getEdges();
-        std::cout << "node: " << index << " neighbors: " << edges.size() << " [ ";
+        result << "node: " << index << " neighbors: " << edges.size() << " [ ";
         for (const Edge& edge : edges)
-            std::cout << "(" << edge.node->getIndex() << " " << color2string(edge.color) << ") ";
-        std::cout << "]\n";
+            result << "(" << edge.node->getIndex() << " " << color2string(edge.color) << ") ";
+        result << "]\n";
     }
+    return result.str();
+}
+
+/**
+ * @brief Prints the details of the bicolored graph.
+ */
+void BicoloredGraph::print() const {
+    std::cout << toString();
 }
 
 /**

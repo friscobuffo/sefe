@@ -116,6 +116,7 @@ public:
     const Graph* getIntersection() const;
     const Graph* computeRed() const;
     const Graph* computeBlue() const;
+    std::string toString() const;
 };
 
 /**

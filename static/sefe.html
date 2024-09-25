@@ -31,6 +31,9 @@
     <div>
       <button class="button" onclick="sefe()">Compute SEFE</button>
     </div>
+    <div>
+      <button class="button disabled" id="download-embedding-sefe" disabled>Download SEFE Embedding</button>
+    </div>
   </div>
 
   <div id="drawings-container">
@@ -187,6 +190,22 @@
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
     });
+
+    const sefeEmbeddingDownload = document.getElementById('download-embedding-sefe');
+    sefeEmbeddingDownload.addEventListener('click', (_) => {
+        const embeddingContent = FS.readFile('/embedding-sefe.txt', { encoding: 'utf8' });
+        const embeddingFileName = "embedding-sefe.txt";
+        const blob = new Blob([embeddingContent], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = embeddingFileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    });
+    
   </script>
   <script src="main.js"></script>
 </body>

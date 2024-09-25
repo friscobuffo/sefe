@@ -166,7 +166,6 @@ inline void saveStringToFile(std::string filename, std::string& content) {
     if (outfile.is_open()) {
         outfile << content;
         outfile.close();
-        std::cout << "File saved successfully." << std::endl;
     } else
         std::cerr << "Unable to open file" << std::endl;
 }
