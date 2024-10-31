@@ -373,7 +373,6 @@ const std::vector<int>& bipartition) const {
                     output->addSingleEdge(higherLevelNode->getIndex(), neighborsToAdd[j], neighborsToAddColor[j]);
         }
     }
-    std::cout << "merged\n";
     return output;
 }
 
@@ -572,10 +571,6 @@ int cycleNodePosition, bool segmentsHasBetweenRedAttachment[], bool segmentsHasB
                 minSegment = segmentsHandler.getSegment(order[min]);
                 continue;
             }
-            assert(!segmentsHasBetweenBlueAttachment[order[min]]);
-            assert(!segmentsHasBetweenBlueAttachment[order[j]]);
-            assert(!segmentsHasBetweenRedAttachment[order[min]]);
-            assert(!segmentsHasBetweenRedAttachment[order[j]]);
             bool changeMinSegment = handleDrawsOfSegments(cycleNodePosition, segmentsHandler, segmentsMinMaxRedAttachment,
                 segmentsMinMaxBlueAttachment, order[j], order[min]);
             if (changeMinSegment) {
