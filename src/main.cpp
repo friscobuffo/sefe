@@ -50,19 +50,20 @@ extern "C" {
         if (!embedding.has_value())
             return 0;
         std::unique_ptr<const EmbeddingSefe> embeddingPtr(embedding.value());
+        
         // red embedding
         const Graph* redGraph = graph.computeRed();
         std::unique_ptr<const Graph> redGraphPtr(redGraph);
         const Embedding* redEmbedding = embedding.value()->computeRedEmbedding(redGraph);
         std::unique_ptr<const Graph> redEmbeddingPtr(redEmbedding);
-        drawSefeEmbeddingToFile(redEmbedding, intersection, "red", "/embedding-red.svg");
+        drawSefeProjectionEmbeddingToFile(redEmbedding, intersection, "red", "/embedding-red.svg");
 
         // blue embedding
         const Graph* blueGraph = graph.computeBlue();
         std::unique_ptr<const Graph> blueGraphPtr(blueGraph);
         const Embedding* blueEmbedding = embedding.value()->computeBlueEmbedding(blueGraph);
         std::unique_ptr<const Graph> blueEmbeddingPtr(blueEmbedding);
-        drawSefeEmbeddingToFile(blueEmbedding, intersection, "blue", "/embedding-blue.svg");
+        drawSefeProjectionEmbeddingToFile(blueEmbedding, intersection, "blue", "/embedding-blue.svg");
 
         std::string embeddingString = embedding.value()->toString();
         saveStringToFile("/embedding-sefe.txt", embeddingString);

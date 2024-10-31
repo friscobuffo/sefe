@@ -312,6 +312,9 @@ const std::vector<int>& bipartition) const {
     computeMinAndMaxSegmentsAttachments(segmentsHandler, segmentsMinMaxRedAttachment, segmentsMinMaxBlueAttachment,
         segmentsHaveBetweenRedAttachment, segmentsHaveBetweenBlueAttachment);
     std::vector<bool> isSegmentCompatible = compatibilityEmbeddingsAndCycle(graph, cycle, embeddings, segmentsHandler);
+    for (int i = 0; i < segmentsHandler.size(); ++i)
+        if (bipartition[i] == 1)
+            isSegmentCompatible[i] = !isSegmentCompatible[i];
     for (int cycleNodePosition = 0; cycleNodePosition < cycle->size(); ++cycleNodePosition) {
         std::vector<int> insideSegments{};
         std::vector<int> outsideSegments{};
@@ -332,8 +335,6 @@ const std::vector<int>& bipartition) const {
         // order of the segments outside the cycle
         std::vector<int> outsideOrder = computeOrder(cycleNode, outsideSegments, segmentsMinMaxRedAttachment, segmentsMinMaxBlueAttachment,
             segmentsHandler, cycleNodePosition, segmentsHaveBetweenRedAttachment, segmentsHaveBetweenBlueAttachment);
-        for (int index : outsideOrder)
-            isSegmentCompatible[index] = !isSegmentCompatible[index];
         output->addSingleEdge(cycleNode->getIndex(), nextCycleNode->getIndex(), Color::BLACK);
         for (int i = 0; i < insideOrder.size(); ++i) {
             const BicoloredSegment* segment = segmentsHandler.getSegment(insideOrder[i]);
@@ -353,7 +354,6 @@ const std::vector<int>& bipartition) const {
         for (int nodeIndex = 0; nodeIndex < segment->size(); ++nodeIndex) {
             const NodeWithColors* node = segment->getNode(nodeIndex);
             const NodeWithColors* higherLevelNode = segment->getHigherLevelNode(node);
-            // int label = segment.getLabelOfNode(nodeIndex);
             if (cycle->hasNode(higherLevelNode)) continue;
             std::vector<int> neighborsToAdd;
             std::vector<Color> neighborsToAddColor;
@@ -373,6 +373,7 @@ const std::vector<int>& bipartition) const {
                     output->addSingleEdge(higherLevelNode->getIndex(), neighborsToAdd[j], neighborsToAddColor[j]);
         }
     }
+    std::cout << "merged\n";
     return output;
 }
 

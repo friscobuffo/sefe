@@ -99,7 +99,7 @@ void drawEmbeddingToFile(const Graph* graph, const Embedding* embedding) {
         std::cerr << "Error generating SVG content." << std::endl;
 }
 
-void drawSefeEmbeddingToFile(const Embedding* embedding, const Graph* intersection, const std::string& color, const std::string& outputFilename) {
+void drawSefeProjectionEmbeddingToFile(const Embedding* embedding, const Graph* intersection, const std::string& color, const std::string& outputFilename) {
     std::unique_ptr<ogdf::Graph> ogdfGraph = std::unique_ptr<ogdf::Graph>(OgdfUtils::myGraphToOgdf(embedding));
     ogdf::GraphAttributes GA(*ogdfGraph, ogdf::GraphAttributes::nodeGraphics |
                             ogdf::GraphAttributes::edgeGraphics |

@@ -8,7 +8,7 @@
 
 void drawEmbeddingToFile(const Graph* graph, const Embedding* embedding);
 
-void drawSefeEmbeddingToFile(const Embedding* embedding, const Graph* intersection,
+void drawSefeProjectionEmbeddingToFile(const Embedding* embedding, const Graph* intersection,
     const std::string& color, const std::string& outputFilename);
 
 #endif

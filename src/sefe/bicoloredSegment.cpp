@@ -44,38 +44,38 @@ const BicoloredSegment* BicoloredSegmentsHandler::getSegment(const int index) co
     return segments_m[index].get();
 }
 
-// computes a path between two attachments, assuring it does not go trought the cycle
+// computes a path between two attachments, assuring it does not go through the cycle
 std::list<const NodeWithColors*> BicoloredSegment::computeBlackPathBetweenAttachments(const NodeWithColors* start, const NodeWithColors* end) const {
     assert(isNodeAnAttachment(start));
     assert(isNodeAnAttachment(end));
-    const NodeWithColors* prevOfNode[size()];
-    for (int i = 0; i < size(); ++i)
-        prevOfNode[i] = nullptr;
-    std::list<const NodeWithColors*> queue{};
+    std::vector<const NodeWithColors*> prev(size(), nullptr);
+    std::list<const NodeWithColors*> queue;
     queue.push_back(start);
-    while (queue.size() != 0) {
+    while (!queue.empty()) {
         const NodeWithColors* node = queue.front();
         queue.pop_front();
+        if (node == end) break;
         const NodeWithColors* higherLevelNode = getHigherLevelNode(node);
         for (const Edge& edge : node->getEdges()) {
             if (edge.color != Color::BLACK) continue;
             const NodeWithColors* neighbor = edge.node;
-            const NodeWithColors* higherLevelNeighbor = getHigherLevelNode(neighbor);
-            if (originalCycle_m->hasNode(higherLevelNode) && originalCycle_m->hasNode(higherLevelNeighbor))
+            if (neighbor == end) {
+                prev[neighbor->getIndex()] = node;
+                break;
+            }
+            if (originalCycle_m->hasNode(getHigherLevelNode(neighbor)))
                 continue;
-            if (prevOfNode[neighbor->getIndex()] == nullptr) {
-                prevOfNode[neighbor->getIndex()] = node;
+            if (!prev[neighbor->getIndex()]) {
+                prev[neighbor->getIndex()] = node;
                 queue.push_back(neighbor);
-                if (neighbor->getIndex() == end->getIndex()) break;
             }
         }
-        if (prevOfNode[end->getIndex()] != nullptr) break;
     }
     std::list<const NodeWithColors*> path{};
     const NodeWithColors* crawl = end;
     while (crawl != start) {
         path.push_front(crawl);
-        crawl = prevOfNode[crawl->getIndex()];
+        crawl = prev[crawl->getIndex()];
     }
     path.push_front(crawl);
     return path;
