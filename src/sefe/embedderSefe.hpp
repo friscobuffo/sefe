@@ -18,6 +18,7 @@ public:
     void addSingleEdge(NodeWithColors* from, const NodeWithColors* to, Color color);
     const Embedding* computeRedEmbedding(const Graph* red) const;
     const Embedding* computeBlueEmbedding(const Graph* blue) const;
+    const std::vector<int> findBoundingFace(int p1index, int p2index, Color color) const;
 };
 
 class EmbedderSefe {

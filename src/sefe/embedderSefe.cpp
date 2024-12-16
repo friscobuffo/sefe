@@ -57,6 +57,44 @@ const Embedding* EmbeddingSefe::computeBlueEmbedding(const Graph* blue) const {
     return embedding;
 }
 
+const std::vector<int> EmbeddingSefe::findBoundingFace(int p1index, int p2index, Color color) const {
+    Color color2ignore;
+    switch (color) {
+        case Color::RED:
+            color2ignore = Color::BLUE;
+            break;
+        case Color::BLUE:
+            color2ignore = Color::RED;
+            break;
+        default:
+            exit(1);
+    }
+    std::vector<int> face{};
+    const NodeWithColors* p1 = getNode(p1index);
+    const NodeWithColors* p2 = getNode(p2index);
+    const NodeWithColors* current = p1;
+    const NodeWithColors* prev = p2;
+    do {
+        face.push_back(current->getIndex());
+        for (int i = 0; i < current->getEdges().size(); ++i) {
+            const Edge& edge = current->getEdges()[i];
+            int degree = current->getEdges().size();
+            if (edge.node == prev) {
+                int nextEdgeIndex = (i+1)%degree;
+                while ((current->getEdges()[nextEdgeIndex].color == color2ignore)
+                || (current == p2 && current->getEdges()[nextEdgeIndex].node == p1)) {
+                    nextEdgeIndex = (nextEdgeIndex+1)%degree;
+                }
+                const NodeWithColors* temp = current;
+                prev = current;
+                current = temp->getEdges()[nextEdgeIndex].node;
+                break;
+            }
+        }
+    } while (current != p1);
+    return face;
+}
+
 bool EmbedderSefe::testSefe(const Graph* graph1, const Graph* graph2) const {
     BicoloredGraph bicoloredGraph(graph1, graph2);
     const Graph* intersection = bicoloredGraph.getIntersection();
@@ -143,29 +181,34 @@ const EmbeddingSefe* EmbedderSefe::baseCaseCycle(const BicoloredSubGraph* cycle)
 
 std::optional<const EmbeddingSefe*> EmbedderSefe::embedGraph(const BicoloredSubGraph* graph,
 IntersectionCycle* cycle) const {
-    const BicoloredSegmentsHandler segmentsHandler(graph, cycle);
-    if (segmentsHandler.size() == 0) // entire biconnected component is a cycle
+    const BicoloredSegmentsHandler* segmentsHandler = new BicoloredSegmentsHandler(graph, cycle);
+    std::unique_ptr<const BicoloredSegmentsHandler> segmentsHandlerPtrUnique(segmentsHandler);
+    if (segmentsHandler->size() == 0) // entire biconnected component is a cycle
         return baseCaseCycle(graph);
-    if (segmentsHandler.size() == 1) {
-        const BicoloredSegment* segment = segmentsHandler.getSegment(0);
+    if (segmentsHandler->size() == 1) {
+        const BicoloredSegment* segment = segmentsHandler->getSegment(0);
         if (segment->isPath())
             return baseCasePath(graph, cycle);
         // chosen cycle is bad
         makeCycleGood(cycle, segment);
-        return embedGraph(graph, cycle);
+        segmentsHandlerPtrUnique.release();
+        delete segmentsHandler;
+        segmentsHandler = new BicoloredSegmentsHandler(graph, cycle);
+        segmentsHandlerPtrUnique.reset(segmentsHandler);
+        if (segmentsHandler->size() == 1) return std::nullopt;
     }
-    InterlacementGraphSefe interlacementGraph(cycle, &segmentsHandler);
+    InterlacementGraphSefe interlacementGraph(cycle, segmentsHandler);
     std::optional<std::vector<int>> bipartition = interlacementGraph.computeBipartition();
     if (!bipartition) return std::nullopt;
     std::vector<std::unique_ptr<const EmbeddingSefe>> embeddings{};
-    for (int i = 0; i < segmentsHandler.size(); ++i) {
-        const BicoloredSegment* segment = segmentsHandler.getSegment(i);
+    for (int i = 0; i < segmentsHandler->size(); ++i) {
+        const BicoloredSegment* segment = segmentsHandler->getSegment(i);
         std::optional<const EmbeddingSefe*> embedding = embedGraph(segment);
         if (!embedding.has_value())
             return std::nullopt;
         embeddings.push_back(std::unique_ptr<const EmbeddingSefe>(embedding.value()));
     }
-    const EmbeddingSefe* embedding = mergeSegmentsEmbeddings(graph, cycle, embeddings, segmentsHandler, bipartition.value());
+    const EmbeddingSefe* embedding = mergeSegmentsEmbeddings(graph, cycle, embeddings, *segmentsHandler, bipartition.value());
     return embedding;
 }
 
