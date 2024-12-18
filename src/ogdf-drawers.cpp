@@ -13,24 +13,22 @@
 class AuslanderParterEmbedder : public ogdf::EmbedderModule {
 public:
     void doCall(ogdf::Graph& graph, ogdf::adjEntry &adjExternal) {
-        const Graph* myGraph = OgdfUtils::ogdfGraphToMyGraph(&graph);
-        std::unique_ptr<const Graph> myGraphPtr(myGraph);
+        auto myGraph = OgdfUtils::ogdfGraphToMyGraph(graph);
         Embedder embedder;
-        std::optional<const Embedding*> embeddingOpt = embedder.embedGraph(myGraph);
+        auto embeddingOpt = embedder.embedGraph(*myGraph);
         if (!embeddingOpt) {
             std::cout << "error\n";
             exit(1);
         }
-        const Embedding* embedding = embeddingOpt.value();
-        std::unique_ptr<const Embedding> embeddingPtr(embedding);
-        std::vector<int> position(embedding->size());
+        auto& embedding = *embeddingOpt.value().get();
+        std::vector<int> position(embedding.size());
         for (ogdf::node n : graph.nodes) {
             const int index = n->index();
-            const Node* node = embedding->getNode(index);
-            const std::vector<const Node*>& neighbors = node->getNeighbors();
-            for (int i = 0; i < neighbors.size(); ++i)
-                position[neighbors[i]->getIndex()] = i;
-            std::vector<ogdf::adjEntry> order(neighbors.size());
+            const Node& node = embedding.getNode(index);
+            auto& edges = node.getEdges();
+            for (int i = 0; i < edges.size(); ++i)
+                position[edges[i].to.getIndex()] = i;
+            std::vector<ogdf::adjEntry> order(edges.size());
             for (ogdf::adjEntry& adj : n->adjEntries) {
                 const int neighbor = adj->twinNode()->index();
                 order[position[neighbor]] = adj;
@@ -45,19 +43,19 @@ public:
 
 class AuslanderParterEmbedderSefe : public ogdf::EmbedderModule {
 private:
-    const Embedding* embedding_m;
+    const Graph& embedding_m;
 public:
-    AuslanderParterEmbedderSefe(const Embedding* embedding) 
+    AuslanderParterEmbedderSefe(const Graph& embedding) 
     : embedding_m(embedding) {}
     void doCall(ogdf::Graph& graph, ogdf::adjEntry &adjExternal) {
-        std::vector<int> position(embedding_m->size());
+        std::vector<int> position(embedding_m.size());
         for (ogdf::node n : graph.nodes) {
             const int index = n->index();
-            const Node* node = embedding_m->getNode(index);
-            const std::vector<const Node*>& neighbors = node->getNeighbors();
-            for (int i = 0; i < neighbors.size(); ++i)
-                position[neighbors[i]->getIndex()] = i;
-            std::vector<ogdf::adjEntry> order(neighbors.size());
+            const Node& node = embedding_m.getNode(index);
+            auto& edges = node.getEdges();
+            for (int i = 0; i < edges.size(); ++i)
+                position[edges[i].to.getIndex()] = i;
+            std::vector<ogdf::adjEntry> order(edges.size());
             for (ogdf::adjEntry& adj : n->adjEntries) {
                 const int neighbor = adj->twinNode()->index();
                 order[position[neighbor]] = adj;
@@ -70,8 +68,8 @@ public:
     }
 };
 
-void drawEmbeddingToFile(const Graph* graph, const Embedding* embedding) {
-    std::unique_ptr<ogdf::Graph> ogdfGraph = std::unique_ptr<ogdf::Graph>(OgdfUtils::myGraphToOgdf(graph));
+void drawEmbeddingToFile(const Graph& graph, const Graph& embedding) {
+    std::unique_ptr<ogdf::Graph> ogdfGraph = OgdfUtils::myGraphToOgdf(graph);
     ogdf::GraphAttributes GA(*ogdfGraph, ogdf::GraphAttributes::nodeGraphics | ogdf::GraphAttributes::edgeGraphics |
                         ogdf::GraphAttributes::nodeLabel | ogdf::GraphAttributes::edgeStyle |
                         ogdf::GraphAttributes::nodeStyle | ogdf::GraphAttributes::edgeArrow);
@@ -92,15 +90,15 @@ void drawEmbeddingToFile(const Graph* graph, const Embedding* embedding) {
     if (ogdf::GraphIO::drawSVG(GA, svgStream, svgSettings)) {
         std::string svgContent = svgStream.str();
         saveStringToFile("/embedding.svg", svgContent);
-        std::string embeddingString = embedding->toString();
+        std::string embeddingString = embedding.toString();
         saveStringToFile("/embedding.txt", embeddingString);
     }
     else
         std::cerr << "Error generating SVG content." << std::endl;
 }
 
-void drawSefeProjectionEmbeddingToFile(const Embedding* embedding, const Graph* intersection, const std::string& color, const std::string& outputFilename) {
-    std::unique_ptr<ogdf::Graph> ogdfGraph = std::unique_ptr<ogdf::Graph>(OgdfUtils::myGraphToOgdf(embedding));
+void drawSefeProjectionEmbeddingToFile(const Graph& embedding, const Graph& intersection, const std::string& color, const std::string& outputFilename) {
+    std::unique_ptr<ogdf::Graph> ogdfGraph = OgdfUtils::myGraphToOgdf(embedding);
     ogdf::GraphAttributes GA(*ogdfGraph, ogdf::GraphAttributes::nodeGraphics |
                             ogdf::GraphAttributes::edgeGraphics |
                             ogdf::GraphAttributes::nodeLabel | ogdf::GraphAttributes::edgeStyle |
@@ -114,7 +112,7 @@ void drawSefeProjectionEmbeddingToFile(const Embedding* embedding, const Graph* 
         ogdf::node to = e->target();
         int fromIndex = from->index();
         int toIndex = to->index();
-        if (!intersection->hasEdge(fromIndex, toIndex))
+        if (!intersection.hasEdge(fromIndex, toIndex))
             GA.strokeColor(e) = (color == "red") ? ogdf::Color(255, 0, 0) : ogdf::Color(0, 0, 255);
         GA.strokeWidth(e) = 1.5;
         GA.arrowType(e) = ogdf::EdgeArrow::None;
@@ -129,7 +127,7 @@ void drawSefeProjectionEmbeddingToFile(const Embedding* embedding, const Graph* 
     if (ogdf::GraphIO::drawSVG(GA, svgStream, svgSettings)) {
         std::string svgContent = svgStream.str();
         saveStringToFile(outputFilename, svgContent);
-        std::string embeddingString = embedding->toString();
+        std::string embeddingString = embedding.toString();
         saveStringToFile("/embedding-" + color + ".txt", embeddingString);
     } else
         std::cerr << "Error generating SVG content." << std::endl;

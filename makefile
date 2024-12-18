@@ -7,19 +7,19 @@ LIBS = -LOGDF
 
 # Source Files
 SRCS = src/main.cpp \
+       src/ogdf-drawers.cpp \
+       src/basic/node.cpp \
+       src/basic/tree.cpp \
        src/basic/graph.cpp \
        src/basic/utils.cpp \
-       src/auslander-parter/biconnectedComponent.cpp \
-       src/auslander-parter/cycle.cpp \
-       src/auslander-parter/segment.cpp \
+       src/components/biconnectedComponent.cpp \
+       src/components/cycle.cpp \
+       src/components/segment.cpp \
        src/auslander-parter/interlacement.cpp \
        src/auslander-parter/embedder.cpp \
-       src/sefe/bicoloredGraph.cpp \
-       src/sefe/intersectionCycle.cpp \
-       src/sefe/bicoloredSegment.cpp \
        src/sefe/interlacementSefe.cpp \
        src/sefe/embedderSefe.cpp \
-       src/ogdf-drawers.cpp
+       src/beta/palm-tree.cpp
 
 # Object Files (stored in obj/ directory)
 OBJS = $(SRCS:%.cpp=$(OBJ_DIR)/%.o)

@@ -4,223 +4,142 @@
 #include <cassert>
 #include <vector>
 
-#include "../auslander-parter/biconnectedComponent.hpp"
-#include "bicoloredGraph.hpp"
-#include "bicoloredSegment.hpp"
+#include "../components/biconnectedComponent.hpp"
 #include "interlacementSefe.hpp"
-#include "intersectionCycle.hpp"
 
-EmbeddingSefe::EmbeddingSefe(const BicoloredSubGraph* originalGraph)
-: BicoloredSubGraph(originalGraph->size(), originalGraph) {
-    for (int i = 0; i < size(); ++i) {
-        const NodeWithColors* node = originalGraph->getNode(i);
-        const NodeWithColors* originalNode = originalGraph->getOriginalNode(node);
-        setOriginalNode(getNode(i), originalNode);
-    }
-}
-
-EmbeddingSefe::EmbeddingSefe(const BicoloredGraph* originalGraph)
-: BicoloredSubGraph(originalGraph->size(), originalGraph) {
-    for (int i = 0; i < size(); ++i)
-        setOriginalNode(getNode(i), originalGraph->getNode(i));
-}
-
-void EmbeddingSefe::addSingleEdge(NodeWithColors* from, const NodeWithColors* to, Color color) {
-    from->addEdge(to, color);
-}
-
-void EmbeddingSefe::addSingleEdge(int fromIndex, int toIndex, Color color) {
-    NodeWithColors* from = getNode(fromIndex);
-    NodeWithColors* to = getNode(toIndex);
-    addSingleEdge(from, to, color);
-}
-
-const Embedding* EmbeddingSefe::computeRedEmbedding(const Graph* red) const {
-    Embedding* embedding = new Embedding(red);
-    for (int i = 0; i < size(); ++i) {
-        const NodeWithColors* node = getNode(i);
-        for (const Edge& edge : node->getEdges())
-            if (edge.color == Color::BLACK || edge.color == Color::RED)
-                embedding->addSingleEdge(node->getIndex(), edge.node->getIndex());
-    }
-    return embedding;
-}
-
-const Embedding* EmbeddingSefe::computeBlueEmbedding(const Graph* blue) const {
-    Embedding* embedding = new Embedding(blue);
-    for (int i = 0; i < size(); ++i) {
-        const NodeWithColors* node = getNode(i);
-        for (const Edge& edge : node->getEdges())
-            if (edge.color == Color::BLACK || edge.color == Color::BLUE)
-                embedding->addSingleEdge(node->getIndex(), edge.node->getIndex());
-    }
-    return embedding;
-}
-
-const std::vector<int> EmbeddingSefe::findBoundingFace(int p1index, int p2index, Color color) const {
-    Color color2ignore;
-    switch (color) {
-        case Color::RED:
-            color2ignore = Color::BLUE;
-            break;
-        case Color::BLUE:
-            color2ignore = Color::RED;
-            break;
-        default:
-            exit(1);
-    }
-    std::vector<int> face{};
-    const NodeWithColors* p1 = getNode(p1index);
-    const NodeWithColors* p2 = getNode(p2index);
-    const NodeWithColors* current = p1;
-    const NodeWithColors* prev = p2;
-    do {
-        face.push_back(current->getIndex());
-        for (int i = 0; i < current->getEdges().size(); ++i) {
-            const Edge& edge = current->getEdges()[i];
-            int degree = current->getEdges().size();
-            if (edge.node == prev) {
-                int nextEdgeIndex = (i+1)%degree;
-                while ((current->getEdges()[nextEdgeIndex].color == color2ignore)
-                || (current == p2 && current->getEdges()[nextEdgeIndex].node == p1)) {
-                    nextEdgeIndex = (nextEdgeIndex+1)%degree;
-                }
-                const NodeWithColors* temp = current;
-                prev = current;
-                current = temp->getEdges()[nextEdgeIndex].node;
-                break;
-            }
-        }
-    } while (current != p1);
-    return face;
-}
-
-bool EmbedderSefe::testSefe(const Graph* graph1, const Graph* graph2) const {
-    BicoloredGraph bicoloredGraph(graph1, graph2);
-    const Graph* intersection = bicoloredGraph.getIntersection();
-    BiconnectedComponentsHandler bicCompHandler(intersection);
+bool EmbedderSefe::testSefe(const Graph& graph1, const Graph& graph2) const {
+    std::unique_ptr<Graph> unionGraph =  Graph::makeUnionGraph(graph1, graph2);
+    std::unique_ptr<Graph> intersection = unionGraph->computeBlackProjection();
+    BiconnectedComponentsHandler bicCompHandler(*intersection);
     if (bicCompHandler.size() > 1) {
         std::cout << "intersection must be biconnected\n";
         return false;
     }
-    BicoloredSubGraph bicoloredSubGraph(&bicoloredGraph);
-    IntersectionCycle cycle(&bicoloredSubGraph);
-    return testSefe(&bicoloredSubGraph, &cycle);
+    std::unique_ptr<SubGraph> subGraph = unionGraph->createCopy();
+    BlackCycle cycle(*subGraph);
+    return testSefe(*subGraph, cycle);
 }
 
 // assumes intersection is biconnected
-bool EmbedderSefe::testSefe(const BicoloredSubGraph* bicoloredGraph, IntersectionCycle* cycle) const {
-    const BicoloredSegmentsHandler segmentsHandler = BicoloredSegmentsHandler(bicoloredGraph, cycle);
+bool EmbedderSefe::testSefe(const SubGraph& unionGraph, BlackCycle& cycle) const {
+    const SegmentsHandler segmentsHandler(&unionGraph, &cycle);
     if (segmentsHandler.size() == 0) // entire biconnected component is a cycle
         return true;
     if (segmentsHandler.size() == 1) {
-        const BicoloredSegment* segment = segmentsHandler.getSegment(0);
-        if (segment->isPath())
+        const Segment& segment = segmentsHandler.getSegment(0);
+        if (segment.isPath())
             return true;
         // chosen cycle is bad
         makeCycleGood(cycle, segment);
-        return testSefe(bicoloredGraph, cycle);
+        return testSefe(unionGraph, cycle);
     }
-    InterlacementGraphSefe interlacementGraph(cycle, &segmentsHandler);
+    InterlacementGraphSefe interlacementGraph(cycle, segmentsHandler);
     std::optional<std::vector<int>> bipartition = interlacementGraph.computeBipartition();
     if (!bipartition) return false;
     for (int i = 0; i < segmentsHandler.size(); ++i) {
-        const BicoloredSegment* segment = segmentsHandler.getSegment(i);
-        IntersectionCycle cycle(segment);
-        if (!testSefe(segment, &cycle)) return false;
+        const Segment& segment = segmentsHandler.getSegment(i);
+        BlackCycle cycle(segment);
+        if (!testSefe(segment, cycle)) return false;
     }
     return true;
 }
 
 // it may happen that a cycle induces only one segment, which is not a base case
 // so the cycle must be recomputed such that it ensures at least two segments
-void EmbedderSefe::makeCycleGood(IntersectionCycle* cycle, const BicoloredSegment* segment) const {
-    assert(!segment->isPath());
-    bool isCycleNodeAttachment[cycle->size()];
-    for (int i = 0; i < cycle->size(); ++i)
+void EmbedderSefe::makeCycleGood(BlackCycle& cycle, const Segment& segment) const {
+    assert(!segment.isPath());
+    bool isCycleNodeAttachment[cycle.size()];
+    for (int i = 0; i < cycle.size(); ++i)
         isCycleNodeAttachment[i] = false;
-    for (const NodeWithColors* attachment : segment->getAttachments()) {
-        const NodeWithColors* attachmentHigherLevel = segment->getHigherLevelNode(attachment);
-        isCycleNodeAttachment[cycle->getPositionOfNode(attachmentHigherLevel).value()] = true;
+    for (const Node* attachment : segment.getAttachments()) {
+        const Node& attachmentHigherLevel = segment.getHigherLevelNode(*attachment);
+        isCycleNodeAttachment[cycle.getPositionOfNode(attachmentHigherLevel).value()] = true;
     }
     int foundAttachments = 0;
-    const NodeWithColors* attachmentsToUse[2];
-    const NodeWithColors* attachmentToInclude = nullptr;
-    for (int i = 0; i < cycle->size(); ++i) {
+    const Node* attachmentsToUse[2];
+    const Node* attachmentToInclude = nullptr;
+    for (int i = 0; i < cycle.size(); ++i) {
         if (!isCycleNodeAttachment[i]) continue;
-        const NodeWithColors* node = cycle->getNode(i);
-        const NodeWithColors* nodeSegment = segment->getNode(i);
-        assert(segment->getHigherLevelNode(nodeSegment) == node);
-        if (!segment->isNodeBlackAttachment(nodeSegment)) {
-            attachmentToInclude = nodeSegment;
+        const Node& node = cycle.getNode(i);
+        const Node& nodeSegment = segment.getNode(i);
+        assert(&segment.getHigherLevelNode(nodeSegment) == &node);
+        if (!segment.isNodeBlackAttachment(nodeSegment)) {
+            attachmentToInclude = &nodeSegment;
             continue;
         }
         if (foundAttachments < 2)
-            attachmentsToUse[foundAttachments++] = nodeSegment;
+            attachmentsToUse[foundAttachments++] = &nodeSegment;
         else
-            attachmentToInclude = nodeSegment;
+            attachmentToInclude = &nodeSegment;
         if (foundAttachments == 2 && attachmentToInclude != nullptr) break;
     }
-    std::list<const NodeWithColors*> path = segment->computeBlackPathBetweenAttachments(attachmentsToUse[0], attachmentsToUse[1]);
-    std::list<const NodeWithColors*> pathHigherLevel;
-    for (const NodeWithColors* node : path)
-        pathHigherLevel.push_back(segment->getHigherLevelNode(node));
-    if (attachmentToInclude != nullptr) attachmentToInclude = segment->getHigherLevelNode(attachmentToInclude);
-    cycle->changeWithPath(pathHigherLevel, attachmentToInclude);
+    std::list<const Node*> path = segment.computePathBetweenAttachments(*attachmentsToUse[0], *attachmentsToUse[1], Color::BLACK);
+    std::list<const Node*> pathHigherLevel;
+    for (const Node* node : path)
+        pathHigherLevel.push_back(&segment.getHigherLevelNode(*node));
+    if (attachmentToInclude != nullptr) attachmentToInclude = &segment.getHigherLevelNode(*attachmentToInclude);
+    cycle.changeWithPath(pathHigherLevel, attachmentToInclude);
 }
 
 // base case: biconnected component is a cycle
-const EmbeddingSefe* EmbedderSefe::baseCaseCycle(const BicoloredSubGraph* cycle) const {
-    EmbeddingSefe* embedding = new EmbeddingSefe(cycle);
-    for (int i = 0; i < cycle->size()-1; ++i)
-        for (const Edge& edge : cycle->getNode(i)->getEdges())
-            if (i < edge.node->getIndex())
-                embedding->addEdge(i, edge.node->getIndex(), edge.color);
+const SubGraph* EmbedderSefe::baseCaseCycle(const SubGraph& cycle) const {
+    SubGraph* embedding = new SubGraph(&cycle);
+    for (int i = 0; i < cycle.size(); ++i) {
+        embedding->addNode(Color::BLACK);
+        embedding->setOriginalNode(embedding->getNode(i), cycle.getOriginalNode(cycle.getNode(i)));
+    }
+    for (int i = 0; i < cycle.size()-1; ++i)
+        for (const Edge& edge : cycle.getNode(i).getEdges())
+            if (i < edge.to.getIndex())
+                embedding->addEdge(i, edge.to.getIndex(), DEFAULT_WEIGHT, edge.color);
     return embedding;
 }
 
-std::optional<const EmbeddingSefe*> EmbedderSefe::embedGraph(const BicoloredSubGraph* graph,
-IntersectionCycle* cycle) const {
-    const BicoloredSegmentsHandler* segmentsHandler = new BicoloredSegmentsHandler(graph, cycle);
-    std::unique_ptr<const BicoloredSegmentsHandler> segmentsHandlerPtrUnique(segmentsHandler);
+std::optional<const SubGraph*> EmbedderSefe::embedGraph(const SubGraph& graph,
+BlackCycle& cycle) const {
+    const SegmentsHandler* segmentsHandler = new SegmentsHandler(&graph, &cycle);
+    std::unique_ptr<const SegmentsHandler> segmentsHandlerPtrUnique(segmentsHandler);
     if (segmentsHandler->size() == 0) // entire biconnected component is a cycle
         return baseCaseCycle(graph);
     if (segmentsHandler->size() == 1) {
-        const BicoloredSegment* segment = segmentsHandler->getSegment(0);
-        if (segment->isPath())
+        const Segment& segment = segmentsHandler->getSegment(0);
+        if (segment.isPath())
             return baseCasePath(graph, cycle);
         // chosen cycle is bad
         makeCycleGood(cycle, segment);
         segmentsHandlerPtrUnique.release();
         delete segmentsHandler;
-        segmentsHandler = new BicoloredSegmentsHandler(graph, cycle);
+        segmentsHandler = new SegmentsHandler(&graph, &cycle);
         segmentsHandlerPtrUnique.reset(segmentsHandler);
         if (segmentsHandler->size() == 1) return std::nullopt;
     }
-    InterlacementGraphSefe interlacementGraph(cycle, segmentsHandler);
+    InterlacementGraphSefe interlacementGraph(cycle, *segmentsHandler);
     std::optional<std::vector<int>> bipartition = interlacementGraph.computeBipartition();
     if (!bipartition) return std::nullopt;
-    std::vector<std::unique_ptr<const EmbeddingSefe>> embeddings{};
+    std::vector<std::unique_ptr<const SubGraph>> embeddings{};
     for (int i = 0; i < segmentsHandler->size(); ++i) {
-        const BicoloredSegment* segment = segmentsHandler->getSegment(i);
-        std::optional<const EmbeddingSefe*> embedding = embedGraph(segment);
-        if (!embedding.has_value())
-            return std::nullopt;
-        embeddings.push_back(std::unique_ptr<const EmbeddingSefe>(embedding.value()));
+        const Segment& segment = segmentsHandler->getSegment(i);
+        std::optional<const SubGraph*> embedding = embedGraph(segment);
+        if (!embedding.has_value()) return std::nullopt;
+        embeddings.push_back(std::unique_ptr<const SubGraph>(embedding.value()));
     }
-    const EmbeddingSefe* embedding = mergeSegmentsEmbeddings(graph, cycle, embeddings, *segmentsHandler, bipartition.value());
+    const SubGraph* embedding = mergeSegmentsEmbeddings(graph, cycle, embeddings, *segmentsHandler, bipartition.value());
     return embedding;
 }
 
 // base case: segment is a path
-const EmbeddingSefe* EmbedderSefe::baseCasePath(const BicoloredSubGraph* component, const IntersectionCycle* cycle) const {
-    EmbeddingSefe* embedding = new EmbeddingSefe(component);
-    for (int nodeIndex = 0; nodeIndex < component->size(); ++nodeIndex) {
-        const NodeWithColors* node = component->getNode(nodeIndex);
-        const std::vector<Edge>& edges = node->getEdges();
+const SubGraph* EmbedderSefe::baseCasePath(const SubGraph& component, const BlackCycle& cycle) const {
+    SubGraph* embedding = new SubGraph(&component);
+    for (int i = 0; i < component.size(); ++i) {
+        embedding->addNode(Color::BLACK);
+        embedding->setOriginalNode(embedding->getNode(i), component.getOriginalNode(component.getNode(i)));
+    }
+    for (int nodeIndex = 0; nodeIndex < component.size(); ++nodeIndex) {
+        const Node& node = component.getNode(nodeIndex);
+        const auto& edges = node.getEdges();
         if (edges.size() == 2) { // attachment nodes will be handled later
-            embedding->addSingleEdge(node->getIndex(), edges[0].node->getIndex(), edges[0].color);
-            embedding->addSingleEdge(node->getIndex(), edges[1].node->getIndex(), edges[1].color);
+            embedding->addSingleEdge(node.getIndex(), edges[0].to.getIndex(), DEFAULT_WEIGHT, edges[0].color);
+            embedding->addSingleEdge(node.getIndex(), edges[1].to.getIndex(), DEFAULT_WEIGHT, edges[1].color);
             continue;
         }
         assert(edges.size() == 3);
@@ -228,74 +147,78 @@ const EmbeddingSefe* EmbedderSefe::baseCasePath(const BicoloredSubGraph* compone
         Color neighborsOrderColor[3];
         for (int i = 0; i < 3; ++i) {
             neighborsOrder[i] = -1;
-            neighborsOrderColor[i] = Color::NONE;
         }
-        for (const Edge& edge : edges) {
-            const NodeWithColors* neighbor = edge.node;
-            Color color = edge.color;
-            if (cycle->getNextOfNode(node) == neighbor) {
-                neighborsOrder[0] = neighbor->getIndex();
-                neighborsOrderColor[0] = color;
+        for (const auto& edge : edges) {
+            const Node& neighbor = edge.to;
+            if (&cycle.getNextOfNode(node) == &neighbor) {
+                neighborsOrder[0] = neighbor.getIndex();
+                neighborsOrderColor[0] = edge.color;
                 continue;
             }
-            if (cycle->getPrevOfNode(node) == neighbor) {
-                neighborsOrder[2] = neighbor->getIndex();
-                neighborsOrderColor[2] = color;
+            if (&cycle.getPrevOfNode(node) == &neighbor) {
+                neighborsOrder[2] = neighbor.getIndex();
+                neighborsOrderColor[2] = edge.color;
                 continue;
             }
-            neighborsOrder[1] = neighbor->getIndex();
-            neighborsOrderColor[1] = color;
+            neighborsOrder[1] = neighbor.getIndex();
+            neighborsOrderColor[1] = edge.color;
         }
         for (int i = 0; i < 3; ++i) {
             assert(neighborsOrder[i] != -1);
-            assert(neighborsOrderColor[i] != Color::NONE);
-            embedding->addSingleEdge(node->getIndex(), neighborsOrder[i], neighborsOrderColor[i]);
+            embedding->addSingleEdge(node.getIndex(), neighborsOrder[i], DEFAULT_WEIGHT, neighborsOrderColor[i]);
         }
     }
     return embedding;
 }
 
-std::optional<const EmbeddingSefe*> EmbedderSefe::embedGraph(const BicoloredSubGraph* graph) const {
-    IntersectionCycle cycle(graph);
-    return embedGraph(graph, &cycle);
+std::optional<const SubGraph*> EmbedderSefe::embedGraph(const SubGraph& graph) const {
+    BlackCycle cycle(graph);
+    return embedGraph(graph, cycle);
 }
 
 // base case: graph has <4 nodes
-const EmbeddingSefe* EmbedderSefe::baseCaseGraph(const BicoloredGraph* graph) const {
-    assert(graph->size() < 4);
-    EmbeddingSefe* embedding = new EmbeddingSefe(graph);
-    for (const NodeWithColors* node : graph->getNodes())
-        for (const Edge& edge : node->getEdges())
-            if (node->getIndex() < edge.node->getIndex())
-                embedding->addEdge(node->getIndex(), edge.node->getIndex(), edge.color);
+const SubGraph* EmbedderSefe::baseCaseGraph(const Graph& graph) const {
+    assert(graph.size() < 4);
+    SubGraph* embedding = new SubGraph(&graph);
+    for (int i = 0; i < graph.size(); ++i) {
+        embedding->addNode(Color::BLACK);
+        embedding->setOriginalNode(embedding->getNode(i), graph.getNode(i));
+    }
+    for (int i = 0; i < graph.size(); ++i) {
+        const Node& node = graph.getNode(i);
+        for (const Edge& edge : node.getEdges())
+            if (node.getIndex() < edge.to.getIndex())
+                embedding->addEdge(node.getIndex(), edge.to.getIndex(), DEFAULT_WEIGHT, edge.color);
+    }
     return embedding;
 }
 
-std::optional<const EmbeddingSefe*> EmbedderSefe::embedGraph(const BicoloredGraph* graph) const {
-    if (graph->size() < 4) return baseCaseGraph(graph);
-    const Graph* intersection = graph->getIntersection();
-    BiconnectedComponentsHandler bch(intersection);
+std::optional<std::unique_ptr<const SubGraph>> EmbedderSefe::embedGraph(const Graph& graph) const {
+    if (graph.size() < 4) return std::unique_ptr<const SubGraph>(baseCaseGraph(graph));
+    std::unique_ptr<const SubGraph> intersection = graph.computeBlackProjection();
+    BiconnectedComponentsHandler bch(*intersection);
     if (bch.size() > 1) {
         std::cout << "intersection must be biconnected\n";
         return std::nullopt;
     }
-    const BicoloredSubGraph sGraph(graph);
-    return embedGraph(&sGraph);
+    std::optional<const SubGraph*> embedding = embedGraph(*graph.createCopy());
+    if (!embedding.has_value()) return std::nullopt;
+    return std::unique_ptr<const SubGraph>(embedding.value());
 }
 
 // for each segment, it computes the minimum and the maximum of all of its attachments,
 // using attachment notation based on the position in the cycle (0, ..., cycleSize-1)
-void EmbedderSefe::computeMinAndMaxSegmentsAttachments(const BicoloredSegmentsHandler& segmentsHandler,
+void EmbedderSefe::computeMinAndMaxSegmentsAttachments(const SegmentsHandler& segmentsHandler,
 int segmentsMinMaxRedAttachment[][2], int segmentsMinMaxBlueAttachment[][2],
 bool segmentsHaveBetweenRedAttachment[], bool segmentsHaveBetweenBlueAttachment[]) const {
     for (int i = 0; i < segmentsHandler.size(); i++) {
-        int minRed = segmentsHandler.getSegment(i)->size();
+        int minRed = segmentsHandler.getSegment(i).size();
         int maxRed = -1;
-        int minBlue = segmentsHandler.getSegment(i)->size();
+        int minBlue = segmentsHandler.getSegment(i).size();
         int maxBlue = -1;
-        const BicoloredSegment* segment = segmentsHandler.getSegment(i);
-        for (const NodeWithColors* attachment : segment->getAttachments()) {
-            const Color color = segment->getColorOfAttachment(attachment);
+        const Segment& segment = segmentsHandler.getSegment(i);
+        for (const Node* attachment : segment.getAttachments()) {
+            const Color color = segment.getColorOfAttachment(*attachment);
             int index = attachment->getIndex();
             switch (color) {
                 case Color::RED:
@@ -324,15 +247,15 @@ bool segmentsHaveBetweenRedAttachment[], bool segmentsHaveBetweenBlueAttachment[
         segmentsMinMaxBlueAttachment[i][1] = maxBlue;
         segmentsHaveBetweenRedAttachment[i] = false;
         segmentsHaveBetweenBlueAttachment[i] = false;
-        for (const NodeWithColors* attachment : segment->getAttachments()) {
+        for (const Node* attachment : segment.getAttachments()) {
             int index = attachment->getIndex();
-            if (segment->isNodeRedAttachment(attachment)) {
+            if (segment.isNodeRedAttachment(*attachment)) {
                 if (minRed < index && index < maxRed)
                     segmentsHaveBetweenRedAttachment[i] = true;
                 else
                     assert(index == minRed || index == maxRed);
             }
-            if (segment->isNodeBlueAttachment(attachment)) {
+            if (segment.isNodeBlueAttachment(*attachment)) {
                 if (minBlue < index && index < maxBlue)
                     segmentsHaveBetweenBlueAttachment[i] = true;
                 else
@@ -344,10 +267,14 @@ bool segmentsHaveBetweenRedAttachment[], bool segmentsHaveBetweenBlueAttachment[
     }
 }
 
-const EmbeddingSefe* EmbedderSefe::mergeSegmentsEmbeddings(const BicoloredSubGraph* graph, const IntersectionCycle* cycle,
-const std::vector<std::unique_ptr<const EmbeddingSefe>>& embeddings, const BicoloredSegmentsHandler& segmentsHandler,
+const SubGraph* EmbedderSefe::mergeSegmentsEmbeddings(const SubGraph& graph, const BlackCycle& cycle,
+const std::vector<std::unique_ptr<const SubGraph>>& embeddings, const SegmentsHandler& segmentsHandler,
 const std::vector<int>& bipartition) const {
-    EmbeddingSefe* output = new EmbeddingSefe(graph);
+    SubGraph* output = new SubGraph(&graph);
+    for (int i = 0; i < graph.size(); ++i) {
+        output->addNode(Color::BLACK);
+        output->setOriginalNode(output->getNode(i), graph.getOriginalNode(graph.getNode(i)));
+    }
     int segmentsMinMaxRedAttachment[segmentsHandler.size()][2];
     int segmentsMinMaxBlueAttachment[segmentsHandler.size()][2];
     bool segmentsHaveBetweenRedAttachment[segmentsHandler.size()]; // true if segment has a red attachment between its min and max red attachments
@@ -356,21 +283,20 @@ const std::vector<int>& bipartition) const {
         segmentsHaveBetweenRedAttachment, segmentsHaveBetweenBlueAttachment);
     std::vector<bool> isSegmentCompatible = compatibilityEmbeddingsAndCycle(graph, cycle, embeddings, segmentsHandler);
     for (int i = 0; i < segmentsHandler.size(); ++i)
-        if (bipartition[i] == 1)
-            isSegmentCompatible[i] = !isSegmentCompatible[i];
-    for (int cycleNodePosition = 0; cycleNodePosition < cycle->size(); ++cycleNodePosition) {
+        if (bipartition[i] == 1) isSegmentCompatible[i] = !isSegmentCompatible[i];
+    for (int cycleNodePosition = 0; cycleNodePosition < cycle.size(); ++cycleNodePosition) {
         std::vector<int> insideSegments{};
         std::vector<int> outsideSegments{};
         for (int i = 0; i < segmentsHandler.size(); ++i) {
-            const NodeWithColors* node = segmentsHandler.getSegment(i)->getNode(cycleNodePosition);
-            if (segmentsHandler.getSegment(i)->isNodeAnAttachment(node)) {
+            const Node& node = segmentsHandler.getSegment(i).getNode(cycleNodePosition);
+            if (segmentsHandler.getSegment(i).isNodeAnAttachment(node)) {
                 if (bipartition[i] == 0) insideSegments.push_back(i);
                 else outsideSegments.push_back(i);
             }
         }
-        const NodeWithColors* cycleNode = cycle->getNode(cycleNodePosition);
-        const NodeWithColors* prevCycleNode = cycle->getPrevOfNode(cycleNode);
-        const NodeWithColors* nextCycleNode = cycle->getNextOfNode(cycleNode);
+        const Node& cycleNode = cycle.getNode(cycleNodePosition);
+        const Node& prevCycleNode = cycle.getPrevOfNode(cycleNode);
+        const Node& nextCycleNode = cycle.getNextOfNode(cycleNode);
         // order of the segments inside the cycle
         std::vector<int> insideOrder = computeOrder(cycleNode, insideSegments, segmentsMinMaxRedAttachment, segmentsMinMaxBlueAttachment,
             segmentsHandler, cycleNodePosition, segmentsHaveBetweenRedAttachment, segmentsHaveBetweenBlueAttachment);
@@ -378,68 +304,68 @@ const std::vector<int>& bipartition) const {
         // order of the segments outside the cycle
         std::vector<int> outsideOrder = computeOrder(cycleNode, outsideSegments, segmentsMinMaxRedAttachment, segmentsMinMaxBlueAttachment,
             segmentsHandler, cycleNodePosition, segmentsHaveBetweenRedAttachment, segmentsHaveBetweenBlueAttachment);
-        output->addSingleEdge(cycleNode->getIndex(), nextCycleNode->getIndex(), Color::BLACK);
+        output->addSingleEdge(cycleNode.getIndex(), nextCycleNode.getIndex(), DEFAULT_WEIGHT, Color::BLACK);
         for (int i = 0; i < insideOrder.size(); ++i) {
-            const BicoloredSegment* segment = segmentsHandler.getSegment(insideOrder[i]);
-            const EmbeddingSefe* embedding = embeddings[insideOrder[i]].get();
-            addMiddleEdges(segment, embedding, cycleNodePosition, graph, isSegmentCompatible[insideOrder[i]], output);
+            const Segment& segment = segmentsHandler.getSegment(insideOrder[i]);
+            const SubGraph& embedding = *embeddings[insideOrder[i]];
+            addMiddleEdges(segment, embedding, cycleNodePosition, graph, isSegmentCompatible[insideOrder[i]], *output);
         }
-        output->addSingleEdge(cycleNode->getIndex(), prevCycleNode->getIndex(), Color::BLACK);
+        output->addSingleEdge(cycleNode.getIndex(), prevCycleNode.getIndex(), DEFAULT_WEIGHT, Color::BLACK);
         for (int i = 0; i < outsideOrder.size(); ++i) {
-            const BicoloredSegment* segment = segmentsHandler.getSegment(outsideOrder[i]);
-            const EmbeddingSefe* embedding = embeddings[outsideOrder[i]].get();
-            addMiddleEdges(segment, embedding, cycleNodePosition, graph, isSegmentCompatible[outsideOrder[i]], output);
+            const Segment& segment = segmentsHandler.getSegment(outsideOrder[i]);
+            const SubGraph& embedding = *embeddings[outsideOrder[i]];
+            addMiddleEdges(segment, embedding, cycleNodePosition, graph, isSegmentCompatible[outsideOrder[i]], *output);
         }
     }
     for (int i = 0; i < segmentsHandler.size(); ++i) {
-        const BicoloredSegment* segment = segmentsHandler.getSegment(i);
-        const EmbeddingSefe* embedding = embeddings[i].get();
-        for (int nodeIndex = 0; nodeIndex < segment->size(); ++nodeIndex) {
-            const NodeWithColors* node = segment->getNode(nodeIndex);
-            const NodeWithColors* higherLevelNode = segment->getHigherLevelNode(node);
-            if (cycle->hasNode(higherLevelNode)) continue;
+        const Segment& segment = segmentsHandler.getSegment(i);
+        const SubGraph& embedding = *embeddings[i];
+        for (int nodeIndex = 0; nodeIndex < segment.size(); ++nodeIndex) {
+            const Node& node = segment.getNode(nodeIndex);
+            const Node& higherLevelNode = segment.getHigherLevelNode(node);
+            if (cycle.hasNode(higherLevelNode)) continue;
             std::vector<int> neighborsToAdd;
             std::vector<Color> neighborsToAddColor;
-            const NodeWithColors* embeddingNode = embedding->getNode(nodeIndex);
-            for (const Edge& edge : embeddingNode->getEdges()) {
-                const NodeWithColors* neighbor = edge.node;
-                const NodeWithColors* neighborSegment = segment->getNode(neighbor->getIndex());
-                const NodeWithColors* neighborHigherLevel = segment->getHigherLevelNode(neighborSegment);
-                neighborsToAdd.push_back(neighborHigherLevel->getIndex());
+            const Node& embeddingNode = embedding.getNode(nodeIndex);
+            for (const Edge& edge : embeddingNode.getEdges()) {
+                const Node& neighbor = edge.to;
+                const Node& neighborSegment = segment.getNode(neighbor.getIndex());
+                const Node& neighborHigherLevel = segment.getHigherLevelNode(neighborSegment);
+                neighborsToAdd.push_back(neighborHigherLevel.getIndex());
                 neighborsToAddColor.push_back(edge.color);
             }
             if (isSegmentCompatible[i])
                 for (int j = 0; j < neighborsToAdd.size(); ++j)
-                    output->addSingleEdge(higherLevelNode->getIndex(), neighborsToAdd[j], neighborsToAddColor[j]);
+                    output->addSingleEdge(higherLevelNode.getIndex(), neighborsToAdd[j], DEFAULT_WEIGHT, neighborsToAddColor[j]);
             else
                 for (int j = neighborsToAdd.size()-1; j >= 0; --j)
-                    output->addSingleEdge(higherLevelNode->getIndex(), neighborsToAdd[j], neighborsToAddColor[j]);
+                    output->addSingleEdge(higherLevelNode.getIndex(), neighborsToAdd[j], DEFAULT_WEIGHT, neighborsToAddColor[j]);
         }
     }
     return output;
 }
 
-void EmbedderSefe::addMiddleEdges(const BicoloredSegment* segment, const EmbeddingSefe* embedding, int cycleNodeIndex,
-const BicoloredSubGraph* higherLevel, bool compatible, EmbeddingSefe* output) const {
-    const IntersectionCycle* cycle = segment->getOriginalCycle();
-    const NodeWithColors* cycleNode = cycle->getNode(cycleNodeIndex);
-    const NodeWithColors* prevCycleNode = cycle->getPrevOfNode(cycleNode);
-    const NodeWithColors* nextCycleNode = cycle->getNextOfNode(cycleNode);
-    assert(cycleNode->getBicoloredGraph() == higherLevel);
-    assert(prevCycleNode->getBicoloredGraph() == higherLevel);
-    assert(nextCycleNode->getBicoloredGraph() == higherLevel);
-    assert(segment->isNodeAnAttachment(segment->getNode(cycleNodeIndex)));
-    const std::vector<Edge>& edges = embedding->getNode(cycleNodeIndex)->getEdges();
+void EmbedderSefe::addMiddleEdges(const Segment& segment, const SubGraph& embedding, int cycleNodeIndex,
+const SubGraph& higherLevel, bool compatible, SubGraph& output) const {
+    const BlackCycle& cycle = segment.getOriginalCycle();
+    const Node& cycleNode = cycle.getNode(cycleNodeIndex);
+    const Node& prevCycleNode = cycle.getPrevOfNode(cycleNode);
+    const Node& nextCycleNode = cycle.getNextOfNode(cycleNode);
+    assert(&cycleNode.getOwner() == &higherLevel);
+    assert(&prevCycleNode.getOwner() == &higherLevel);
+    assert(&nextCycleNode.getOwner() == &higherLevel);
+    assert(segment.isNodeAnAttachment(segment.getNode(cycleNodeIndex)));
+    const auto& edges = embedding.getNode(cycleNodeIndex).getEdges();
     int positionOfLastAddedNode = -1;
     for (int i = 0; i < edges.size(); ++i) {
-        const NodeWithColors* neighbor = edges[i].node;
-        const NodeWithColors* neighborSegment = segment->getNode(neighbor->getIndex());
-        const NodeWithColors* neighborHigherLevel = segment->getHigherLevelNode(neighborSegment);
-        if (neighborHigherLevel->getIndex() == prevCycleNode->getIndex()) {
+        const Node& neighbor = edges[i].to;
+        const Node& neighborSegment = segment.getNode(neighbor.getIndex());
+        const Node& neighborHigherLevel = segment.getHigherLevelNode(neighborSegment);
+        if (neighborHigherLevel.getIndex() == prevCycleNode.getIndex()) {
             positionOfLastAddedNode = i;
             break;
         }
-        if (neighborHigherLevel->getIndex() == nextCycleNode->getIndex()) {
+        if (neighborHigherLevel.getIndex() == nextCycleNode.getIndex()) {
             positionOfLastAddedNode = i;
             break;
         }
@@ -449,58 +375,58 @@ const BicoloredSubGraph* higherLevel, bool compatible, EmbeddingSefe* output) co
     std::vector<Color> neighborsToAddColor;
     for (int i = 1; i < edges.size(); ++i) {
         const int index = (i+positionOfLastAddedNode)%edges.size();
-        const NodeWithColors* neighbor = edges[index].node;
-        const NodeWithColors* neighborSegment = segment->getNode(neighbor->getIndex());
-        const NodeWithColors* neighborHigherLevel = segment->getHigherLevelNode(neighborSegment);
-        assert(neighborHigherLevel->getBicoloredGraph() == higherLevel);
-        assert(segment->getOriginalNode(neighborSegment) == higherLevel->getOriginalNode(neighborHigherLevel));
-        assert(segment->getOriginalNode(neighborSegment) == embedding->getOriginalNode(neighbor));
-        if (nextCycleNode == neighborHigherLevel) continue;
-        if (prevCycleNode == neighborHigherLevel) continue;
-        neighborsToAdd.push_back(neighborHigherLevel->getIndex());
+        const Node& neighbor = edges[index].to;
+        const Node& neighborSegment = segment.getNode(neighbor.getIndex());
+        const Node& neighborHigherLevel = segment.getHigherLevelNode(neighborSegment);
+        assert(&neighborHigherLevel.getOwner() == &higherLevel);
+        assert(&segment.getOriginalNode(neighborSegment) == &higherLevel.getOriginalNode(neighborHigherLevel));
+        assert(&segment.getOriginalNode(neighborSegment) == &embedding.getOriginalNode(neighbor));
+        if (&nextCycleNode == &neighborHigherLevel) continue;
+        if (&prevCycleNode == &neighborHigherLevel) continue;
+        neighborsToAdd.push_back(neighborHigherLevel.getIndex());
         neighborsToAddColor.push_back(edges[index].color);
     }
     if (compatible)
         for (int j = 0; j < neighborsToAdd.size(); ++j) {
-            NodeWithColors* from = output->getNode(cycleNode->getIndex());
-            NodeWithColors* to = output->getNode(neighborsToAdd[j]);
-            output->addSingleEdge(from, to, neighborsToAddColor[j]);
+            Node& from = output.getNode(cycleNode.getIndex());
+            Node& to = output.getNode(neighborsToAdd[j]);
+            output.addSingleEdge(from, to, DEFAULT_WEIGHT, neighborsToAddColor[j]);
         }
     else
         for (int j = neighborsToAdd.size()-1; j >= 0; --j) {
-            NodeWithColors* from = output->getNode(cycleNode->getIndex());
-            NodeWithColors* to = output->getNode(neighborsToAdd[j]);
-            output->addSingleEdge(from, to, neighborsToAddColor[j]);
+            Node& from = output.getNode(cycleNode.getIndex());
+            Node& to = output.getNode(neighborsToAdd[j]);
+            output.addSingleEdge(from, to, DEFAULT_WEIGHT, neighborsToAddColor[j]);
         }
 }
 
 // the embedding is "compatible" with the cycle if, drawn the cycle clockwise,
 // the embedding of the segment places the segment inside the cycle
-std::vector<bool> EmbedderSefe::compatibilityEmbeddingsAndCycle(const BicoloredSubGraph* component, const IntersectionCycle* cycle,
-const std::vector<std::unique_ptr<const EmbeddingSefe>>& embeddings, const BicoloredSegmentsHandler& segmentsHandler) const {
+std::vector<bool> EmbedderSefe::compatibilityEmbeddingsAndCycle(const SubGraph& component, const BlackCycle& cycle,
+const std::vector<std::unique_ptr<const SubGraph>>& embeddings, const SegmentsHandler& segmentsHandler) const {
     std::vector<bool> isCompatible(segmentsHandler.size());
     for (int i = 0; i < segmentsHandler.size(); ++i) {
-        const BicoloredSegment* segment = segmentsHandler.getSegment(i);
-        const EmbeddingSefe* embedding = embeddings[i].get();
-        const NodeWithColors* attachment = segment->getAttachments()[0]; // any attachment is good
-        const NodeWithColors* higherLevelNode = segment->getHigherLevelNode(attachment);
-        const NodeWithColors* next = cycle->getNextOfNode(higherLevelNode);
-        const NodeWithColors* prev = cycle->getPrevOfNode(higherLevelNode);
+        const Segment& segment = segmentsHandler.getSegment(i);
+        const SubGraph& embedding = *embeddings[i];
+        const Node& attachment = *segment.getAttachments()[0]; // any attachment is good
+        const Node& higherLevelNode = segment.getHigherLevelNode(attachment);
+        const Node& next = cycle.getNextOfNode(higherLevelNode);
+        const Node& prev = cycle.getPrevOfNode(higherLevelNode);
         int position = -1;
-        int attachmentIndex = attachment->getIndex();
-        const std::vector<Edge>& edges = embedding->getNode(attachmentIndex)->getEdges();
+        int attachmentIndex = attachment.getIndex();
+        const auto& edges = embedding.getNode(attachmentIndex).getEdges();
         assert(edges.size() >= 3);
         for (int j = 0; j < edges.size(); ++j) {
-            const NodeWithColors* neighbor = edges[j].node;
-            const NodeWithColors* higherLevelNeighbor = segment->getHigherLevelNode(neighbor);
-            if (higherLevelNeighbor == next) {
+            const Node& neighbor = edges[j].to;
+            const Node& higherLevelNeighbor = segment.getHigherLevelNode(neighbor);
+            if (&higherLevelNeighbor == &next) {
                 position = j;
                 break;
             }
         }
         assert(position != -1);
         int nextPosition = (position+1)%edges.size();
-        isCompatible[i] = (segment->getHigherLevelNode(edges[nextPosition].node) != prev);
+        isCompatible[i] = (&segment.getHigherLevelNode(edges[nextPosition].to) != &prev);
     }
     return isCompatible;
 }
@@ -509,9 +435,8 @@ const std::vector<std::unique_ptr<const EmbeddingSefe>>& embeddings, const Bicol
 // returns 1 if the first segment goes after the second,
 // returns 0 if they can go in any order
 // (considering the segments to be placed outside the cycle)
-int compareSegments(const NodeWithColors* cycleNode, const BicoloredSegment* segment1, const BicoloredSegment* segment2,
-int segmentsMinMaxAttachment[][2], int segment1index, int segment2index,
-int cycleNodePosition, bool segmentsHasBetweenAttachment[]) {
+int EmbedderSefe::compareSegments(int segmentsMinMaxAttachment[][2], int segment1index, int segment2index,
+int cycleNodePosition, bool segmentsHasBetweenAttachment[]) const {
     int seg1min = segmentsMinMaxAttachment[segment1index][0];
     int seg1max = segmentsMinMaxAttachment[segment1index][1];
     bool hasSeg1between = segmentsHasBetweenAttachment[segment1index];
@@ -571,7 +496,7 @@ int cycleNodePosition, bool segmentsHasBetweenAttachment[]) {
     return 0;
 }
 
-bool EmbedderSefe::handleDrawsOfSegments(int cycleNodePosition, const BicoloredSegmentsHandler& segmentsHandler,
+bool EmbedderSefe::handleDrawsOfSegments(int cycleNodePosition, const SegmentsHandler& segmentsHandler,
 int segmentsMinMaxRedAttachment[][2], int segmentsMinMaxBlueAttachment[][2], int segmentIndex1, int segmentIndex2) const {
     bool isCycleNodeMinAttachment = false;
     if (segmentsMinMaxRedAttachment[segmentIndex1][0] == cycleNodePosition ||
@@ -593,33 +518,28 @@ int segmentsMinMaxRedAttachment[][2], int segmentsMinMaxBlueAttachment[][2], int
 // assuming the cycle is drawn CLOCKWISE, and assuming the segments incident to the
 // attachment "cycleNode" must be drawn OUTSIDE the cycle, computes the order of
 // placement of these segments such that they don't intersect
-std::vector<int> EmbedderSefe::computeOrder(const NodeWithColors* cycleNode, const std::vector<int>& segmentsIndexes,
-int segmentsMinMaxRedAttachment[][2], int segmentsMinMaxBlueAttachment[][2], const BicoloredSegmentsHandler& segmentsHandler,
+std::vector<int> EmbedderSefe::computeOrder(const Node& cycleNode, const std::vector<int>& segmentsIndexes,
+int segmentsMinMaxRedAttachment[][2], int segmentsMinMaxBlueAttachment[][2], const SegmentsHandler& segmentsHandler,
 int cycleNodePosition, bool segmentsHasBetweenRedAttachment[], bool segmentsHasBetweenBlueAttachment[]) const {
     std::vector<int> order(segmentsIndexes);
     for (int i = 0; i < int(order.size())-1; ++i) {
         int min = i;
-        const BicoloredSegment* minSegment = segmentsHandler.getSegment(order[min]);
         for (int j = i+1; j < order.size(); ++j) {
-            const BicoloredSegment* segmentCandidate = segmentsHandler.getSegment(order[j]);
-            int v = compareSegments(cycleNode, minSegment, segmentCandidate, segmentsMinMaxRedAttachment,
-                order[min], order[j], cycleNodePosition, segmentsHasBetweenRedAttachment);
+            int v = compareSegments(segmentsMinMaxRedAttachment, order[min], order[j],
+                cycleNodePosition, segmentsHasBetweenRedAttachment);
             if (v == 0)
-                v = compareSegments(cycleNode, minSegment, segmentCandidate, segmentsMinMaxBlueAttachment,
-                    order[min], order[j], cycleNodePosition, segmentsHasBetweenBlueAttachment);
+                v = compareSegments(segmentsMinMaxBlueAttachment, order[min], order[j],
+                    cycleNodePosition, segmentsHasBetweenBlueAttachment);
             if (v < 0)
                 continue;
             if (v > 0) {
                 min = j;
-                minSegment = segmentsHandler.getSegment(order[min]);
                 continue;
             }
             bool changeMinSegment = handleDrawsOfSegments(cycleNodePosition, segmentsHandler, segmentsMinMaxRedAttachment,
                 segmentsMinMaxBlueAttachment, order[j], order[min]);
-            if (changeMinSegment) {
+            if (changeMinSegment)
                 min = j;
-                minSegment = segmentsHandler.getSegment(order[min]);
-            }
         }
         int temp = order[min];
         order[min] = order[i];

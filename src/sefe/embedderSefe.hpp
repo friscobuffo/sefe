@@ -3,53 +3,42 @@
 
 #include <optional>
 #include <vector>
+#include <memory>
 
 #include "../basic/graph.hpp"
-#include "bicoloredGraph.hpp"
-#include "bicoloredSegment.hpp"
-#include "intersectionCycle.hpp"
-#include "../auslander-parter/embedder.hpp"
-
-class EmbeddingSefe : public BicoloredSubGraph {
-public:
-    EmbeddingSefe(const BicoloredSubGraph* originalGraph);
-    EmbeddingSefe(const BicoloredGraph* originalGraph);
-    void addSingleEdge(int fromIndex, int toIndex, Color color);
-    void addSingleEdge(NodeWithColors* from, const NodeWithColors* to, Color color);
-    const Embedding* computeRedEmbedding(const Graph* red) const;
-    const Embedding* computeBlueEmbedding(const Graph* blue) const;
-    const std::vector<int> findBoundingFace(int p1index, int p2index, Color color) const;
-};
+#include "../components/segment.hpp"
+#include "../components/cycle.hpp"
 
 class EmbedderSefe {
 private:
-    bool testSefe(const BicoloredSubGraph* bicoloredGraph, IntersectionCycle* cycle) const;
-    void makeCycleGood(IntersectionCycle* cycle, const BicoloredSegment* segment) const;
-    const EmbeddingSefe* baseCaseGraph(const BicoloredGraph* graph) const;
-    std::optional<const EmbeddingSefe*> embedGraph(const BicoloredSubGraph* graph) const;
-    std::optional<const EmbeddingSefe*> embedGraph(const BicoloredSubGraph* graph,
-        IntersectionCycle* cycle) const;
-    const EmbeddingSefe* baseCaseCycle(const BicoloredSubGraph* cycle) const;
-    const EmbeddingSefe* baseCasePath(const BicoloredSubGraph* component, const IntersectionCycle* cycle) const;
-    const EmbeddingSefe* mergeSegmentsEmbeddings(const BicoloredSubGraph* graph, const IntersectionCycle* cycle,
-        const std::vector<std::unique_ptr<const EmbeddingSefe>>& embeddings, const BicoloredSegmentsHandler& segmentsHandler,
-        const std::vector<int>& bipartition) const;
-    void computeMinAndMaxSegmentsAttachments(const BicoloredSegmentsHandler& segmentsHandler,
+    bool testSefe(const SubGraph& unionGraph, BlackCycle& cycle) const;
+    void makeCycleGood(BlackCycle& cycle, const Segment& segment) const;
+    const SubGraph* baseCaseGraph(const Graph& unionGraph) const;
+    std::optional<const SubGraph*> embedGraph(const SubGraph& unionGraph) const;
+    std::optional<const SubGraph*> embedGraph(const SubGraph& unionGraph, BlackCycle& cycle) const;
+    const SubGraph* baseCaseCycle(const SubGraph& cycle) const;
+    const SubGraph* baseCasePath(const SubGraph& unionGraph, const BlackCycle& cycle) const;
+    const SubGraph* mergeSegmentsEmbeddings(const SubGraph& unionGraph, const BlackCycle& cycle,
+        const std::vector<std::unique_ptr<const SubGraph>>& embeddings,
+        const SegmentsHandler& segmentsHandler, const std::vector<int>& bipartition) const;
+    void computeMinAndMaxSegmentsAttachments(const SegmentsHandler& segmentsHandler,
         int segmentsMinMaxRedAttachment[][2], int segmentsMinMaxBlueAttachment[][2],
         bool segmentsHaveBetweenRedAttachment[], bool segmentsHaveBetweenBlueAttachment[]) const;
-    std::vector<bool> compatibilityEmbeddingsAndCycle(const BicoloredSubGraph* component, const IntersectionCycle* cycle,
-    const std::vector<std::unique_ptr<const EmbeddingSefe>>& embeddings, const BicoloredSegmentsHandler& segmentsHandler) const;
-    std::vector<int> computeOrder(const NodeWithColors* cycleNode, const std::vector<int>& segmentsIndexes,
+    std::vector<bool> compatibilityEmbeddingsAndCycle(const SubGraph& component, const BlackCycle& cycle,
+    const std::vector<std::unique_ptr<const SubGraph>>& embeddings, const SegmentsHandler& segmentsHandler) const;
+    int compareSegments(int segmentsMinMaxAttachment[][2], int segment1index, int segment2index,
+        int cycleNodePosition, bool segmentsHasBetweenAttachment[]) const;
+    std::vector<int> computeOrder(const Node& cycleNode, const std::vector<int>& segmentsIndexes,
         int segmentsMinMaxRedAttachment[][2], int segmentsMinMaxBlueAttachment[][2],
-        const BicoloredSegmentsHandler& segmentsHandler, int cycleNodePosition,
+        const SegmentsHandler& segmentsHandler, int cycleNodePosition,
         bool segmentsHaveBetweenRedAttachment[], bool segmentsHaveBetweenBlueAttachment[]) const;
-    bool handleDrawsOfSegments(int cycleNodePosition, const BicoloredSegmentsHandler& segmentsHandler,
+    bool handleDrawsOfSegments(int cycleNodePosition, const SegmentsHandler& segmentsHandler,
         int segmentsMinMaxRedAttachment[][2], int segmentsMinMaxBlueAttachment[][2], int segmentIndex1, int segmentIndex2) const;
-    void addMiddleEdges(const BicoloredSegment* segment, const EmbeddingSefe* embedding, int cycleNodeIndex,
-        const BicoloredSubGraph* higherLevel, bool compatible, EmbeddingSefe* output) const;
+    void addMiddleEdges(const Segment& segment, const SubGraph& embedding, int cycleNodeIndex,
+        const SubGraph& higherLevel, bool compatible, SubGraph& output) const;
 public:
-    bool testSefe(const Graph* graph1, const Graph* graph2) const;
-    std::optional<const EmbeddingSefe*> embedGraph(const BicoloredGraph* graph) const;
+    bool testSefe(const Graph& graph1, const Graph& graph2) const;
+    std::optional<std::unique_ptr<const SubGraph>> embedGraph(const Graph& unionGraph) const;
 };
 
 #endif

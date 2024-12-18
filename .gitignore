@@ -1,7 +1,6 @@
 /.vscode
-main
 /bin
-/embeddings
-/OGDF
 to-*.txt
 lines.py
+/build
+/OGDF

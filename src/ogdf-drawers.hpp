@@ -6,9 +6,9 @@
 #include "basic/graph.hpp"
 #include "auslander-parter/embedder.hpp"
 
-void drawEmbeddingToFile(const Graph* graph, const Embedding* embedding);
+void drawEmbeddingToFile(const Graph& graph, const Graph& embedding);
 
-void drawSefeProjectionEmbeddingToFile(const Embedding* embedding, const Graph* intersection,
+void drawSefeProjectionEmbeddingToFile(const Graph& embedding, const Graph& intersection,
     const std::string& color, const std::string& outputFilename);
 
 #endif
