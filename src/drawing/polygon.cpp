@@ -1,7 +1,7 @@
 #include "polygon.hpp"
 #include <cassert>
 #include <fstream>
-#include "../../basic/graph.hpp"
+#include "../basic/graph.hpp"
 #include <cmath>
 #include <algorithm>
 

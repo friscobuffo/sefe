@@ -30,6 +30,10 @@ const std::vector<std::unique_ptr<const SubGraph>>& embeddings) const {
 }
 
 std::optional<std::unique_ptr<const SubGraph>> Embedder::embedGraph(const Graph& graph) const {
+    if (!graph.isGraphUndirected()) {
+        std::cerr << "Graph is not undirected" << std::endl;
+        return std::nullopt;
+    }
     if (graph.size() < 4) return baseCaseGraph(graph);
     if (graph.totalNumberOfEdges()/2 > (3*graph.size()-6))
         return std::nullopt;

@@ -242,6 +242,24 @@ std::string Graph::toString() const {
     return result.str();
 }
 
+// checks that each edge is present in both directions
+bool Graph::isGraphUndirected() const {
+    bool foundEdge[size()][size()];
+    for (int i = 0; i < size(); ++i)
+        for (int j = 0; j < size(); ++j)
+            foundEdge[i][j] = false;
+    for (int i = 0; i < size(); ++i) {
+        const Node& node = getNode(i);
+        for (const Edge& edge : node.getEdges()) {
+            const Node& neighbor = edge.to;
+            if (foundEdge[i][neighbor.getIndex()])
+                return false;
+            foundEdge[i][neighbor.getIndex()] = true;
+        }
+    }
+    return true;
+}
+
 std::unique_ptr<Graph> Graph::loadFromFile(std::string filename) {
     int nodesNumber{};
     std::ifstream infile(filename);
@@ -379,6 +397,13 @@ void SubGraph::setOriginalNode(const Node& node, const Node& originalNode) {
     assert(&node.getOwner() == this);
     assert(&originalNode.getOwner() == &originalGraph_m);
     originalNodes_m.setPointer(index, &originalNode);
+}
+
+void SubGraph::resetOriginalNode(const Node& node) {
+    const int index = node.getIndex();
+    assert(&node.getOwner() == this);
+    assert(&getOriginalNode(node) != nullptr);
+    originalNodes_m.resetPointer(index);
 }
 
 std::string SubGraph::toString() const {

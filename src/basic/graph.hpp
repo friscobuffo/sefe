@@ -36,6 +36,7 @@ public:
     const std::vector<int> findBoundingFace(int p1index, int p2index, Color color) const;
     virtual std::unique_ptr<SubGraph> createCopy() const;
     virtual std::string toString() const override;
+    bool isGraphUndirected() const;
 };
 
 class SubGraph : public Graph {
@@ -47,6 +48,7 @@ public:
     SubGraph(const Graph* graph);
     const Node& getOriginalNode(const Node& node) const;
     void setOriginalNode(const Node& node, const Node& originalNode);
+    void resetOriginalNode(const Node& node);
     const Graph& getOriginalGraph() const;
     std::unique_ptr<SubGraph> createCopy() const override;
     std::string toString() const override;

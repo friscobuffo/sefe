@@ -58,6 +58,12 @@ public:
         assert(pointers_m[index] == nullptr);
         pointers_m[index] = pointer;
     }
+
+    void resetPointer(const int index) {
+        assert(index >= 0 && index < pointers_m.size());
+        assert(&pointers_m[index] != nullptr);
+        pointers_m[index] = nullptr;
+    }
 };
 
 inline void saveStringToFile(std::string filename, std::string& content) {

@@ -15,6 +15,10 @@ extern "C" {
             std::cerr << "Graph is not connected." << std::endl;
             return -1;
         }
+        if (!graph->isGraphUndirected()) {
+            std::cerr << "Graph is not undirected." << std::endl;
+            return -2;
+        }
         Embedder embedder{};
         std::optional<std::unique_ptr<const SubGraph>> embedding = embedder.embedGraph(*graph);
         if (embedding.has_value()) {
@@ -56,7 +60,7 @@ extern "C" {
         std::string embeddingString = embedding.value()->toString();
         saveStringToFile("/embedding-sefe.txt", embeddingString);
 
-        drawSefeEmbeddingToFile(*embedding.value(), *intersection, "/embedding-red.svg");
+        // drawSefeEmbeddingToFile(*embedding.value(), *intersection, "/embedding-red.svg");
         
         return 1;
     }
