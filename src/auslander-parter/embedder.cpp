@@ -31,7 +31,7 @@ const std::vector<std::unique_ptr<const SubGraph>>& embeddings) const {
 
 std::optional<std::unique_ptr<const SubGraph>> Embedder::embedGraph(const Graph& graph) const {
     if (graph.size() < 4) return baseCaseGraph(graph);
-    if (graph.totalNumberOfEdges() > (3*graph.size()-6))
+    if (graph.totalNumberOfEdges()/2 > (3*graph.size()-6))
         return std::nullopt;
     const BiconnectedComponentsHandler bicComps(graph);
     std::vector<std::unique_ptr<const SubGraph>> embeddings{};
@@ -157,6 +157,8 @@ int segmentsMinAttachment[], int segmentsMaxAttachment[], const SegmentsHandler&
     return order;
 }
 
+// segment's embedding is compatible with the cycle if, drawing the cycle clockwise,
+// places the segment inside of it
 std::vector<bool> Embedder::compatibilityEmbeddingsAndCycle(const SubGraph& component, const BlackCycle& cycle,
 const std::vector<std::unique_ptr<const SubGraph>>& embeddings, const SegmentsHandler& segmentsHandler) const {
     std::vector<bool> isCompatible(segmentsHandler.size());
@@ -397,7 +399,7 @@ std::unique_ptr<const SubGraph> Embedder::baseCaseGraph(const Graph& graph) cons
     assert(graph.size() < 4);
     std::unique_ptr<SubGraph> embedding = std::make_unique<SubGraph>(&graph);
     for (int i = 0; i < graph.size(); ++i) {
-        embedding->addNode(Color::BLACK);
+        embedding->addNode(graph.getNode(i).getColor());
         embedding->setOriginalNode(embedding->getNode(i), graph.getNode(i));
     }
     for (int nodeIndex = 0; nodeIndex < graph.size(); ++nodeIndex) {
@@ -411,38 +413,42 @@ std::unique_ptr<const SubGraph> Embedder::baseCaseGraph(const Graph& graph) cons
 std::unique_ptr<const SubGraph> Embedder::baseCaseComponent(const SubGraph& component, const BlackCycle& cycle) const {
     std::unique_ptr<SubGraph> embedding = std::make_unique<SubGraph>(&component);
     for (int i = 0; i < component.size(); ++i) {
-        embedding->addNode(Color::BLACK);
+        embedding->addNode(component.getNode(i).getColor());
         embedding->setOriginalNode(embedding->getNode(i), component.getOriginalNode(component.getNode(i)));
     }
     for (int nodeIndex = 0; nodeIndex < component.size(); ++nodeIndex) {
         const Node& node = component.getNode(nodeIndex);
         const auto& edges = node.getEdges();
         if (edges.size() == 2) {
-            embedding->addSingleEdge(nodeIndex, edges[0].to.getIndex(), 1.0, edges[0].color);
-            embedding->addSingleEdge(nodeIndex, edges[1].to.getIndex(), 1.0, edges[1].color);
+            embedding->addSingleEdge(nodeIndex, edges[0].to.getIndex(), edges[0].weight, edges[0].color);
+            embedding->addSingleEdge(nodeIndex, edges[1].to.getIndex(), edges[1].weight, edges[1].color);
             continue;
         }
         assert(edges.size() == 3);
         int neighborsOrder[3] = {-1, -1, -1};
         Color neighborsOrderColor[3];
+        double neighborsOrderWeight[3];
         for (const auto& edge : edges) {
             const Node& neighbor = edge.to;
             if (&cycle.getNextOfNode(node) == &neighbor) {
                 neighborsOrder[0] = neighbor.getIndex();
                 neighborsOrderColor[0] = edge.color;
+                neighborsOrderWeight[0] = edge.weight;
                 continue;
             }
             if (&cycle.getPrevOfNode(node) == &neighbor) {
                 neighborsOrder[2] = neighbor.getIndex();
                 neighborsOrderColor[2] = edge.color;
+                neighborsOrderWeight[2] = edge.weight;
                 continue;
             }
             neighborsOrder[1] = neighbor.getIndex();
             neighborsOrderColor[1] = edge.color;
+            neighborsOrderWeight[1] = edge.weight;
         }
         for (int i = 0; i < 3; ++i) {
             assert(neighborsOrder[i] != -1);
-            embedding->addSingleEdge(nodeIndex, neighborsOrder[i], 1.0, neighborsOrderColor[i]);
+            embedding->addSingleEdge(nodeIndex, neighborsOrder[i], neighborsOrderWeight[i], neighborsOrderColor[i]);
         }
     }
     return embedding;
@@ -451,7 +457,7 @@ std::unique_ptr<const SubGraph> Embedder::baseCaseComponent(const SubGraph& comp
 std::unique_ptr<const SubGraph> Embedder::baseCaseCycle(const SubGraph& cycle) const {
     std::unique_ptr<SubGraph> embedding = std::make_unique<SubGraph>(&cycle);
     for (int i = 0; i < cycle.size(); ++i) {
-        embedding->addNode(Color::BLACK);
+        embedding->addNode(cycle.getNode(i).getColor());
         embedding->setOriginalNode(embedding->getNode(i), cycle.getOriginalNode(cycle.getNode(i)));
     }
     for (int i = 0; i < cycle.size()-1; ++i)
@@ -498,6 +504,5 @@ int Embedder::computeNumberOfFacesInEmbedding(const SubGraph& embedding) const {
 
 bool Embedder::isEmbeddingGood(const SubGraph& embedding) const {
     int numberOfFaces = computeNumberOfFacesInEmbedding(embedding);
-    // std::cout << "Number of faces: " << numberOfFaces << "\n";
-    return (embedding.size() - embedding.totalNumberOfEdges() + numberOfFaces) == 2;
+    return (embedding.size() - embedding.totalNumberOfEdges()/2 + numberOfFaces) == 2;
 }

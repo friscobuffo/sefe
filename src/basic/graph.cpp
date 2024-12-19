@@ -177,7 +177,7 @@ int Graph::totalNumberOfEdges() const {
     int edges = 0;
     for (int i = 0; i < size(); ++i)
         edges += getNode(i).getEdges().size();
-    return edges/2;
+    return edges;
 }
 
 std::unique_ptr<SubGraph> Graph::computeRedProjection() const {
