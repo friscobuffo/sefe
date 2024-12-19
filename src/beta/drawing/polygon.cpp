@@ -1,7 +1,7 @@
 #include "polygon.hpp"
 #include <cassert>
 #include <fstream>
-#include "dynamic_graph.hpp"
+#include "../../basic/graph.hpp"
 #include <cmath>
 #include <algorithm>
 
@@ -86,11 +86,12 @@ bool Polygon2D::isInside(Line2D& l) {
         Point2D& p1 = m_points[i];
         Point2D& p2 = m_points[(i + 1) % n];
         Line2D edge(p1, p2);
-        if (l.isIntersecting(edge))
+        if (l.isIntersecting(edge)) {
             if (l.isPointOnLine(p1) || l.isPointOnLine(p2))
                 continue;
             else
                 return false;
+        }
     }
     if (isOnBoundary(l.p1) && isOnBoundary(l.p2)) {
         auto m = (l.p1 + l.p2)/2.0;
@@ -107,31 +108,36 @@ Path2D Polygon2D::computePathInside(Point2D& p1, Point2D& p2) {
         path.addPoint(p2);
         return path;
     }
-    DynamicGraph<Point2D> graph;
-    graph.addNode(p1);
-    graph.addNode(p2);
+    Graph graph;
+    graph.addNode(Color::BLACK);
+    graph.addNode(Color::BLACK);
+    std::vector<Point2D> points;
+    points.push_back(p1);
+    points.push_back(p2);
     for (int i = 0; i < m_points.size()-1; ++i) {
         for (int j = i+2; j < m_points.size(); ++j) {
             Point2D insideVertex = (m_points[i]+m_points[j])/2.0;
-            if (isInside(insideVertex) && !isOnBoundary(insideVertex))
-                graph.addNode(insideVertex);
+            if (isInside(insideVertex) && !isOnBoundary(insideVertex)) {
+                graph.addNode(Color::BLACK);
+                points.push_back(insideVertex);
+            }
         }
     }
     for (int i = 0; i < graph.size()-1; ++i) {
-        Point2D& p1 = graph.getNode(i).getContent();
+        Point2D& p1 = points[graph.getNode(i).getIndex()];
         for (int j = i+1; j < graph.size(); ++j) {
-            Point2D& p2 = graph.getNode(j).getContent();
+            Point2D& p2 = points[graph.getNode(j).getIndex()];
             Line2D line(p1, p2);
             if (isInside(line)) {
                 double distance = p1.distance(p2);
-                graph.addEdge(i,j,distance);
+                graph.addEdge(i,j,distance, Color::BLACK);
             }
         }
     }
     auto path = graph.shortestPath(0,1);
     Path2D result;
     for (int i = 0; i < path.size(); ++i) {
-        Point2D& p = graph.getNode(path[i]).getContent();
+        Point2D& p = points[graph.getNode(path[i]).getIndex()];
         result.addPoint(p);
     }
     return result;

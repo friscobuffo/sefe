@@ -39,7 +39,7 @@ if (ENVIRONMENT_IS_NODE) {
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
-// include: /tmp/tmp_gkphqw9.js
+// include: /tmp/tmp4cw63t41.js
 
   if (!Module.expectedDataFileDownloads) {
     Module.expectedDataFileDownloads = 0;
@@ -218,25 +218,25 @@ Module['FS_createPath']("/example-graphs", "graphs", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/example-graphs/a0_1.txt", "start": 0, "end": 92}, {"filename": "/example-graphs/a1_1.txt", "start": 92, "end": 193}, {"filename": "/example-graphs/graphs-sefe/a0.txt", "start": 193, "end": 230}, {"filename": "/example-graphs/graphs-sefe/a1.txt", "start": 230, "end": 267}, {"filename": "/example-graphs/graphs-sefe/b0.txt", "start": 267, "end": 300}, {"filename": "/example-graphs/graphs-sefe/b1.txt", "start": 300, "end": 333}, {"filename": "/example-graphs/graphs-sefe/c0.txt", "start": 333, "end": 371}, {"filename": "/example-graphs/graphs-sefe/c1.txt", "start": 371, "end": 405}, {"filename": "/example-graphs/graphs-sefe/d0.txt", "start": 405, "end": 463}, {"filename": "/example-graphs/graphs-sefe/d1.txt", "start": 463, "end": 517}, {"filename": "/example-graphs/graphs-sefe/e0.txt", "start": 517, "end": 567}, {"filename": "/example-graphs/graphs-sefe/e1.txt", "start": 567, "end": 617}, {"filename": "/example-graphs/graphs-sefe/f0 (no SEFE).txt", "start": 617, "end": 671}, {"filename": "/example-graphs/graphs-sefe/f1 (no SEFE).txt", "start": 671, "end": 721}, {"filename": "/example-graphs/graphs-sefe/g0.txt", "start": 721, "end": 771}, {"filename": "/example-graphs/graphs-sefe/g1.txt", "start": 771, "end": 821}, {"filename": "/example-graphs/graphs/g1.txt", "start": 821, "end": 854}, {"filename": "/example-graphs/graphs/g11.txt", "start": 854, "end": 946}, {"filename": "/example-graphs/graphs/g2.txt", "start": 946, "end": 975}, {"filename": "/example-graphs/graphs/g3.txt", "start": 975, "end": 1028}, {"filename": "/example-graphs/graphs/g4.txt", "start": 1028, "end": 1086}, {"filename": "/example-graphs/graphs/g5.txt", "start": 1086, "end": 1119}, {"filename": "/example-graphs/graphs/g6.txt", "start": 1119, "end": 1152}, {"filename": "/example-graphs/graphs/k23.txt", "start": 1152, "end": 1177}, {"filename": "/example-graphs/graphs/k24.txt", "start": 1177, "end": 1210}, {"filename": "/example-graphs/graphs/k33.txt", "start": 1210, "end": 1247}, {"filename": "/example-graphs/graphs/k5.txt", "start": 1247, "end": 1288}], "remote_package_size": 1288});
+    loadPackage({"files": [{"filename": "/example-graphs/graphs-sefe/a0.txt", "start": 0, "end": 37}, {"filename": "/example-graphs/graphs-sefe/a1.txt", "start": 37, "end": 74}, {"filename": "/example-graphs/graphs-sefe/b0.txt", "start": 74, "end": 107}, {"filename": "/example-graphs/graphs-sefe/b1.txt", "start": 107, "end": 140}, {"filename": "/example-graphs/graphs-sefe/c0.txt", "start": 140, "end": 178}, {"filename": "/example-graphs/graphs-sefe/c1.txt", "start": 178, "end": 212}, {"filename": "/example-graphs/graphs-sefe/d0.txt", "start": 212, "end": 270}, {"filename": "/example-graphs/graphs-sefe/d1.txt", "start": 270, "end": 324}, {"filename": "/example-graphs/graphs-sefe/e0.txt", "start": 324, "end": 374}, {"filename": "/example-graphs/graphs-sefe/e1.txt", "start": 374, "end": 424}, {"filename": "/example-graphs/graphs-sefe/f0 (no SEFE).txt", "start": 424, "end": 478}, {"filename": "/example-graphs/graphs-sefe/f1 (no SEFE).txt", "start": 478, "end": 528}, {"filename": "/example-graphs/graphs-sefe/g0.txt", "start": 528, "end": 578}, {"filename": "/example-graphs/graphs-sefe/g1.txt", "start": 578, "end": 628}, {"filename": "/example-graphs/graphs-sefe/h0.txt", "start": 628, "end": 717}, {"filename": "/example-graphs/graphs-sefe/h1.txt", "start": 717, "end": 813}, {"filename": "/example-graphs/graphs/g1.txt", "start": 813, "end": 846}, {"filename": "/example-graphs/graphs/g11.txt", "start": 846, "end": 938}, {"filename": "/example-graphs/graphs/g2.txt", "start": 938, "end": 967}, {"filename": "/example-graphs/graphs/g3.txt", "start": 967, "end": 1020}, {"filename": "/example-graphs/graphs/g4.txt", "start": 1020, "end": 1078}, {"filename": "/example-graphs/graphs/g5.txt", "start": 1078, "end": 1111}, {"filename": "/example-graphs/graphs/g6.txt", "start": 1111, "end": 1144}, {"filename": "/example-graphs/graphs/k23.txt", "start": 1144, "end": 1169}, {"filename": "/example-graphs/graphs/k24.txt", "start": 1169, "end": 1202}, {"filename": "/example-graphs/graphs/k33.txt", "start": 1202, "end": 1239}, {"filename": "/example-graphs/graphs/k5.txt", "start": 1239, "end": 1280}], "remote_package_size": 1280});
 
   })();
 
-// end include: /tmp/tmp_gkphqw9.js
-// include: /tmp/tmp7d224o1_.js
+// end include: /tmp/tmp4cw63t41.js
+// include: /tmp/tmpbgr93wri.js
 
     // All the pre-js content up to here must remain later on, we need to run
     // it.
     if (Module['$ww'] || (typeof ENVIRONMENT_IS_PTHREAD != 'undefined' && ENVIRONMENT_IS_PTHREAD)) Module['preRun'] = [];
     var necessaryPreJSTasks = Module['preRun'].slice();
-  // end include: /tmp/tmp7d224o1_.js
-// include: /tmp/tmpbdkj70pw.js
+  // end include: /tmp/tmpbgr93wri.js
+// include: /tmp/tmpy73awr9r.js
 
     if (!Module['preRun']) throw 'Module.preRun should exist because file support used it; did a pre-js delete it?';
     necessaryPreJSTasks.forEach((task) => {
       if (Module['preRun'].indexOf(task) < 0) throw 'All preRun tasks that exist before user pre-js code should remain after; did you replace Module or modify Module.preRun?';
     });
-  // end include: /tmp/tmpbdkj70pw.js
+  // end include: /tmp/tmpy73awr9r.js
 
 
 // Sometimes an existing Module object exists with properties

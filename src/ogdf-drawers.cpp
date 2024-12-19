@@ -132,3 +132,95 @@ void drawSefeProjectionEmbeddingToFile(const Graph& embedding, const Graph& inte
     } else
         std::cerr << "Error generating SVG content." << std::endl;
 }
+
+#include "beta/drawing/polygon.hpp"
+
+void drawSefeEmbeddingToFile(const Graph& embedding, const Graph& intersection,
+const std::string& outputFilename) {
+    std::unique_ptr<const SubGraph> redEmbedding = embedding.computeRedProjection();
+    std::unique_ptr<ogdf::Graph> ogdfGraph = OgdfUtils::myGraphToOgdf(*redEmbedding);
+    ogdf::GraphAttributes GA(*ogdfGraph, ogdf::GraphAttributes::nodeGraphics |
+                            ogdf::GraphAttributes::edgeGraphics |
+                            ogdf::GraphAttributes::nodeLabel | ogdf::GraphAttributes::edgeStyle |
+                            ogdf::GraphAttributes::nodeStyle | ogdf::GraphAttributes::edgeArrow);
+    for (ogdf::node v : ogdfGraph->nodes) {
+        GA.label(v) = std::to_string(v->index());
+        GA.shape(v) = ogdf::Shape::Ellipse;
+    }
+    for (ogdf::edge e : ogdfGraph->edges) {
+        ogdf::node from = e->source();
+        ogdf::node to = e->target();
+        int fromIndex = from->index();
+        int toIndex = to->index();
+        if (!intersection.hasEdge(fromIndex, toIndex))
+            GA.strokeColor(e) = ogdf::Color(255, 0, 0);
+        GA.strokeWidth(e) = 1.5;
+        GA.arrowType(e) = ogdf::EdgeArrow::None;
+    }
+
+    ogdf::PlanarDrawLayout layout;
+    layout.setEmbedder(new AuslanderParterEmbedderSefe(*redEmbedding));
+    layout.call(GA);
+
+    std::vector<double> xCoords;
+    std::vector<double> yCoords;
+    for (ogdf::node v : ogdfGraph->nodes) {
+        xCoords.push_back(GA.x(v));
+        yCoords.push_back(GA.y(v));
+    }
+
+    for (int nodeIndex = 0; nodeIndex < embedding.size(); ++nodeIndex) {
+        const Node& node = embedding.getNode(nodeIndex);
+        for (const auto& edge : node.getEdges()) {
+            int neighborIndex = edge.to.getIndex();
+            if (nodeIndex > neighborIndex) 
+                continue;
+            if (edge.color != Color::BLUE)
+                continue;
+            std::vector<int> boundingFace = embedding.findBoundingFace(nodeIndex, neighborIndex, Color::BLUE);
+            int startingIndex = -1;
+            int endingIndex = -1;
+            for (int i = 0; i < boundingFace.size(); ++i) {
+                if (boundingFace[i] == nodeIndex)
+                    startingIndex = i;
+                if (boundingFace[i] == neighborIndex)
+                    endingIndex = i;
+            }
+            std::vector<Point2D> points;
+            for (int i = 0; i < boundingFace.size(); ++i) {
+                int index = boundingFace[i];
+                points.push_back(Point2D(xCoords[index], yCoords[index]));
+            }
+            Polygon2D polygon{points};
+            const auto insidePath = polygon.computePathInside(points[startingIndex], points[endingIndex]);
+            ogdf::node u = ogdfGraph->newNode();
+            GA.x(u) = insidePath.points[0].x;
+            GA.y(u) = insidePath.points[0].y;
+            GA.width(u) = 0.0;
+            GA.height(u) = 0.0;
+            GA.shape(u) = ogdf::Shape::Ellipse;
+            for (int i = 1; i < insidePath.points.size(); ++i) {
+                ogdf::node v = ogdfGraph->newNode();
+                GA.x(v) = insidePath.points[i].x;
+                GA.y(v) = insidePath.points[i].y;
+                GA.width(v) = 0.0;
+                GA.height(v) = 0.0;
+                GA.shape(v) = ogdf::Shape::Ellipse;
+                ogdf::edge e = ogdfGraph->newEdge(u, v);
+                GA.strokeWidth(e) = 1.5;
+                GA.strokeColor(e) = ogdf::Color(0, 0, 255);
+                GA.arrowType(e) = ogdf::EdgeArrow::None;
+                u = v;
+            }
+        }
+    }
+    std::ostringstream svgStream;
+    ogdf::GraphIO::SVGSettings svgSettings;
+    if (ogdf::GraphIO::drawSVG(GA, svgStream, svgSettings)) {
+        std::string svgContent = svgStream.str();
+        saveStringToFile(outputFilename, svgContent);
+        std::string embeddingString = embedding.toString();
+        saveStringToFile("/sefe-embedding.txt", embeddingString);
+    } else
+        std::cerr << "Error generating SVG content." << std::endl;
+}

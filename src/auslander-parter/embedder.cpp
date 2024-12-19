@@ -10,7 +10,7 @@ std::unique_ptr<const SubGraph> Embedder::mergeBiconnectedComponents(const Graph
 const std::vector<std::unique_ptr<const SubGraph>>& embeddings) const {
     std::unique_ptr<SubGraph> output = std::make_unique<SubGraph>(&graph);
     for (int i = 0; i < graph.size(); ++i) {
-        output->addNode(Color::BLACK);
+        output->addNode(graph.getNode(0).getColor());
         output->setOriginalNode(output->getNode(i), graph.getNode(i));
     }
     assert(biconnectedComponents.size() == embeddings.size());
@@ -198,6 +198,7 @@ const SubGraph& component, bool compatible, SubGraph& output) const {
     assert(segment.isNodeAnAttachment(segment.getNode(cycleNodeIndex)));
     std::vector<int> neighborsToAdd;
     std::vector<Color> neighborsToAddColor;
+    std::vector<double> neighborsToAddWeight;
     const auto& edges = embedding.getNode(cycleNodeIndex).getEdges();
     int positionOfLastAddedNode = -1;
     for (int i = 0; i < edges.size(); ++i) {
@@ -226,35 +227,53 @@ const SubGraph& component, bool compatible, SubGraph& output) const {
         if (&prevCycleNode == &neighborComponent) continue;
         neighborsToAdd.push_back(neighborComponent.getIndex());
         neighborsToAddColor.push_back(edges[index].color);
+        neighborsToAddWeight.push_back(edges[index].weight);
     }
     if (compatible)
         for (int j = 0; j < neighborsToAdd.size(); ++j) {
             Node& from = output.getNode(cycleNode.getIndex());
             Node& to = output.getNode(neighborsToAdd[j]);
-            output.addSingleEdge(from, to, 1.0, neighborsToAddColor[j]);
+            output.addSingleEdge(from, to, neighborsToAddWeight[j], neighborsToAddColor[j]);
         }
     else
         for (int j = neighborsToAdd.size()-1; j >= 0; --j) {
             Node& from = output.getNode(cycleNode.getIndex());
             Node& to = output.getNode(neighborsToAdd[j]);
-            output.addSingleEdge(from, to, 1.0, neighborsToAddColor[j]);
+            output.addSingleEdge(from, to, neighborsToAddWeight[j], neighborsToAddColor[j]);
         }
 }
 
-std::unique_ptr<const SubGraph> Embedder::mergeSegmentsEmbeddings(const SubGraph& component, const BlackCycle& cycle,
-const std::vector<std::unique_ptr<const SubGraph>>& embeddings, const SegmentsHandler& segmentsHandler,
-const std::vector<int>& bipartition) const {
-    std::unique_ptr<SubGraph> output = std::make_unique<SubGraph>(&component);
-    for (int i = 0; i < component.size(); ++i) {
-        output->addNode(Color::BLACK);
-        output->setOriginalNode(output->getNode(i), component.getOriginalNode(component.getNode(i)));
+void Embedder::addEdgesNotIncidentToCycle(const SegmentsHandler& segmentsHandler, SubGraph& output, const BlackCycle& cycle,
+const std::vector<std::unique_ptr<const SubGraph>>& embeddings, std::vector<bool> isSegmentCompatible) const {
+    for (int i = 0; i < segmentsHandler.size(); ++i) {
+        const Segment& segment = segmentsHandler.getSegment(i);
+        const SubGraph& embedding = *embeddings[i];
+        for (int nodeIndex = 0; nodeIndex < segment.size(); ++nodeIndex) {
+            const Node& node = segment.getNode(nodeIndex);
+            const Node& componentNode = segment.getHigherLevelNode(node);
+            if (cycle.hasNode(componentNode)) continue;
+            std::vector<int> neighborsToAdd;
+            std::vector<Color> neighborsToAddColor;
+            const Node& embeddingNode = embedding.getNode(nodeIndex);
+            for (const auto& edge : embeddingNode.getEdges()) {
+                const Node& neighborSegment = segment.getNode(edge.to.getIndex());
+                const Node& neighborComponent = segment.getHigherLevelNode(neighborSegment);
+                neighborsToAdd.push_back(neighborComponent.getIndex());
+                neighborsToAddColor.push_back(edge.color);
+            }
+            if (isSegmentCompatible[i])
+                for (int j = 0; j < neighborsToAdd.size(); ++j)
+                    output.addSingleEdge(componentNode.getIndex(), neighborsToAdd[j], 1.0, neighborsToAddColor[j]);
+            else
+                for (int j = neighborsToAdd.size()-1; j >= 0; --j)
+                    output.addSingleEdge(componentNode.getIndex(), neighborsToAdd[j], 1.0, neighborsToAddColor[j]);
+        } 
     }
-    int segmentsMinAttachment[segmentsHandler.size()];
-    int segmentsMaxAttachment[segmentsHandler.size()];
-    computeMinAndMaxSegmentsAttachments(segmentsHandler, segmentsMinAttachment, segmentsMaxAttachment);
-    std::vector<bool> isSegmentCompatible = compatibilityEmbeddingsAndCycle(component, cycle, embeddings, segmentsHandler);
-    for (int i = 0; i < segmentsHandler.size(); ++i)
-        if (bipartition[i] == 1) isSegmentCompatible[i] = !isSegmentCompatible[i];
+}
+
+void Embedder::addEdgesIncidentToCycle(const SegmentsHandler& segmentsHandler, const BlackCycle& cycle, const SubGraph& component,
+const std::vector<std::unique_ptr<const SubGraph>>& embeddings, const std::vector<int>& bipartition, SubGraph& output,
+int segmentsMinAttachment[], int segmentsMaxAttachment[], std::vector<bool> isSegmentCompatible) const {
     for (int cycleNodePosition = 0; cycleNodePosition < cycle.size(); ++cycleNodePosition) {
         std::vector<int> insideSegments{};
         std::vector<int> outsideSegments{};
@@ -275,43 +294,38 @@ const std::vector<int>& bipartition) const {
         // order of the segments outside the cycle
         std::vector<int> outsideOrder = computeOrder(cycleNode, outsideSegments,
             segmentsMinAttachment, segmentsMaxAttachment, segmentsHandler, cycleNodePosition);
-        output->addSingleEdge(cycleNode.getIndex(), nextCycleNode.getIndex(), 1.0, Color::BLACK);
+        output.addSingleEdge(cycleNode.getIndex(), nextCycleNode.getIndex(), 1.0, Color::BLACK);
         for (int i = 0; i < insideOrder.size(); ++i) {
             const Segment& segment = segmentsHandler.getSegment(insideOrder[i]);
             const SubGraph& embedding = *embeddings[insideOrder[i]];
-            addMiddleEdges(segment, embedding, cycleNodePosition, component, isSegmentCompatible[insideOrder[i]], *output);
+            addMiddleEdges(segment, embedding, cycleNodePosition, component, isSegmentCompatible[insideOrder[i]], output);
         }
-        output->addSingleEdge(cycleNode.getIndex(), prevCycleNode.getIndex(), 1.0, Color::BLACK);
+        output.addSingleEdge(cycleNode.getIndex(), prevCycleNode.getIndex(), 1.0, Color::BLACK);
         for (int i = 0; i < outsideOrder.size(); ++i) {
             const Segment& segment = segmentsHandler.getSegment(outsideOrder[i]);
             const SubGraph& embedding = *embeddings[outsideOrder[i]];
-            addMiddleEdges(segment, embedding, cycleNodePosition, component, isSegmentCompatible[outsideOrder[i]], *output);
+            addMiddleEdges(segment, embedding, cycleNodePosition, component, isSegmentCompatible[outsideOrder[i]], output);
         }
     }
-    for (int i = 0; i < segmentsHandler.size(); ++i) {
-        const Segment& segment = segmentsHandler.getSegment(i);
-        const SubGraph& embedding = *embeddings[i];
-        for (int nodeIndex = 0; nodeIndex < segment.size(); ++nodeIndex) {
-            const Node& node = segment.getNode(nodeIndex);
-            const Node& componentNode = segment.getHigherLevelNode(node);
-            if (cycle.hasNode(componentNode)) continue;
-            std::vector<int> neighborsToAdd;
-            std::vector<Color> neighborsToAddColor;
-            const Node& embeddingNode = embedding.getNode(nodeIndex);
-            for (const auto& edge : embeddingNode.getEdges()) {
-                const Node& neighborSegment = segment.getNode(edge.to.getIndex());
-                const Node& neighborComponent = segment.getHigherLevelNode(neighborSegment);
-                neighborsToAdd.push_back(neighborComponent.getIndex());
-                neighborsToAddColor.push_back(edge.color);
-            }
-            if (isSegmentCompatible[i])
-                for (int j = 0; j < neighborsToAdd.size(); ++j)
-                    output->addSingleEdge(componentNode.getIndex(), neighborsToAdd[j], 1.0, neighborsToAddColor[j]);
-            else
-                for (int j = neighborsToAdd.size()-1; j >= 0; --j)
-                    output->addSingleEdge(componentNode.getIndex(), neighborsToAdd[j], 1.0, neighborsToAddColor[j]);
-        } 
+}
+
+std::unique_ptr<const SubGraph> Embedder::mergeSegmentsEmbeddings(const SubGraph& component, const BlackCycle& cycle,
+const std::vector<std::unique_ptr<const SubGraph>>& embeddings, const SegmentsHandler& segmentsHandler,
+const std::vector<int>& bipartition) const {
+    std::unique_ptr<SubGraph> output = std::make_unique<SubGraph>(&component);
+    for (int i = 0; i < component.size(); ++i) {
+        output->addNode(component.getNode(i).getColor());
+        output->setOriginalNode(output->getNode(i), component.getOriginalNode(component.getNode(i)));
     }
+    int segmentsMinAttachment[segmentsHandler.size()];
+    int segmentsMaxAttachment[segmentsHandler.size()];
+    computeMinAndMaxSegmentsAttachments(segmentsHandler, segmentsMinAttachment, segmentsMaxAttachment);
+    std::vector<bool> isSegmentCompatible = compatibilityEmbeddingsAndCycle(component, cycle, embeddings, segmentsHandler);
+    for (int i = 0; i < segmentsHandler.size(); ++i)
+        if (bipartition[i] == 1) isSegmentCompatible[i] = !isSegmentCompatible[i];
+    addEdgesIncidentToCycle(segmentsHandler, cycle, component, embeddings, bipartition, *output, segmentsMinAttachment,
+        segmentsMaxAttachment, isSegmentCompatible);
+    addEdgesNotIncidentToCycle(segmentsHandler, *output, cycle, embeddings, isSegmentCompatible);
     return output;
 }
 

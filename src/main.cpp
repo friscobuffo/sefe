@@ -55,6 +55,9 @@ extern "C" {
 
         std::string embeddingString = embedding.value()->toString();
         saveStringToFile("/embedding-sefe.txt", embeddingString);
+
+        drawSefeEmbeddingToFile(*embedding.value(), *intersection, "/embedding-red.svg");
+        
         return 1;
     }
 }

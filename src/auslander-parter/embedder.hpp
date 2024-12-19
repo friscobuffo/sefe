@@ -27,6 +27,11 @@ private:
         const std::vector<std::unique_ptr<const SubGraph>>& embeddings, const SegmentsHandler& segmentsHandler) const;
     void addMiddleEdges(const Segment& segment, const SubGraph& embedding, int cycleNodeIndex,
         const SubGraph& component, bool compatible, SubGraph& output) const;
+    void addEdgesIncidentToCycle(const SegmentsHandler& segmentsHandler, const BlackCycle& cycle, const SubGraph& component,
+        const std::vector<std::unique_ptr<const SubGraph>>& embeddings, const std::vector<int>& bipartition, SubGraph& output,
+        int segmentsMinAttachment[], int segmentsMaxAttachment[], std::vector<bool> isSegmentCompatible) const;
+    void addEdgesNotIncidentToCycle(const SegmentsHandler& segmentsHandler, SubGraph& output, const BlackCycle& cycle,
+        const std::vector<std::unique_ptr<const SubGraph>>& embeddings, std::vector<bool> isSegmentCompatible) const;
     std::unique_ptr<const SubGraph> mergeSegmentsEmbeddings(const SubGraph& component, const BlackCycle& cycle,
         const std::vector<std::unique_ptr<const SubGraph>>& embeddings, const SegmentsHandler& segmentsHandler,
         const std::vector<int>& bipartition) const;

@@ -11,4 +11,7 @@ void drawEmbeddingToFile(const Graph& graph, const Graph& embedding);
 void drawSefeProjectionEmbeddingToFile(const Graph& embedding, const Graph& intersection,
     const std::string& color, const std::string& outputFilename);
 
+void drawSefeEmbeddingToFile(const Graph& embedding, const Graph& intersection,
+    const std::string& outputFilename);
+    
 #endif

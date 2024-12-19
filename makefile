@@ -19,7 +19,8 @@ SRCS = src/main.cpp \
        src/auslander-parter/embedder.cpp \
        src/sefe/interlacementSefe.cpp \
        src/sefe/embedderSefe.cpp \
-       src/beta/palm-tree.cpp
+       src/beta/palm-tree.cpp \
+       src/beta/drawing/polygon.cpp
 
 # Object Files (stored in obj/ directory)
 OBJS = $(SRCS:%.cpp=$(OBJ_DIR)/%.o)

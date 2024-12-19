@@ -122,7 +122,7 @@ std::list<std::pair<const Node*, const Edge*>>& stackOfEdges) {
         else if (childrenNumber == 0) { // node is isolated
             components_m.push_back(std::make_unique<SubGraph>(&originalGraph_m));
             SubGraph& component = *components_m.back();
-            component.addNode(Color::BLACK);
+            component.addNode(node.getColor());
             component.setOriginalNode(component.getNode(0), node);
         }
     }
