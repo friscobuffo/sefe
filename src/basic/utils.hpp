@@ -61,7 +61,7 @@ public:
 
     void resetPointer(const int index) {
         assert(index >= 0 && index < pointers_m.size());
-        assert(&pointers_m[index] != nullptr);
+        assert(pointers_m[index] != nullptr);
         pointers_m[index] = nullptr;
     }
 };

@@ -7,8 +7,6 @@
 #include "color.hpp"
 #include "utils.hpp"
 
-#define DEFAULT_WEIGHT 1.0
-
 class NodesStructure;
 
 class Edge;

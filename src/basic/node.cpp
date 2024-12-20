@@ -35,10 +35,6 @@ Color Node::getColor() const {
     return m_color;
 }
 
-Node& daje(std::unique_ptr<Node> node) {
-    return *node;
-}
-
 const Container<Node>& NodesStructure::getNodes() const {
     return m_nodes;
 }

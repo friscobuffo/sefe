@@ -402,7 +402,7 @@ void SubGraph::setOriginalNode(const Node& node, const Node& originalNode) {
 void SubGraph::resetOriginalNode(const Node& node) {
     const int index = node.getIndex();
     assert(&node.getOwner() == this);
-    assert(&getOriginalNode(node) != nullptr);
+    assert(&getOriginalNode(node).getOwner() == &originalGraph_m);
     originalNodes_m.resetPointer(index);
 }
 

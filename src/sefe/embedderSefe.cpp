@@ -91,7 +91,7 @@ const SubGraph* EmbedderSefe::baseCaseCycle(const SubGraph& cycle) const {
     for (int i = 0; i < cycle.size()-1; ++i)
         for (const Edge& edge : cycle.getNode(i).getEdges())
             if (i < edge.to.getIndex())
-                embedding->addEdge(i, edge.to.getIndex(), DEFAULT_WEIGHT, edge.color);
+                embedding->addEdge(i, edge.to.getIndex(), edge.weight, edge.color);
     return embedding;
 }
 
@@ -138,13 +138,14 @@ const SubGraph* EmbedderSefe::baseCasePath(const SubGraph& component, const Blac
         const Node& node = component.getNode(nodeIndex);
         const auto& edges = node.getEdges();
         if (edges.size() == 2) { // attachment nodes will be handled later
-            embedding->addSingleEdge(node.getIndex(), edges[0].to.getIndex(), DEFAULT_WEIGHT, edges[0].color);
-            embedding->addSingleEdge(node.getIndex(), edges[1].to.getIndex(), DEFAULT_WEIGHT, edges[1].color);
+            embedding->addSingleEdge(node.getIndex(), edges[0].to.getIndex(), edges[0].weight, edges[0].color);
+            embedding->addSingleEdge(node.getIndex(), edges[1].to.getIndex(), edges[1].weight, edges[1].color);
             continue;
         }
         assert(edges.size() == 3);
         int neighborsOrder[3];
         Color neighborsOrderColor[3];
+        double neighborsOrderWeight[3];
         for (int i = 0; i < 3; ++i) {
             neighborsOrder[i] = -1;
         }
@@ -153,19 +154,22 @@ const SubGraph* EmbedderSefe::baseCasePath(const SubGraph& component, const Blac
             if (&cycle.getNextOfNode(node) == &neighbor) {
                 neighborsOrder[0] = neighbor.getIndex();
                 neighborsOrderColor[0] = edge.color;
+                neighborsOrderWeight[0] = edge.weight;
                 continue;
             }
             if (&cycle.getPrevOfNode(node) == &neighbor) {
                 neighborsOrder[2] = neighbor.getIndex();
                 neighborsOrderColor[2] = edge.color;
+                neighborsOrderWeight[2] = edge.weight;
                 continue;
             }
             neighborsOrder[1] = neighbor.getIndex();
             neighborsOrderColor[1] = edge.color;
+            neighborsOrderWeight[1] = edge.weight;
         }
         for (int i = 0; i < 3; ++i) {
             assert(neighborsOrder[i] != -1);
-            embedding->addSingleEdge(node.getIndex(), neighborsOrder[i], DEFAULT_WEIGHT, neighborsOrderColor[i]);
+            embedding->addSingleEdge(node.getIndex(), neighborsOrder[i], neighborsOrderWeight[i], neighborsOrderColor[i]);
         }
     }
     return embedding;
@@ -188,7 +192,7 @@ const SubGraph* EmbedderSefe::baseCaseGraph(const Graph& graph) const {
         const Node& node = graph.getNode(i);
         for (const Edge& edge : node.getEdges())
             if (node.getIndex() < edge.to.getIndex())
-                embedding->addEdge(node.getIndex(), edge.to.getIndex(), DEFAULT_WEIGHT, edge.color);
+                embedding->addEdge(node.getIndex(), edge.to.getIndex(), edge.weight, edge.color);
     }
     return embedding;
 }
@@ -304,13 +308,13 @@ const std::vector<int>& bipartition) const {
         // order of the segments outside the cycle
         std::vector<int> outsideOrder = computeOrder(cycleNode, outsideSegments, segmentsMinMaxRedAttachment, segmentsMinMaxBlueAttachment,
             segmentsHandler, cycleNodePosition, segmentsHaveBetweenRedAttachment, segmentsHaveBetweenBlueAttachment);
-        output->addSingleEdge(cycleNode.getIndex(), nextCycleNode.getIndex(), DEFAULT_WEIGHT, Color::BLACK);
+        output->addSingleEdge(cycleNode.getIndex(), nextCycleNode.getIndex(), 1.0, Color::BLACK);
         for (int i = 0; i < insideOrder.size(); ++i) {
             const Segment& segment = segmentsHandler.getSegment(insideOrder[i]);
             const SubGraph& embedding = *embeddings[insideOrder[i]];
             addMiddleEdges(segment, embedding, cycleNodePosition, graph, isSegmentCompatible[insideOrder[i]], *output);
         }
-        output->addSingleEdge(cycleNode.getIndex(), prevCycleNode.getIndex(), DEFAULT_WEIGHT, Color::BLACK);
+        output->addSingleEdge(cycleNode.getIndex(), prevCycleNode.getIndex(), 1.0, Color::BLACK);
         for (int i = 0; i < outsideOrder.size(); ++i) {
             const Segment& segment = segmentsHandler.getSegment(outsideOrder[i]);
             const SubGraph& embedding = *embeddings[outsideOrder[i]];
@@ -326,6 +330,7 @@ const std::vector<int>& bipartition) const {
             if (cycle.hasNode(higherLevelNode)) continue;
             std::vector<int> neighborsToAdd;
             std::vector<Color> neighborsToAddColor;
+            std::vector<double> neighborsToAddWeight;
             const Node& embeddingNode = embedding.getNode(nodeIndex);
             for (const Edge& edge : embeddingNode.getEdges()) {
                 const Node& neighbor = edge.to;
@@ -333,13 +338,14 @@ const std::vector<int>& bipartition) const {
                 const Node& neighborHigherLevel = segment.getHigherLevelNode(neighborSegment);
                 neighborsToAdd.push_back(neighborHigherLevel.getIndex());
                 neighborsToAddColor.push_back(edge.color);
+                neighborsToAddWeight.push_back(edge.weight);
             }
             if (isSegmentCompatible[i])
                 for (int j = 0; j < neighborsToAdd.size(); ++j)
-                    output->addSingleEdge(higherLevelNode.getIndex(), neighborsToAdd[j], DEFAULT_WEIGHT, neighborsToAddColor[j]);
+                    output->addSingleEdge(higherLevelNode.getIndex(), neighborsToAdd[j], neighborsToAddWeight[j], neighborsToAddColor[j]);
             else
                 for (int j = neighborsToAdd.size()-1; j >= 0; --j)
-                    output->addSingleEdge(higherLevelNode.getIndex(), neighborsToAdd[j], DEFAULT_WEIGHT, neighborsToAddColor[j]);
+                    output->addSingleEdge(higherLevelNode.getIndex(), neighborsToAdd[j], neighborsToAddWeight[j], neighborsToAddColor[j]);
         }
     }
     return output;
@@ -373,6 +379,7 @@ const SubGraph& higherLevel, bool compatible, SubGraph& output) const {
     assert(positionOfLastAddedNode != -1);
     std::vector<int> neighborsToAdd;
     std::vector<Color> neighborsToAddColor;
+    std::vector<double> neighborsToAddWeight;
     for (int i = 1; i < edges.size(); ++i) {
         const int index = (i+positionOfLastAddedNode)%edges.size();
         const Node& neighbor = edges[index].to;
@@ -385,18 +392,19 @@ const SubGraph& higherLevel, bool compatible, SubGraph& output) const {
         if (&prevCycleNode == &neighborHigherLevel) continue;
         neighborsToAdd.push_back(neighborHigherLevel.getIndex());
         neighborsToAddColor.push_back(edges[index].color);
+        neighborsToAddWeight.push_back(edges[index].weight);
     }
     if (compatible)
         for (int j = 0; j < neighborsToAdd.size(); ++j) {
             Node& from = output.getNode(cycleNode.getIndex());
             Node& to = output.getNode(neighborsToAdd[j]);
-            output.addSingleEdge(from, to, DEFAULT_WEIGHT, neighborsToAddColor[j]);
+            output.addSingleEdge(from, to, neighborsToAddWeight[j], neighborsToAddColor[j]);
         }
     else
         for (int j = neighborsToAdd.size()-1; j >= 0; --j) {
             Node& from = output.getNode(cycleNode.getIndex());
             Node& to = output.getNode(neighborsToAdd[j]);
-            output.addSingleEdge(from, to, DEFAULT_WEIGHT, neighborsToAddColor[j]);
+            output.addSingleEdge(from, to, neighborsToAddWeight[j], neighborsToAddColor[j]);
         }
 }
 

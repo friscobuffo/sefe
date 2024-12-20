@@ -133,7 +133,7 @@ void drawSefeProjectionEmbeddingToFile(const Graph& embedding, const Graph& inte
         std::cerr << "Error generating SVG content." << std::endl;
 }
 
-#include "beta/drawing/polygon.hpp"
+#include "drawing/polygon.hpp"
 
 void drawSefeEmbeddingToFile(const Graph& embedding, const Graph& intersection,
 const std::string& outputFilename) {
